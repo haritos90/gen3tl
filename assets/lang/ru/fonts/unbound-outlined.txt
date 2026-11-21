@@ -1,0 +1,663 @@
+# Cyrillic letters for the outlined DexNav HUD font.
+# 8 rows per letter; '#' ink, 's' outline, '_' transparent.
+# neighbouring letters share the outline column.
+
+glyph А width 5
+_sss_
+ss#ss
+s#s#s
+s#s#s
+s###s
+s#s#s
+s#s#s
+sssss
+
+glyph Б width 5
+sssss
+s###s
+s#sss
+s##ss
+s#s#s
+s#s#s
+s##ss
+ssss_
+
+glyph В width 5
+ssss_
+s##ss
+s#s#s
+s##ss
+s#s#s
+s#s#s
+s##ss
+ssss_
+
+glyph Г width 5
+sssss
+s###s
+s#sss
+s#s__
+s#s__
+s#s__
+s#s__
+sss__
+
+glyph Д width 5
+_ssss
+ss##s
+s#s#s
+s#s#s
+s#s#s
+s#s#s
+s###s
+s#s#s
+
+glyph Е width 5
+sssss
+s###s
+s#sss
+s##s_
+s#ss_
+s#sss
+s###s
+sssss
+
+glyph Ё width 5
+s#s#s
+s###s
+s#sss
+s##s_
+s#ss_
+s#sss
+s###s
+sssss
+
+glyph Ж width 7
+sssssss
+s#s#s#s
+s#s#s#s
+ss###ss
+s#s#s#s
+s#s#s#s
+s#s#s#s
+sssssss
+
+glyph З width 5
+ssss_
+s##ss
+sss#s
+_s#ss
+_ss#s
+sss#s
+s##ss
+ssss_
+
+glyph И width 6
+ssssss
+s#ss#s
+s#ss#s
+s#s##s
+s##s#s
+s#ss#s
+s#ss#s
+ssssss
+
+glyph Й width 6
+ss##ss
+s#ss#s
+s#ss#s
+s#s##s
+s##s#s
+s#ss#s
+s#ss#s
+ssssss
+
+glyph К width 5
+sssss
+s#s#s
+s#s#s
+s##ss
+s##ss
+s#s#s
+s#s#s
+sssss
+
+glyph Л width 5
+_ssss
+ss##s
+s#s#s
+s#s#s
+s#s#s
+s#s#s
+s#s#s
+sssss
+
+glyph М width 7
+sss_sss
+s#sss#s
+s##s##s
+s#s#s#s
+s#sss#s
+s#s_s#s
+s#s_s#s
+sss_sss
+
+glyph Н width 5
+sssss
+s#s#s
+s#s#s
+s###s
+s#s#s
+s#s#s
+s#s#s
+sssss
+
+glyph О width 5
+_sss_
+ss#ss
+s#s#s
+s#s#s
+s#s#s
+s#s#s
+ss#ss
+_sss_
+
+glyph П width 5
+sssss
+s###s
+s#s#s
+s#s#s
+s#s#s
+s#s#s
+s#s#s
+sssss
+
+glyph Р width 5
+ssss_
+s##ss
+s#s#s
+s#s#s
+s##ss
+s#ss_
+s#s__
+sss__
+
+glyph С width 5
+_ssss
+ss##s
+s#sss
+s#s__
+s#s__
+s#sss
+ss##s
+_ssss
+
+glyph Т width 5
+sssss
+s###s
+ss#ss
+_s#s_
+_s#s_
+_s#s_
+_s#s_
+_sss_
+
+glyph У width 5
+sssss
+s#s#s
+s#s#s
+s#s#s
+ss##s
+sss#s
+s##ss
+ssss_
+
+glyph Ф width 7
+__sss__
+_ss#ss_
+ss###ss
+s#s#s#s
+s#s#s#s
+ss###ss
+_ss#ss_
+__sss__
+
+glyph Х width 5
+sssss
+s#s#s
+s#s#s
+ss#ss
+ss#ss
+s#s#s
+s#s#s
+sssss
+
+glyph Ц width 5
+sssss
+s#s#s
+s#s#s
+s#s#s
+s#s#s
+s#s#s
+s###s
+sss#s
+
+glyph Ч width 5
+sssss
+s#s#s
+s#s#s
+s#s#s
+ss##s
+_ss#s
+__s#s
+__sss
+
+glyph Ш width 7
+sssssss
+s#s#s#s
+s#s#s#s
+s#s#s#s
+s#s#s#s
+s#s#s#s
+s#####s
+sssssss
+
+glyph Щ width 7
+sssssss
+s#s#s#s
+s#s#s#s
+s#s#s#s
+s#s#s#s
+s#s#s#s
+s#####s
+sssss#s
+
+glyph Ъ width 6
+ssss__
+s##s__
+ss#ss_
+_s##ss
+_s#s#s
+_s#s#s
+_s##ss
+_ssss_
+
+glyph Ы width 7
+sss_sss
+s#s_s#s
+s#sss#s
+s##ss#s
+s#s#s#s
+s#s#s#s
+s##ss#s
+sssssss
+
+glyph Ь width 5
+sss__
+s#s__
+s#ss_
+s##ss
+s#s#s
+s#s#s
+s##ss
+ssss_
+
+glyph Э width 5
+ssss_
+s##ss
+sss#s
+_s##s
+_ss#s
+sss#s
+s##ss
+ssss_
+
+glyph Ю width 7
+ssssss_
+s#ss#ss
+s#s#s#s
+s###s#s
+s#s#s#s
+s#s#s#s
+s#ss#ss
+ssssss_
+
+glyph Я width 5
+_ssss
+ss##s
+s#s#s
+s#s#s
+ss##s
+s#s#s
+s#s#s
+sssss
+
+glyph а width 5
+_____
+_____
+_ssss
+ss##s
+s#s#s
+s#s#s
+ss##s
+_ssss
+
+glyph б width 5
+_ssss
+ss##s
+s#sss
+s##ss
+s#s#s
+s#s#s
+ss#ss
+_sss_
+
+glyph в width 5
+_____
+_____
+ssss_
+s##s_
+s##ss
+s#s#s
+s##ss
+ssss_
+
+glyph г width 5
+_____
+_____
+sssss
+s###s
+s#sss
+s#s__
+s#s__
+sss__
+
+glyph д width 5
+_____
+_____
+_ssss
+ss##s
+s#s#s
+s#s#s
+s###s
+s#s#s
+
+glyph е width 5
+_____
+_____
+_sss_
+ss#ss
+s###s
+s#sss
+ss##s
+_ssss
+
+glyph ё width 5
+sssss
+s#s#s
+sssss
+ss#ss
+s###s
+s#sss
+ss##s
+_ssss
+
+glyph ж width 7
+_______
+_______
+sssssss
+s#s#s#s
+ss###ss
+ss###ss
+s#s#s#s
+sssssss
+
+glyph з width 5
+_____
+_____
+ssss_
+s##ss
+ss##s
+sss#s
+s##ss
+ssss_
+
+glyph и width 6
+______
+______
+ssssss
+s#ss#s
+s#s##s
+s##s#s
+s#ss#s
+ssssss
+
+glyph й width 6
+_ssss_
+_s##s_
+ssssss
+s#ss#s
+s#s##s
+s##s#s
+s#ss#s
+ssssss
+
+glyph к width 5
+_____
+_____
+sssss
+s#s#s
+s##ss
+s#s#s
+s#s#s
+sssss
+
+glyph л width 5
+_____
+_____
+_ssss
+ss##s
+s#s#s
+s#s#s
+s#s#s
+sssss
+
+glyph м width 7
+_______
+_______
+sss_sss
+s#sss#s
+s##s##s
+s#s#s#s
+s#sss#s
+sss_sss
+
+glyph н width 5
+_____
+_____
+sssss
+s#s#s
+s###s
+s#s#s
+s#s#s
+sssss
+
+glyph о width 5
+_____
+_____
+_sss_
+ss#ss
+s#s#s
+s#s#s
+ss#ss
+_sss_
+
+glyph п width 5
+_____
+_____
+sssss
+s###s
+s#s#s
+s#s#s
+s#s#s
+sssss
+
+glyph р width 5
+_____
+_____
+ssss_
+s##ss
+s#s#s
+s#s#s
+s##ss
+s#ss_
+
+glyph с width 5
+_____
+_____
+_ssss
+ss##s
+s#sss
+s#sss
+ss##s
+_ssss
+
+glyph т width 5
+_____
+_____
+sssss
+s###s
+ss#ss
+_s#s_
+_s#s_
+_sss_
+
+glyph у width 5
+_____
+_____
+sssss
+s#s#s
+s#s#s
+s#s#s
+ss##s
+s##ss
+
+glyph ф width 7
+_______
+__sss__
+_ss#ss_
+ss###ss
+s#s#s#s
+s#s#s#s
+ss###ss
+_ss#ss_
+
+glyph х width 5
+_____
+_____
+sssss
+s#s#s
+ss#ss
+ss#ss
+s#s#s
+sssss
+
+glyph ц width 5
+_____
+_____
+sssss
+s#s#s
+s#s#s
+s#s#s
+s###s
+sss#s
+
+glyph ч width 5
+_____
+_____
+sssss
+s#s#s
+s#s#s
+ss##s
+_ss#s
+__sss
+
+glyph ш width 7
+_______
+_______
+sssssss
+s#s#s#s
+s#s#s#s
+s#s#s#s
+s#####s
+sssssss
+
+glyph щ width 7
+_______
+_______
+sssssss
+s#s#s#s
+s#s#s#s
+s#s#s#s
+s#####s
+sssss#s
+
+glyph ъ width 6
+______
+______
+ssss__
+s##ss_
+ss##ss
+_s#s#s
+_s##ss
+_ssss_
+
+glyph ы width 7
+_______
+_______
+sss_sss
+s#sss#s
+s##ss#s
+s#s#s#s
+s##ss#s
+sssssss
+
+glyph ь width 5
+_____
+_____
+sss__
+s#ss_
+s##ss
+s#s#s
+s##ss
+ssss_
+
+glyph э width 5
+_____
+_____
+ssss_
+s##ss
+ss##s
+sss#s
+s##ss
+ssss_
+
+glyph ю width 7
+_______
+_______
+ssssss_
+s#ss#ss
+s###s#s
+s#s#s#s
+s#ss#ss
+ssssss_
+
+glyph я width 5
+_____
+_____
+_ssss
+ss##s
+s#s#s
+ss##s
+s#s#s
+sssss

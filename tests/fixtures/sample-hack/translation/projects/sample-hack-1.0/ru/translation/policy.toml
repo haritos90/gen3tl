@@ -1,0 +1,5 @@
+[policy]
+version = "2.0.0"
+profile = "sample-hack-1.0"
+language = "ru"
+rom_sha1 = "8bbf30c3f11e0a4371231cff8301e64e62bd4f31"

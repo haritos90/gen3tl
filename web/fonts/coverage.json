@@ -1,0 +1,144 @@
+{
+  "schema": 1,
+  "roles": {
+    "display": {
+      "selector": "h1, h2, h3, h4, .brand",
+      "family": "Bricolage Grotesque",
+      "fallback": ["system-ui", "-apple-system", "Segoe UI", "sans-serif"]
+    },
+    "body": {
+      "family": "IBM Plex Sans",
+      "fallback": ["system-ui", "-apple-system", "Segoe UI", "sans-serif"]
+    },
+    "mono": {
+      "selector": "code, .mono",
+      "family": "IBM Plex Mono",
+      "fallback": ["ui-monospace", "Menlo", "Consolas", "monospace"]
+    }
+  },
+  "scripts": [
+    {
+      "id": "latn",
+      "ranges": ["0041-005A", "0061-007A", "00C0-00D6", "00D8-00F6", "00F8-024F", "1E00-1EFF", "2C60-2C7F", "A720-A7FF", "AB30-AB6F"],
+      "subsets": {
+        "display": ["bricolage-grotesque-latin.woff2"],
+        "body": ["ibm-plex-sans-latin.woff2"],
+        "mono": ["ibm-plex-mono-400-latin.woff2", "ibm-plex-mono-500-latin.woff2"]
+      },
+      "fallbacks": {
+        "display": ["Avenir Next", "Helvetica Neue", "system-ui", "sans-serif"]
+      }
+    },
+    {
+      "id": "cyrl",
+      "ranges": ["0400-052F", "2DE0-2DFF", "A640-A69F"],
+      "subsets": {
+        "body": ["ibm-plex-sans-cyrillic.woff2"],
+        "mono": ["ibm-plex-mono-400-cyrillic.woff2", "ibm-plex-mono-500-cyrillic.woff2"]
+      },
+      "fallbacks": {
+        "display": ["IBM Plex Sans", "system-ui", "-apple-system", "Segoe UI", "sans-serif"]
+      }
+    },
+    {
+      "id": "grek",
+      "ranges": ["0370-03FF", "1F00-1FFF"],
+      "subsets": {}
+    },
+    {
+      "id": "armn",
+      "ranges": ["0530-058F"],
+      "subsets": {}
+    },
+    {
+      "id": "hebr",
+      "ranges": ["0590-05FF", "FB1D-FB4F"],
+      "subsets": {}
+    },
+    {
+      "id": "arab",
+      "ranges": ["0600-06FF", "0750-077F", "0870-089F", "08A0-08FF", "FB50-FDFF", "FE70-FEFF"],
+      "subsets": {}
+    },
+    {
+      "id": "deva",
+      "ranges": ["0900-097F", "A8E0-A8FF"],
+      "subsets": {}
+    },
+    {
+      "id": "beng",
+      "ranges": ["0980-09FF"],
+      "subsets": {}
+    },
+    {
+      "id": "guru",
+      "ranges": ["0A00-0A7F"],
+      "subsets": {}
+    },
+    {
+      "id": "gujr",
+      "ranges": ["0A80-0AFF"],
+      "subsets": {}
+    },
+    {
+      "id": "taml",
+      "ranges": ["0B80-0BFF"],
+      "subsets": {}
+    },
+    {
+      "id": "telu",
+      "ranges": ["0C00-0C7F"],
+      "subsets": {}
+    },
+    {
+      "id": "knda",
+      "ranges": ["0C80-0CFF"],
+      "subsets": {}
+    },
+    {
+      "id": "mlym",
+      "ranges": ["0D00-0D7F"],
+      "subsets": {}
+    },
+    {
+      "id": "thai",
+      "ranges": ["0E00-0E7F"],
+      "subsets": {}
+    },
+    {
+      "id": "geor",
+      "ranges": ["10A0-10FF", "1C90-1CBF", "2D00-2D2F"],
+      "subsets": {}
+    },
+    {
+      "id": "khmr",
+      "ranges": ["1780-17FF", "19E0-19FF"],
+      "subsets": {}
+    },
+    {
+      "id": "mymr",
+      "ranges": ["1000-109F", "AA60-AA7F", "A9E0-A9FF"],
+      "subsets": {}
+    },
+    {
+      "id": "hira",
+      "ranges": ["3040-309F"],
+      "subsets": {}
+    },
+    {
+      "id": "kana",
+      "ranges": ["30A0-30FF", "31F0-31FF", "FF66-FF9D"],
+      "subsets": {}
+    },
+    {
+      "id": "hani",
+      "ranges": ["3400-4DBF", "4E00-9FFF", "F900-FAFF"],
+      "subsets": {}
+    },
+    {
+      "id": "hang",
+      "ranges": ["1100-11FF", "3130-318F", "A960-A97F", "AC00-D7AF", "D7B0-D7FF"],
+      "subsets": {}
+    }
+  ]
+}

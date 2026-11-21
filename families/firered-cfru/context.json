@@ -1,0 +1,533 @@
+{
+  "schema": 1,
+  "family": "firered-cfru",
+  "functions": [
+    {
+      "name": "copy",
+      "category": "context",
+      "length": 30,
+      "instructions": 15,
+      "sha256": "21ba59270248da0f3d29e6ab360354a5852bc6b5eac012c740967cb2d577acd3",
+      "prefix_sha256": "8606135c15f83d775c706d3579310194dfbfa5362624c57ca93d3f30439eff24",
+      "prefix_count": 3,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ],
+      "branches": [
+        [
+          4,
+          12
+        ],
+        [
+          18,
+          6
+        ]
+      ]
+    },
+    {
+      "name": "append",
+      "category": "context",
+      "length": 24,
+      "instructions": 11,
+      "sha256": "504145edc13c174c1cde8a010c83de59459183e3269422b1ac123ef3ee6a3c04",
+      "prefix_sha256": "323edb4480fea2d84d84b40dbd097b42216c703ccc309ff33d46b5b9a7bb1a0d",
+      "prefix_count": 3,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ],
+      "branches": [
+        [
+          4,
+          8
+        ],
+        [
+          12,
+          6
+        ]
+      ]
+    },
+    {
+      "name": "bufferstring",
+      "category": "context",
+      "length": 36,
+      "instructions": 16,
+      "sha256": "1dff803caa4c589a39b25995f26847a53d7fedc4cd5e815b27a0238e4421d905",
+      "prefix_sha256": "cc4b517eff6be6c55ee766a1bc3394d46a499b45df14a1a16ec7f6aa82b762b6",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ],
+      "branches": []
+    },
+    {
+      "name": "special",
+      "category": "context",
+      "length": 54,
+      "instructions": 20,
+      "sha256": "8d6acef322b1338af32539572af4bbe28c3814b4d5ecadd924b8da7ab215eb10",
+      "prefix_sha256": "dfd5e9a45ecb91d5211f32f99261aa8ac691f75255b8e346b1f694c73ddad2d1",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ],
+      "branches": [
+        [
+          18,
+          36
+        ],
+        [
+          26,
+          48
+        ]
+      ]
+    },
+    {
+      "name": "guarded-copy",
+      "category": "context",
+      "length": 68,
+      "instructions": 32,
+      "sha256": "21141edfc6d46aefe81846c96f2dfcd63cfccec27e5a835901f81f876e084821",
+      "prefix_sha256": "18491b7ea68c87a92cca7ecdebbdb14cd017ed4a44b974b4dd066e9c0888e024",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          3,
+          4,
+          5,
+          6,
+          7,
+          14
+        ],
+        0,
+        false,
+        null
+      ],
+      "branches": [
+        [
+          14,
+          66
+        ],
+        [
+          22,
+          66
+        ],
+        [
+          60,
+          66
+        ]
+      ]
+    },
+    {
+      "name": "lookup-copy",
+      "category": "context",
+      "length": 52,
+      "instructions": 24,
+      "sha256": "8d0df2d4eb6eb0f465d5f95ba151969165ef0d2a4ff37872af93faae91b688ce",
+      "prefix_sha256": "fd3ac5165a4f68b46a514dace0361cd2492120fa1d10fec0a6ff7a34c4a80564",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        3,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ],
+      "branches": [
+        [
+          22,
+          40
+        ],
+        [
+          44,
+          16
+        ],
+        [
+          50,
+          32
+        ]
+      ]
+    },
+    {
+      "name": "lookup-append",
+      "category": "context",
+      "length": 94,
+      "instructions": 43,
+      "sha256": "d88df12399390092ac6d203c3baa79b27615939727e7b4ddcea1deea7b737f06",
+      "prefix_sha256": "371bf3c9b05f84e8da48a7a7e025e8b2797d06812a398b7ca5fba0bda2e79a8f",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ],
+      "branches": [
+        [
+          28,
+          80
+        ],
+        [
+          48,
+          78
+        ],
+        [
+          62,
+          72
+        ],
+        [
+          68,
+          72
+        ],
+        [
+          84,
+          24
+        ],
+        [
+          92,
+          74
+        ]
+      ]
+    },
+    {
+      "name": "bounded-copy",
+      "category": "context",
+      "length": 34,
+      "instructions": 15,
+      "sha256": "0d1993da1349eeb546555585371543d8d7ed732e5ead34cb8ab54b798da62b55",
+      "prefix_sha256": "33dfb5f2c887ef09f3e2b5dcdbc6ed4e253d12a50ab960e8a8693dd08bcc52c2",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ],
+      "branches": [
+        [
+          14,
+          24
+        ]
+      ]
+    },
+    {
+      "name": "bounded-wrapper",
+      "category": "context",
+      "length": 132,
+      "instructions": 53,
+      "sha256": "5409c26924a7dd6152ce5344dec6b50010f35bef2e3df7b9d37aef0aff4d4c0f",
+      "prefix_sha256": "0a926ea10a61b4a2d99dc9b78fe133729177fb4474d05b0c1c14458d929e270b",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        3,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ],
+      "branches": [
+        [
+          10,
+          28
+        ],
+        [
+          14,
+          72
+        ],
+        [
+          20,
+          24
+        ],
+        [
+          26,
+          66
+        ],
+        [
+          70,
+          126
+        ]
+      ]
+    },
+    {
+      "name": "boolean-copy",
+      "category": "context",
+      "length": 112,
+      "instructions": 51,
+      "sha256": "6073155fd9532249fbc6e00f833ed17b4456c95f4c25c61170ab6c20f4426e6b",
+      "prefix_sha256": "ecf47f71d0a4f87bd842029dfce4fa29f8c5ec994d2f027093cb43f77884cfac",
+      "prefix_count": 4,
+      "entry": [
+        "mov",
+        2,
+        3,
+        null,
+        null,
+        0,
+        [],
+        0,
+        false,
+        null
+      ],
+      "branches": [
+        [
+          16,
+          20
+        ],
+        [
+          24,
+          106
+        ],
+        [
+          94,
+          108
+        ],
+        [
+          110,
+          102
+        ]
+      ]
+    },
+    {
+      "name": "prefixed-row",
+      "category": "context",
+      "length": 36,
+      "instructions": 16,
+      "sha256": "c173fec155a457eb57a9b3b424f79955475ed0708517a39a397fa50b34469928",
+      "prefix_sha256": "a138747440e09f4aef6e58735e202fd8ba7067f4bdeac8bb193266d2bc590539",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ],
+      "branches": []
+    }
+  ],
+  "buffers": {
+    "handler": "bufferstring",
+    "opcode": 133,
+    "read": 22,
+    "copy": 24,
+    "slots": 3
+  },
+  "specials": {
+    "handler": "special",
+    "opcode": 37,
+    "base_load": 10,
+    "end_load": 14
+  },
+  "native_fills": [
+    {
+      "name": "ball-changer-ball",
+      "handler": "guarded-copy",
+      "analysis": [
+        16,
+        38
+      ],
+      "read": 28,
+      "copy": 34,
+      "bound": 20,
+      "domain": "guard",
+      "storage": "pointer-run"
+    },
+    {
+      "name": "table-1FB30E8",
+      "handler": "lookup-copy",
+      "analysis": [
+        24,
+        38
+      ],
+      "read": 30,
+      "copy": 34,
+      "bound": 42,
+      "domain": "loop",
+      "fallback": 46
+    },
+    {
+      "name": "table-1FB2DF8",
+      "handler": "lookup-append",
+      "analysis": [
+        10,
+        46
+      ],
+      "read": 36,
+      "copy": 42,
+      "bound": 82,
+      "domain": "loop",
+      "fallback": 86,
+      "shortfall": "The handler combines a selector loop with conditional suffix writes; reproduction requires a joined buffer-state proof, including the selector-table row and every append branch."
+    },
+    {
+      "name": "difficulty-names",
+      "handler": "bounded-copy",
+      "analysis": [
+        10,
+        32
+      ],
+      "read": 22,
+      "copy": 28,
+      "bound": 12,
+      "domain": "guard",
+      "fallback": 10,
+      "wrapper": "bounded-wrapper",
+      "wrapper_call": 126
+    },
+    {
+      "name": "ring-record-types",
+      "handler": "boolean-copy",
+      "analysis": [
+        26,
+        46
+      ],
+      "read": 36,
+      "copy": 42,
+      "boolean": 26,
+      "domain": "boolean",
+      "special": true
+    }
+  ],
+  "text_prefixes": [
+    {
+      "name": "berry-number-prefix",
+      "handler": "prefixed-row",
+      "copy": 18,
+      "append": 26,
+      "end": 36,
+      "shortfall": "The prefix source and shared destination are proven. The formatter redirects before number and item-name concatenation; the continuation needs register-state and source-table proofs. Row capacity, font advances, quantity placement and post-omission limits need independent consumer evidence; runtime fit observations remain manual."
+    }
+  ],
+  "shortfalls": [
+    {
+      "id": "context.speaker_colours",
+      "reason": "The text bytes expose palette indices, not semantic gender labels. A family dialogue-colour convention or independent labelled speaker evidence is required."
+    },
+    {
+      "id": "context.textcolor_genders",
+      "reason": "The textcolor command exposes a colour selector. Mapping its values to gender requires an independently established dialogue convention."
+    },
+    {
+      "id": "context.sprite_genders",
+      "reason": "Map and trainer facts link individual uses, but a sprite can be reused. A consistent identity domain or independent sprite-gender evidence is required before assigning a global hint."
+    },
+    {
+      "id": "context.participants",
+      "reason": "Speaker/addressee relationships across scenes and natural-language gender assertions are not encoded as script identities. Runtime continuity and reviewed text interpretation remain manual."
+    },
+    {
+      "id": "context.record_speakers",
+      "reason": "The record reader must prove each text field, table extent, class byte and gender byte, including the gender-value convention. Pointer-table shape alone does not establish those meanings."
+    },
+    {
+      "id": "reach.default_origin",
+      "reason": "Map banks identify current structures, not the historical provenance label of every remaining ROM byte. An origin convention is required."
+    },
+    {
+      "id": "reach.origin_regions",
+      "reason": "Current map and function facts do not encode historical allocation boundaries. A verified base-image comparison or provenance manifest is required."
+    },
+    {
+      "id": "reach.table",
+      "reason": "The retained table borders neighbouring window and animation data and its original getters redirect elsewhere. An independent root, record extent and text-field proof is required."
+    },
+    {
+      "id": "reach.unused_entries",
+      "reason": "Absence from walked script selections does not prove a native special entry unused. A complete direct and computed dispatch-domain proof is required."
+    },
+    {
+      "id": "coverage.unread_reference",
+      "reason": "Unselected menu rows need the complete native selector domain; apparent sample-data pointers need audio extent and consumer evidence. Pointer shape and absent map-script uses are insufficient."
+    }
+  ]
+}

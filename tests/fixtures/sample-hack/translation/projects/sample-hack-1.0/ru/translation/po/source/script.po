@@ -1,0 +1,30 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: sample-hack-1.0\n"
+"Language: ru\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-ROM-SHA1: 8bbf30c3f11e0a4371231cff8301e64e62bd4f31\n"
+"X-Catalog-Status: draft\n"
+
+#. category: script; mode: field
+#. source validation: reference pattern; use unverified
+#. source length: 30 bytes
+#. reachability, speaker, font and window: unknown
+#. references: 0x0000182 (script:loadpointer)
+#: 0x0000310
+#, fuzzy
+msgctxt "s0000310"
+msgid "Welcome to the sample region!"
+msgstr ""
+
+#. category: script; mode: field
+#. source validation: reference pattern; use unverified
+#. source length: 37 bytes
+#. reachability, speaker, font and window: unknown
+#. references: 0x0000187 (script:message)
+#: 0x0000330
+#, fuzzy
+msgctxt "s0000330"
+msgid "Hello, {PLAYER}!\\nYour journey starts here."
+msgstr ""

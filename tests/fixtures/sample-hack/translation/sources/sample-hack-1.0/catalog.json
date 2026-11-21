@@ -1,0 +1,21 @@
+{
+  "profile": "sample-hack-1.0",
+  "rom_sha1": "8bbf30c3f11e0a4371231cff8301e64e62bd4f31",
+  "engine": "emerald",
+  "codec": "gen3-western-baseline",
+  "status": "unverified-candidates",
+  "limitations": [
+    "False positives and missing strings are expected.",
+    "Pointer-shaped words are not verified references.",
+    "Custom characters and placeholder meanings need engine verification.",
+    "No fonts, scripts, tables, context, saves or layout limits are inferred.",
+    "This file is not a translation inventory or a build input."
+  ],
+  "schema": "1.0.0",
+  "source_language": "en",
+  "target_language": null,
+  "generator": "gen3-pointer-candidates/1.0.0",
+  "entries": 7,
+  "translations": 0,
+  "source_sha256": "6762bc91d00252a5ce20c75f3ce24f0e52ef7265382675c8a77feb540ca2fc16"
+}

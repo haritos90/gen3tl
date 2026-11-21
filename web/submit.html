@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https:; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title data-ui="Submit changes">Submit changes</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="site.css">
+<script src="js/theme.js"></script>
+<script type="module" src="js/submitpage.js"></script>
+</head>
+<body>
+<!-- site-shell: masthead -->
+<header class="mast" data-site-mast="">
+  <a class="brand" href="./"><span class="tile"></span>gen3tl</a>
+  <nav class="tools" aria-label="Site" data-ui-label="Site" data-ui-site="">
+    <button class="tools-toggle" type="button" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="tools-icon"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span class="tools-current" data-tools-current="" data-ui="Tools" data-ui-site="">Tools</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></button>
+    <div class="tools-list">
+      <a href="./" class="brand c-home" aria-label="Home" data-ui-label="Home" data-ui-site="" title="Home" data-ui-title="Home"><span class="c-home-arrow" aria-hidden="true">←</span><span data-ui="Home" data-ui-site="">Home</span></a>
+      <a data-tool="patch" href="patch" id="link-patch" data-ui="Patcher" data-ui-site="">Patcher</a>
+      <a data-tool="editor" href="editor" id="link-editor" data-ui="Translation editor" data-ui-site="">Translation editor</a>
+      <a data-tool="save" href="save" id="link-save" data-ui="Save converter" data-ui-site="">Save converter</a>
+      <a data-tool="pokedex" href="pokedex" id="link-pokedex" data-ui="Pokédex" data-ui-site="">Pokédex</a>
+      <a href="guide" data-ui="Guide" data-ui-site="">Guide</a>
+    </div>
+  </nav>
+  <div class="mast-controls">
+    <details class="lang-menu">
+      <summary title="Site and game language" data-ui-title="Site and game language" data-ui-site=""><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="globe"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"></path></svg><span class="lang-name" data-lang-name=""></span><span class="lang-code" data-lang-code="">EN</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></summary>
+      <div class="lang-list" role="group" aria-label="Language" data-ui-label="Language" data-ui-site="" data-lang-list=""></div>
+    </details>
+    <button class="theme" data-toggle-theme="" type="button" aria-label="Toggle dark mode" data-ui-label="Toggle dark mode" data-ui-site="" title="Toggle dark mode" data-ui-title="Toggle dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+  </div>
+</header>
+<!-- /site-shell: masthead -->
+
+<main class="page wrap snug" id="submit-page">
+  <div class="intro">
+    <p class="eyebrow" id="eyebrow" data-ui="Loading…">Loading…</p>
+    <h1 class="page-title" id="heading" data-ui="Submit changes">Submit changes</h1>
+    <p class="muted" data-ui="Drafts kept in this browser for this game and language, each shown against the catalog it was made on. Widths are measured against each window; the reviewers decide on wording.">Drafts kept in this browser for this game and language, each shown against the catalog it was
+      made on. Widths are measured against each window; the reviewers decide on wording.</p>
+    <p class="muted" data-ui="A submission is contributed under CC BY-SA 4.0; files under .github are contributed under the MIT License.">A submission is contributed under CC BY-SA 4.0; files under
+      .github are contributed under the MIT License.</p>
+  </div>
+
+  <p id="load-error" class="note err" role="alert" hidden></p>
+
+  <div class="with-aside" id="content" hidden>
+    <section class="submit-main" aria-label="Changes" data-ui-label="Changes">
+      <p id="width-note" class="note" hidden></p>
+      <p id="empty" class="note" hidden></p>
+
+      <section class="submit-group" id="rules" aria-label="Changed engine rules" data-ui-label="Changed engine rules" hidden>
+        <h2 class="submit-head" data-ui="Changed engine rules">Changed engine rules</h2>
+        <p class="note" data-ui="Engine rules and their catalog changes are approved and verified together in one pull request before merge.">Engine rules and their catalog changes are approved and verified together in one pull request before merge.</p>
+        <div class="submit-list" id="rule-list"></div>
+      </section>
+
+      <section class="submit-group" id="texts" aria-label="Changed texts" data-ui-label="Changed texts" hidden>
+        <h2 class="submit-head" id="texts-head" data-ui="Texts">Texts</h2>
+        <div class="submit-list" id="text-list"></div>
+        <p class="small muted" id="texts-left" hidden></p>
+      </section>
+
+      <section class="submit-group" id="pictures" aria-label="Changed pictures" data-ui-label="Changed pictures" hidden>
+        <h2 class="submit-head" data-ui="Pictures">Pictures</h2>
+        <div class="submit-list" id="picture-list"></div>
+      </section>
+
+      <section class="submit-group" id="terms" aria-label="Changed terms" data-ui-label="Changed terms" hidden>
+        <h2 class="submit-head" data-ui="Terms">Terms</h2>
+        <div class="submit-list" id="term-list"></div>
+      </section>
+
+      <section class="submit-group" id="glyphs" aria-label="Redrawn glyphs" data-ui-label="Redrawn glyphs" hidden>
+        <h2 class="submit-head" data-ui="Glyphs">Glyphs</h2>
+        <div class="submit-list" id="glyph-list"></div>
+      </section>
+
+      <section class="submit-group" id="keyboard" aria-label="Changed keyboard" data-ui-label="Changed keyboard" hidden>
+        <h2 class="submit-head" data-ui="Keyboard">Keyboard</h2>
+        <div class="submit-list" id="keyboard-list"></div>
+      </section>
+
+      <section class="submit-group" id="note-changes" aria-label="Changed notes" data-ui-label="Changed notes" hidden>
+        <h2 class="submit-head" data-ui="Notes">Notes</h2>
+        <p id="note-counts" class="small muted"></p>
+        <div class="submit-list" id="note-list"></div>
+      </section>
+
+      <p id="split-issues" class="note" hidden data-ui="These changes need two issues: game changes and notes go to the game repository; glyphs and keyboard changes go to the toolkit repository. The JSON download contains both.">These changes need two issues: game changes and notes go to the game repository; glyphs and keyboard changes go to the toolkit repository. The JSON download contains both.</p>
+
+      <label class="field">
+        <span data-ui="Notes for the reviewers">Notes for the reviewers</span>
+        <textarea class="input" id="notes" rows="3" placeholder="Why these changes, sources you used, anything the reviewers should check" data-ui-placeholder="Why these changes, sources you used, anything the reviewers should check"></textarea>
+      </label>
+
+      <div class="actions-row">
+        <button class="btn primary big" type="button" id="issue" disabled data-ui="Open a GitHub issue with these changes">Open a GitHub issue with these changes</button>
+        <button class="btn big" type="button" id="toolkit-issue" hidden data-ui="Open the toolkit issue">Open the toolkit issue</button>
+        <button class="btn big" type="button" id="download" disabled data-ui="Download JSON">Download JSON</button>
+        <span class="small muted" data-ui="A GitHub account is needed only for the issue step. The JSON file can be sent any other way.">A GitHub account is needed only for the issue step. The JSON file can be sent any other way.</span>
+      </div>
+      <p id="issue-note" class="small muted" hidden></p>
+      <p id="status" class="note" role="status" aria-live="polite" hidden></p>
+    </section>
+
+    <aside class="aside" aria-label="What happens next" data-ui-label="What happens next">
+      <div class="card">
+        <h2 class="aside-title" data-ui="What happens next">What happens next</h2>
+        <ol class="next">
+          <li><div><b data-ui="The issue is checked">The issue is checked</b><span data-ui="A workflow validates the changes against the current files of the project and answers on the issue with any problem; editing the issue runs it again.">A workflow validates the changes against the current files of the
+            project and answers on the issue with any problem; editing the issue runs it again.</span></div></li>
+          <li><div><b data-ui="A pull request opens">A pull request opens</b><span data-ui="The changes are written into the files of the project on a branch that names the issue.">The changes are written into the files of the project on a branch that
+            names the issue.</span></div></li>
+          <li><div><b data-ui="Checks render the boxes">Checks render the boxes</b><span data-ui="Every changed line is measured against its window; a comment lists the widths and links a before and an after preview of each changed box.">Every changed line is measured against its window; a comment lists
+            the widths and links a before and an after preview of each changed box.</span></div></li>
+          <li><div><b data-ui="A maintainer merges it">A maintainer merges it</b><span data-ui="A maintainer reviews the pull request and merges it. After the merge a new translation has the status Translated; a text that was Approved stays Approved.">A maintainer reviews the pull request and merges it. After the merge a new
+            translation has the status Translated; a text that was Approved stays Approved.</span></div></li>
+          <li><div><b data-ui="A release includes it">A release includes it</b><span data-ui="Translated and approved texts enter the next version of the translation patch, listed on the patcher page.">Translated and approved texts enter the next version of the translation
+            patch, listed on the patcher page.</span></div></li>
+          <li><div><b data-ui="A playtest approves it">A playtest approves it</b><span data-ui="After a version is played and reported in an issue of the game project, its translated texts become Approved.">After a version is played and reported in an issue of the game project, its
+            translated texts become Approved.</span></div></li>
+        </ol>
+      </div>
+      <div class="card">
+        <h2 class="aside-title" data-ui="Included in the export">Included in the export</h2>
+        <dl class="kv" id="included"></dl>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- site-shell: footer -->
+<footer class="foot" data-site-footer=""><div class="wrap"><a href="license-gen3tl.txt" rel="noreferrer" data-ui="gen3tl licence" data-ui-site="">gen3tl licence</a><a href="fonts/OFL.txt" rel="noreferrer" data-ui="Font licenses" data-ui-site="">Font licenses</a></div></footer>
+<!-- /site-shell: footer -->
+</body>
+</html>

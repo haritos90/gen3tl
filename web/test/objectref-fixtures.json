@@ -1,0 +1,116 @@
+{
+  "registry": {
+    "schema": 1,
+    "default": "game-v1",
+    "games": [
+      { "id": "game-v1", "name": "First profile", "stage": "translation", "languages": ["aa", "bb"], "data": "./first/" },
+      { "id": "game-v2", "name": "Second profile", "stage": "catalog", "languages": ["aa"], "data": "./second/" },
+      { "id": "site", "name": "Interface", "stage": "catalog", "languages": ["aa", "bb"], "data": "./interface/" }
+    ]
+  },
+  "workspace": { "game": "game-v1", "language": "aa" },
+  "references": [
+    {
+      "reference": "gen3tl:game-v1/aa/engine-rule/ending%2Fgroup",
+      "object": { "game": "game-v1", "language": "aa", "kind": "engine-rule", "id": "ending/group" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/text/map:1.110/trigger:0/90",
+      "object": { "game": "game-v1", "language": "aa", "kind": "text", "id": "map:1.110/trigger:0/90" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/text/table:moves/5",
+      "object": { "game": "game-v1", "language": "aa", "kind": "text", "id": "table:moves/5" }
+    },
+    {
+      "reference": "gen3tl:game-v2/aa/text/battle:120",
+      "object": { "game": "game-v2", "language": "aa", "kind": "text", "id": "battle:120" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/term/move:pound",
+      "object": { "game": "game-v1", "language": "aa", "kind": "term", "id": "move:pound" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/family/word:move:punch",
+      "object": { "game": "game-v1", "language": "aa", "kind": "family", "id": "word:move:punch" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/family/type:10",
+      "object": { "game": "game-v1", "language": "aa", "kind": "family", "id": "type:10" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/family/list:punching",
+      "object": { "game": "game-v1", "language": "aa", "kind": "family", "id": "list:punching" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/picture/G03",
+      "object": { "game": "game-v1", "language": "aa", "kind": "picture", "id": "G03" }
+    },
+    {
+      "reference": "gen3tl:game-v1/bb/keyboard-page/accents%20uppercase",
+      "object": { "game": "game-v1", "language": "bb", "kind": "keyboard-page", "id": "accents uppercase" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/chat-row/chat_upper_1",
+      "object": { "game": "game-v1", "language": "aa", "kind": "chat-row", "id": "chat_upper_1" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/font/dexnav-hud",
+      "object": { "game": "game-v1", "language": "aa", "kind": "font", "id": "dexnav-hud" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/glyph/font0/BB",
+      "object": { "game": "game-v1", "language": "aa", "kind": "glyph", "sheet": "font0", "code": "BB" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/glyph/small/1AB",
+      "object": { "game": "game-v1", "language": "aa", "kind": "glyph", "sheet": "small", "code": "1AB" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/glyph/sheet%2Fsmall%20%25/00",
+      "object": { "game": "game-v1", "language": "aa", "kind": "glyph", "sheet": "sheet/small %", "code": "00" }
+    },
+    {
+      "reference": "gen3tl:site/bb/text/site:Open%20%3F%20%23%20%25/%C3%A9%20%F0%9F%98%80",
+      "object": { "game": "site", "language": "bb", "kind": "text", "id": "site:Open ? # %/é 😀" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/term/move:slash%2F%252F%3F%23%20%C3%A9",
+      "object": { "game": "game-v1", "language": "aa", "kind": "term", "id": "move:slash/%2F?# é" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/text/site:%252F/%2525%20%2B%20%09%0A%0D",
+      "object": { "game": "game-v1", "language": "aa", "kind": "text", "id": "site:%2F/%25 + \t\n\r" }
+    },
+    {
+      "reference": "gen3tl:game-v1/aa/text/s00ABC12",
+      "object": { "game": "game-v1", "language": "aa", "kind": "text", "id": "s00ABC12" }
+    }
+  ],
+  "bareKeys": [
+    "map:1.110/trigger:0/90", "table:moves/5", "table:records/2/description",
+    "battle:120", "code:Function_1/2", "sym:Symbol_1", "hash:12abcdef",
+    "site: Open / ? # %2F é ", "s00ABC12", "moves:5"
+  ],
+  "invalid": [
+    "", "gen3tl:", "gen3tl:game-v1", "gen3tl:game-v1/aa", "gen3tl:game-v1/aa/text",
+    "gen3tl:/aa/text/id", "gen3tl:game-v1//text/id", "gen3tl:game-v1/aa/text/",
+    "gen3tl:game-v1/aa/terms/id", "gen3tl:game-v1/aa/Text/id", "GEN3TL:game-v1/aa/text/id",
+    "gen3tl://game-v1/aa/text/id", "gen3tl:game-v1/aa/term/a/b",
+    "gen3tl:game-v1/aa/font/", "gen3tl:game-v1/aa/glyph/font0",
+    "gen3tl:game-v1/aa/glyph//BB", "gen3tl:game-v1/aa/glyph/font0/",
+    "gen3tl:game-v1/aa/glyph/font0/BB/extra", "gen3tl:game-v1/aa/glyph/font0/bb",
+    "gen3tl:game-v1/aa/glyph/font0/B", "gen3tl:game-v1/aa/glyph/font0/00BB",
+    "gen3tl:game-v1/aa/glyph/font0/GG", "gen3tl:game-v1/aa/glyph/font0/0xBB",
+    "gen3tl:game-v1/aa/text/a b", "gen3tl:game-v1/aa/text/a?b", "gen3tl:game-v1/aa/text/a#b",
+    "gen3tl:game-v1/aa/text/é", "gen3tl:game-v1/aa/text/a+b", "gen3tl:game-v1/aa/text/a\nb",
+    "gen3tl:game-v1/aa/text/a\n", "gen3tl:game-v1/aa/term/a\n", "gen3tl:game-v1/aa/glyph/font0/BB%0A",
+    "gen3tl:game-v1/aa/text/%", "gen3tl:game-v1/aa/text/%2", "gen3tl:game-v1/aa/text/%GG",
+    "gen3tl:game-v1/aa/text/%FF", "gen3tl:game-v1/aa/text/%C0%AF", "gen3tl:game-v1/aa/text/%ED%A0%80",
+    "gen3tl:game%/aa/text/id", "gen3tl:game-v1/a%/text/id", "gen3tl:game-v1/aa/%74ext/id",
+    "table:moves/5\n", "table:moves/5/extra/field", "hash:12ABCDEF", "site:", "arbitrary words",
+    "https://example.test/editor.html#game-v1/aa/table:moves/5", "#game-v1/aa/table:moves/5"
+  ],
+  "unknownGames": ["missing", "game-v3", "Game-v1", "game-v1/extra", "game-v1%2Fextra"],
+  "unavailableLanguages": ["missing", "AA", "aa/extra", "aa%2Fextra"]
+}

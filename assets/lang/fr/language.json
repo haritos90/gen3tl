@@ -1,0 +1,23 @@
+{
+  "schema": "2.0.0",
+  "code": "fr",
+  "locale": "fr_FR",
+  "provider": "manual",
+  "preview_lines": [
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "abcdefghijklmnopqrstuvwxyz",
+    "À Â Ç È É Ê Ë Î Ï Ô Œ Ù Û Ü",
+    "à â ç è é ê ë î ï ô œ ù û ü",
+    "0123456789 !?…,."
+  ],
+  "pseudo": {
+    "source": "",
+    "target": "",
+    "padding": "x",
+    "stress": "xxx"
+  },
+  "save": {
+    "letter_pattern": "(?!)",
+    "transliteration": {}
+  }
+}

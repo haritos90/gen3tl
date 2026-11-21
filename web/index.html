@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="site-startup-deadline" content="2500">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https:; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title data-ui="gen3tl translations">gen3tl translations</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preload" href="fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-sans-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="site.css">
+<script src="js/theme.js"></script>
+<script type="module" src="js/home.js"></script>
+</head>
+<body class="landing-page">
+<!-- site-shell: masthead -->
+<header class="mast" data-site-mast="">
+  <a class="brand" href="./"><span class="tile"></span>gen3tl</a>
+  <nav class="tools" aria-label="Site" data-ui-label="Site" data-ui-site="">
+    <button class="tools-toggle" type="button" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="tools-icon"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span class="tools-current" data-tools-current="" data-ui="Tools" data-ui-site="">Tools</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></button>
+    <div class="tools-list">
+      <a href="./" class="brand c-home" aria-label="Home" data-ui-label="Home" data-ui-site="" title="Home" data-ui-title="Home" aria-current="page"><span class="c-home-arrow" aria-hidden="true">←</span><span data-ui="Home" data-ui-site="">Home</span></a>
+      <a data-tool="patch" href="patch" data-ui="Patcher" data-ui-site="">Patcher</a>
+      <a data-tool="editor" href="editor" data-ui="Translation editor" data-ui-site="">Translation editor</a>
+      <a data-tool="save" href="save" data-ui="Save converter" data-ui-site="">Save converter</a>
+      <a data-tool="pokedex" href="pokedex" data-ui="Pokédex" data-ui-site="">Pokédex</a>
+      <a href="guide" data-ui="Guide" data-ui-site="">Guide</a>
+    </div>
+  </nav>
+  <div class="mast-controls">
+    <details class="lang-menu">
+      <summary title="Site and game language" data-ui-title="Site and game language" data-ui-site=""><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="globe"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"></path></svg><span class="lang-name" data-lang-name=""></span><span class="lang-code" data-lang-code="">EN</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></summary>
+      <div class="lang-list" role="group" aria-label="Language" data-ui-label="Language" data-ui-site="" data-lang-list=""></div>
+    </details>
+    <button class="theme" data-toggle-theme="" type="button" aria-label="Toggle dark mode" data-ui-label="Toggle dark mode" data-ui-site="" title="Toggle dark mode" data-ui-title="Toggle dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+  </div>
+</header>
+<!-- /site-shell: masthead -->
+
+<main class="page wrap">
+  <section class="hero">
+    <p class="eyebrow" data-ui="Fan translations · Game Boy Advance">Fan translations · Game Boy Advance</p>
+    <h1 data-ui="Play Pokémon ROM hacks in your language.">Play Pokémon ROM hacks in your language.</h1>
+    <p id="landing-intro" class="lede dynamic-copy" data-ui="Translation patches for Game Boy Advance ROM hacks. Runs locally in your browser.">Translation patches for Game Boy Advance ROM hacks. Runs locally in your browser.</p>
+  </section>
+
+  <p id="surface-unavailable" class="note warn" role="status" hidden></p>
+  <section class="doors" id="doors" aria-label="What do you want to do" data-ui-label="What do you want to do">
+    <a class="door primary" id="door-patch" href="patch">
+      <span class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>
+      <div><h2 class="door-title" data-ui="Patch your ROM">Patch your ROM</h2><p data-ui="Apply a site translation or your own UPS, IPS, BPS, xdelta, APS or PPF patch.">Apply a site translation or your own UPS, IPS, BPS, xdelta, APS or PPF patch.</p></div>
+      <span class="go" data-ui="Start patching">Start patching</span>
+    </a>
+    <a class="door" id="door-pokedex" href="pokedex">
+      <span class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h6m6 0h6"/><circle cx="12" cy="12" r="2.5"/></svg></span>
+      <div><h2 class="door-title" data-ui="Open the Pokédex">Open the Pokédex</h2><p data-ui="Pokedex is translated as translation submissions are merged. The original language is used for terms without a translation.">Pokedex is translated as translation submissions are merged. The original language is used for terms without a translation.</p></div>
+      <span class="go" data-ui="Browse species">Browse species</span>
+    </a>
+    <a class="door" id="door-save" href="save">
+      <span class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/><path d="M18 15l3 3-3 3"/></svg></span>
+      <div><h2 class="door-title" data-ui="Convert your save">Convert your save</h2><p data-ui="Continuing a save from the original game? Its names stay in the original language on the translated ROM until you convert it. Works both ways.">Continuing a save from the original game? Its names stay in the original language on the translated ROM until you convert it. Works both ways.</p></div>
+      <span class="go" data-ui="Convert a save">Convert a save</span>
+    </a>
+    <a class="door" id="door-editor" href="editor">
+      <span class="glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M13.5 6.5l3 3"/></svg></span>
+      <div><h2 class="door-title" data-ui="Contribute a translation">Contribute a translation</h2><p id="landing-editor" class="dynamic-copy" data-ui="Translate in the browser. Start a new language or improve one.">Translate in the browser. Start a new language or improve one.</p></div>
+      <span class="go" data-ui="Open the editor">Open the editor</span>
+    </a>
+  </section>
+
+  <section aria-labelledby="games">
+    <div class="section-head">
+      <h2 id="games" data-ui="Games and languages">Games and languages</h2>
+      <p class="muted" data-ui="Languages and actions reflect the data available for each game.">Languages and actions reflect the data available for each game.</p>
+    </div>
+    <div id="games-loading" class="game" aria-live="polite" aria-busy="true">
+      <div class="card loading-card skeleton" aria-hidden="true"></div>
+      <div class="langs">
+        <div class="loading-row skeleton" aria-hidden="true"></div>
+        <div class="loading-row skeleton" aria-hidden="true"></div>
+        <p class="small muted" data-ui="Loading the games…">Loading the games…</p>
+      </div>
+    </div>
+    <div id="games-placeholders" class="games-list" aria-hidden="true"></div>
+    <p id="games-error" class="note err" role="alert" hidden></p>
+    <p id="games-empty" class="muted" hidden data-ui="No games available.">No games available.</p>
+    <div id="games-list" class="games-list"></div>
+  </section>
+
+  <section aria-labelledby="how">
+    <div class="section-head"><h2 id="how" data-ui="How it works">How it works</h2></div>
+    <div class="how">
+      <div>
+        <h3 data-ui="Your ROM stays with you">Your ROM stays with you</h3>
+        <p data-ui="Apply a site translation with its original ROM, or your own UPS, IPS, BPS, xdelta, APS or PPF patch. Files stay in your browser. Translation releases check the ROM and result hashes. UPS patches also work with {tool}.">Apply a site translation with its original ROM, or your own UPS, IPS, BPS, xdelta, APS or PPF patch. Files stay in your browser. Translation releases check the ROM and result hashes. UPS patches also work with <a href="https://github.com/marcrobledo/RomPatcher.js" target="_blank" rel="noopener" data-ui-hole="tool">RomPatcher.js</a>.</p>
+      </div>
+      <div id="how-changes" hidden>
+        <h3 id="how-changes-title"></h3>
+        <p id="how-changes-text"></p>
+      </div>
+      <div id="how-review" hidden>
+        <h3 id="how-review-title"></h3>
+        <p id="how-review-text"></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- site-shell: footer -->
+<footer class="foot" data-site-footer=""><div class="wrap"><a href="license-gen3tl.txt" rel="noreferrer" data-ui="gen3tl licence" data-ui-site="">gen3tl licence</a><a href="fonts/OFL.txt" rel="noreferrer" data-ui="Font licenses" data-ui-site="">Font licenses</a></div></footer>
+<!-- /site-shell: footer -->
+</body>
+</html>

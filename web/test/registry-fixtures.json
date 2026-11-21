@@ -1,0 +1,188 @@
+[
+  {
+    "name": "present",
+    "manifest": {
+      "site": {
+        "name": "Example translations",
+        "brand": "../brand.svg",
+        "home": "../",
+        "repository": "example/toolkit",
+        "new_language_url": "https://example.org/languages/new",
+        "licenses": [
+          {
+            "label_key": "Toolkit license",
+            "url": "../license"
+          },
+          {
+            "label_key": "Font licenses",
+            "url": "https://example.org/fonts/license"
+          }
+        ]
+      },
+      "languages": [
+        {
+          "profile": "sample",
+          "code": "xx"
+        }
+      ],
+      "profiles": [
+        {
+          "id": "sample",
+          "name": "Sample game",
+          "support": "translation",
+          "engine": "sample-engine",
+          "source_language": "pt-BR",
+          "engine_label": "Sample engine",
+          "links": {
+            "project": "https://example.org/game",
+            "new_language": "../request?game=sample",
+            "content_license": "../content-license"
+          },
+          "compatibility": {
+            "changed_bytes": "Declared byte changes",
+            "saves": "Declared save support",
+            "link_play": "Declared link support"
+          },
+          "landing": {
+            "intro": "Declared project introduction",
+            "editor": "Declared editor measurement",
+            "changes_title": "Release changes",
+            "changes": "Declared release changes",
+            "review_title": "Public review",
+            "review": "Declared review policy"
+          }
+        }
+      ]
+    },
+    "registry": {
+      "schema": 1,
+      "games": [
+        {
+          "id": "sample",
+          "name": "Sample game",
+          "stage": "translation",
+          "engine": "sample-engine",
+          "languages": [
+            "xx"
+          ],
+          "data": "./",
+          "source_language": "pt-BR",
+          "engine_label": "Sample engine",
+          "links": {
+            "project": "https://example.org/game",
+            "new_language": "../request?game=sample",
+            "content_license": "../content-license"
+          },
+          "compatibility": {
+            "changed_bytes": "Declared byte changes",
+            "saves": "Declared save support",
+            "link_play": "Declared link support"
+          },
+          "landing": {
+            "intro": "Declared project introduction",
+            "editor": "Declared editor measurement",
+            "changes_title": "Release changes",
+            "changes": "Declared release changes",
+            "review_title": "Public review",
+            "review": "Declared review policy"
+          }
+        }
+      ],
+      "site": {
+        "name": "Example translations",
+        "brand": "../brand.svg",
+        "home": "../",
+        "repository": "example/toolkit",
+        "new_language_url": "https://example.org/languages/new",
+        "licenses": [
+          {
+            "label_key": "Toolkit license",
+            "url": "../license"
+          },
+          {
+            "label_key": "Font licenses",
+            "url": "https://example.org/fonts/license"
+          }
+        ]
+      },
+      "default": "sample"
+    }
+  },
+  {
+    "name": "absent",
+    "manifest": {
+      "languages": [],
+      "profiles": [
+        {
+          "id": "sample",
+          "name": "Sample game",
+          "support": "catalog",
+          "engine": "sample-engine"
+        }
+      ]
+    },
+    "registry": {
+      "schema": 1,
+      "games": [
+        {
+          "id": "sample",
+          "name": "Sample game",
+          "stage": "catalog",
+          "engine": "sample-engine",
+          "languages": [],
+          "data": "./"
+        }
+      ],
+      "default": "sample"
+    }
+  },
+  {
+    "name": "unavailable",
+    "manifest": {
+      "site": {
+        "repository": null,
+        "new_language_url": null,
+        "licenses": []
+      },
+      "languages": [],
+      "profiles": [
+        {
+          "id": "sample",
+          "name": "Sample game",
+          "support": "catalog",
+          "links": {
+            "project": null,
+            "new_language": null,
+            "content_license": null
+          },
+          "compatibility": {}
+        }
+      ]
+    },
+    "registry": {
+      "schema": 1,
+      "games": [
+        {
+          "id": "sample",
+          "name": "Sample game",
+          "stage": "catalog",
+          "engine": "unspecified",
+          "languages": [],
+          "data": "./",
+          "links": {
+            "project": null,
+            "new_language": null,
+            "content_license": null
+          },
+          "compatibility": {}
+        }
+      ],
+      "site": {
+        "repository": null,
+        "new_language_url": null,
+        "licenses": []
+      },
+      "default": "sample"
+    }
+  }
+]

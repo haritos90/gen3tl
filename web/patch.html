@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="site-startup-deadline" content="2500">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https:; img-src 'self' data:; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; font-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title data-ui="Patch your ROM">Patch your ROM</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="site.css">
+<script src="js/theme.js"></script>
+<script type="module" src="js/patch.js"></script>
+</head>
+<body class="patcher-page">
+<!-- site-shell: masthead -->
+<header class="mast" data-site-mast="">
+  <a class="brand" href="./"><span class="tile"></span>gen3tl</a>
+  <nav class="tools" aria-label="Site" data-ui-label="Site" data-ui-site="">
+    <button class="tools-toggle" type="button" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="tools-icon"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span class="tools-current" data-tools-current="" data-ui="Tools" data-ui-site="">Tools</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></button>
+    <div class="tools-list">
+      <a href="./" class="brand c-home" aria-label="Home" data-ui-label="Home" data-ui-site="" title="Home" data-ui-title="Home"><span class="c-home-arrow" aria-hidden="true">←</span><span data-ui="Home" data-ui-site="">Home</span></a>
+      <a data-tool="patch" href="patch" aria-current="page" data-ui="Patcher" data-ui-site="">Patcher</a>
+      <a data-tool="editor" href="editor" data-ui="Translation editor" data-ui-site="">Translation editor</a>
+      <a data-tool="save" href="save" data-ui="Save converter" data-ui-site="">Save converter</a>
+      <a data-tool="pokedex" href="pokedex" data-ui="Pokédex" data-ui-site="">Pokédex</a>
+      <a href="guide" data-ui="Guide" data-ui-site="">Guide</a>
+    </div>
+  </nav>
+  <div class="mast-controls">
+    <details class="lang-menu">
+      <summary title="Site and game language" data-ui-title="Site and game language" data-ui-site=""><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="globe"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"></path></svg><span class="lang-name" data-lang-name=""></span><span class="lang-code" data-lang-code="">EN</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></summary>
+      <div class="lang-list" role="group" aria-label="Language" data-ui-label="Language" data-ui-site="" data-lang-list=""></div>
+    </details>
+    <button class="theme" data-toggle-theme="" type="button" aria-label="Toggle dark mode" data-ui-label="Toggle dark mode" data-ui-site="" title="Toggle dark mode" data-ui-title="Toggle dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+  </div>
+</header>
+<!-- /site-shell: masthead -->
+
+<main class="page wrap snug">
+  <div class="intro">
+    <h1 class="page-title" data-ui="Patch your ROM">Patch your ROM</h1>
+  </div>
+
+  <p id="load-error" class="note err" role="alert" hidden></p>
+
+  <div class="patcher">
+    <div class="patch-pane" id="source-choice" hidden>
+      <label class="field"><span data-ui="Patch source">Patch source</span><select class="select" id="patch-source">
+        <option value="translation" data-ui="Site translation">Site translation</option>
+        <option value="own" data-ui="Own patch file">Own patch file</option>
+      </select></label>
+    </div>
+    <article class="patch-pane" id="translation">
+      <h2 data-ui="Translation">Translation</h2>
+      <div class="choice">
+        <label class="field"><span data-ui="Game">Game</span><select class="select" id="game" disabled></select></label>
+        <label class="field"><span data-ui="Language">Language</span><select class="select" id="language" disabled></select></label>
+        <label class="field"><span data-ui="Version">Version</span><select class="select" id="release" disabled></select></label>
+      </div>
+      <p class="note" id="language-note" hidden></p>
+      <p class="summary" id="release-summary" data-ui="Loading the releases…" data-loading>Loading the releases…</p>
+      <p class="summary script-placeholder loading-copy" id="release-summary-placeholder" aria-hidden="true" data-loading data-ui-hole="summary">Requires an unmodified Game Boy Advance ROM · SHA-1 0000000000000000000000000000000000000000</p>
+      <div class="field script-placeholder loading-copy" id="release-notes-loading" aria-hidden="true" data-loading>
+        <span data-ui-hole="label">Release notes</span>
+        <ul class="summary">
+          <li data-ui-hole="note">Loading the releases… Loading the releases… Loading the releases… Loading the releases… Loading the releases… Loading the releases… Loading the releases… Loading the releases…</li>
+          <li data-ui-hole="note">Loading the releases… Loading the releases… Loading the releases… Loading the releases… Loading the releases… Loading the releases… Loading the releases… Loading the releases…</li>
+        </ul>
+      </div>
+      <div class="field" id="release-notes" hidden>
+        <span data-ui="Release notes">Release notes</span>
+        <ul class="summary" id="release-notes-list"></ul>
+      </div>
+    </article>
+
+    <p class="summary" id="patch-options-title" data-ui="Choose how to apply the translation">Choose how to apply the translation</p>
+    <section class="patch-options" aria-labelledby="patch-options-title">
+      <article class="patch-pane" id="patch-here">
+        <h2 data-ui="Patch in this page">Patch in this page</h2>
+        <div class="steps" aria-label="Patch steps" data-ui-label="Patch steps">
+          <section class="step" id="step-patch" hidden>
+            <header><span class="n">1</span><h3 data-ui="Your patch file">Your patch file</h3></header>
+            <div class="file" id="patch-file-card" hidden></div>
+            <p id="patch-error" class="note err" role="alert" hidden></p>
+            <div class="drop" id="patch-drop">
+              <strong id="patch-drop-title" data-ui="Drop your patch here">Drop your patch here</strong>
+              <span class="small" data-ui="or {browse}. The file is read on this device and stays local.">or <button class="browse" type="button" id="patch-browse" data-ui-hole="browse" data-ui="browse">browse</button>. The file is read on this device and stays local.</span>
+            </div>
+            <input id="patch-file" type="file" hidden>
+            <p class="note" id="unverified-note" hidden></p>
+          </section>
+
+          <section class="step is-locked" id="step-rom">
+            <header><span class="n" id="rom-step-number">1</span><h3 id="rom-heading" data-ui="Your original ROM">Your original ROM</h3><span id="rom-chip" class="chip plain" hidden></span></header>
+            <div class="file" id="rom-file-card" hidden></div>
+            <p id="rom-error" class="note err" role="alert" hidden></p>
+            <div class="drop" id="rom-drop">
+              <strong id="rom-drop-title" data-ui="Drop your original ROM here">Drop your original ROM here</strong>
+              <span class="small" data-ui="or {browse}. The file is read on this device and stays local.">or <button class="browse" type="button" id="rom-browse" data-ui-hole="browse" data-ui="browse">browse</button>. The file is read on this device and stays local.</span>
+              <span class="small mono" id="rom-expected" data-loading></span>
+              <span class="small mono script-placeholder loading-copy" id="rom-expected-placeholder" aria-hidden="true" data-loading data-ui-hole="sha1">Expected SHA-1 0000000000000000000000000000000000000000</span>
+            </div>
+            <input id="rom-file" type="file" accept=".gba,.bin,application/octet-stream" hidden>
+          </section>
+
+          <section class="step is-locked" id="step-apply">
+            <header><span class="n" id="apply-step-number">2</span><h3 data-ui="Apply and download">Apply and download</h3></header>
+            <div class="result">
+              <div class="actions">
+                <button class="btn primary big" type="button" id="apply" disabled data-ui="Apply translation">Apply translation</button>
+                <a class="btn primary big" id="download" hidden data-ui="Download">Download</a>
+                <button class="btn" type="button" id="cancel" hidden data-ui="Cancel">Cancel</button>
+                <span class="muted small" id="apply-note" data-ui="The original file stays unchanged.">The original file stays unchanged.</span>
+              </div>
+              <dl class="kv">
+                <dt data-ui="Result file">Result file</dt><dd id="result-name"></dd>
+                <dt id="result-hash-label" data-ui="Expected SHA-1">Expected SHA-1</dt><dd class="hash" id="result-sha1"></dd>
+                <dt id="patch-facts-label" data-ui="Patch">Patch</dt><dd id="patch-facts"></dd>
+              </dl>
+              <p id="status" class="small" role="status" aria-live="polite"></p>
+            </div>
+          </section>
+        </div>
+      </article>
+
+      <article class="patch-pane" id="patch-download">
+        <h2 data-ui="Download the patch">Download the patch</h2>
+        <p class="summary" data-ui="For emulators and patchers that apply UPS files.">For emulators and patchers that apply UPS files.</p>
+        <div class="actions-row"><a class="btn primary big" id="patch-link" href="#" download data-ui="Download UPS patch">Download UPS patch</a></div>
+      </article>
+    </section>
+  </div>
+</main>
+
+<template id="file-card">
+  <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span>
+  <div><div class="n"></div><div class="m"></div></div>
+  <button class="btn sm" type="button" data-ui="Replace">Replace</button>
+</template>
+
+<!-- site-shell: footer -->
+<footer class="foot" data-site-footer=""><div class="wrap"><a href="license-gen3tl.txt" rel="noreferrer" data-ui="gen3tl licence" data-ui-site="">gen3tl licence</a><a href="fonts/OFL.txt" rel="noreferrer" data-ui="Font licenses" data-ui-site="">Font licenses</a></div></footer>
+<!-- /site-shell: footer -->
+</body>
+</html>

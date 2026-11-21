@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read the release of the tag
+        id: found
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          # a written body stays as it is
+          state=missing
+          if body=$(gh release view "$TAG" --repo "$REPOSITORY" --json body --jq .body 2>/dev/null); then
+            if [ -n "$body" ]; then state=written; else state=empty; fi
+          fi
+          printf 'release      %s %s\n' "$TAG" "$state"
+          printf 'state=%s\n' "$state" >>"$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+        if: steps.found.outputs.state != 'written'
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Write the body from the commits since the previous tag
+        if: steps.found.outputs.state != 'written'
+        env:
+          TAG: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          previous=$(git tag --list 'v*' --sort=-v:refname | awk -v tag="$TAG" 'seen { print; exit } $0 == tag { seen = 1 }')
+          if [ -n "$previous" ]; then
+            printf 'Changes since `%s`:\n\n' "$previous" >"$RUNNER_TEMP/body.md"
+            range="$previous..$TAG"
+          else
+            printf 'Changes:\n\n' >"$RUNNER_TEMP/body.md"
+            range="$TAG"
+          fi
+          git log --reverse --abbrev=7 \
+            --format="- %s ([\`%h\`](https://github.com/$REPOSITORY/commit/%H))" "$range" >>"$RUNNER_TEMP/body.md"
+          printf 'commits      %s\n' "$(grep -c '^- ' "$RUNNER_TEMP/body.md")"
+      - name: Create the release or fill its body
+        if: steps.found.outputs.state != 'written'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+          STATE: ${{ steps.found.outputs.state }}
+        run: |
+          if [ "$STATE" = empty ]; then
+            gh release edit "$TAG" --repo "$REPOSITORY" --notes-file "$RUNNER_TEMP/body.md"
+          else
+            gh release create "$TAG" --repo "$REPOSITORY" --verify-tag \
+              --title "gen3tl ${TAG#v}" --notes-file "$RUNNER_TEMP/body.md"
+          fi

@@ -1,0 +1,70 @@
+name: Site catalog check
+
+on:
+  pull_request:
+    paths:
+      - 'web/i18n/**'
+      - 'web/**/*.html'
+      - 'web/js/**'
+      - 'src/gen3tl/web/siteshell.py'
+      - 'src/gen3tl/cli/**'
+      - '.github/workflows/site-catalog-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Install the toolkit without a ROM
+        run: python -m pip install .
+      - name: Check the site catalogs against the pages
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from tempfile import TemporaryDirectory
+          from gen3tl.catalog.po import read, write
+          from gen3tl.web import sitecatalog
+
+          web = Path("web")
+          i18n = web / "i18n"
+          keys = sitecatalog.page_keys(web)
+          problems = []
+          translated = 0
+          for path in sitecatalog.catalogs(i18n).values():
+              entries = sitecatalog.load(path)
+              header, _ = read(path)
+              here = sum(1 for e in entries if e.msgstr and e.fuzzy)
+              translated += here
+              print(f"translated  {path.stem}  {here} entries")
+              have = {e.msgid for e in entries}
+              added = [key for key in keys if key not in have]
+              dropped = [e.msgid for e in entries if e.msgid not in keys]
+              for key in added:
+                  problems.append(f"missing key  {path}: {key}")
+              for key in dropped:
+                  problems.append(f"stale key  {path}: {key}")
+              for entry in entries:
+                  if entry.msgstr and sorted(sitecatalog.HOLE.findall(entry.msgstr)) != sorted(sitecatalog.HOLE.findall(entry.msgid)):
+                      problems.append(f"dropped hole  {path}: {entry.msgid}")
+              with TemporaryDirectory() as tmp:
+                  out = Path(tmp) / path.name
+                  write(out, sitecatalog.merged(entries, keys), header)
+                  if out.read_bytes() != path.read_bytes() and not added and not dropped:
+                      problems.append(f"out of sync  {path}: web site-catalog --sync would change it")
+          if problems:
+              for problem in problems:
+                  print(problem)
+              raise SystemExit(1)
+          print(f"site catalogs  {len(sitecatalog.catalogs(i18n))} catalogs, {len(keys)} keys, "
+                f"translated {translated} entries, holes kept")
+          PY
+      - name: Check shared page markup
+        run: python -m gen3tl web site-shell --web web

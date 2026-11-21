@@ -1,0 +1,94 @@
+schema = "3.0.0"
+
+[[note]]
+id = "glossary-short-name"
+subject = { kind = "term", id = "move:sample" }
+scope = { kind = "language", language = "zz" }
+guidance = ["Use the complete compact name."]
+reason = ["The compact name fits the field."]
+status = "accepted"
+related_subjects = [{ kind = "term", id = "move:related" }]
+
+[[note.sources]]
+kind = "web"
+name = "Reference glossary"
+address = "https://example.test/terms?edition=2#compact"
+locator = "Entry 14"
+retrieved = "2026-11-10"
+quoted_term = "Éclat"
+quote = "The label is \"Éclat\".\nThe spelling is preserved."
+relation = "selected_form"
+verification = "recorded"
+
+[[note]]
+id = "research-occurrence"
+subject = { kind = "research", id = "synopsis:episode-14:occurrence-2" }
+scope = { kind = "language", language = "zz" }
+facts = ["One occurrence uses an oblique form.", "The nominative form is not attested."]
+status = "needs_review"
+related_notes = ["glossary-short-name"]
+sources = [{ kind = "publication", name = "Episode synopsis", address = "reference:synopsis", locator = "Episode 14", verification = "unresolved" }]
+evidence = [{ method = "lookup", verification = "recorded", measurements = [{ name = "occurrences", value = 1, unit = "count" }] }]
+
+[[note]]
+id = "profile-font-pointers"
+subject = { kind = "profile_fact", id = "font[name=small]" }
+scope = { kind = "shared" }
+binding = { kind = "profile_fact", id = "font[name=small]", value_sha256 = "1111111111111111111111111111111111111111111111111111111111111111", field = "evidence" }
+facts = ["Adjacent pool words identify the glyph data and width table."]
+status = "unreviewed"
+sources = [{ kind = "rom", name = "Base ROM", address = "sha1:2222222222222222222222222222222222222222", verification = "recorded" }]
+
+[[note.evidence]]
+method = "literal-pool"
+verification = "recorded"
+locations = [{ kind = "rom_offset", value = 0x100, label = "pool" }, { kind = "cpu_address", value = 0x08001000, label = "glyphs" }, { kind = "symbol", value = "SMALL_FONT" }]
+measurements = [{ name = "stride", value = 13, unit = "bytes" }]
+
+[[note]]
+id = "translator-name-placeholder"
+subject = { kind = "entry", id = "battle:sample" }
+scope = { kind = "shared" }
+binding = { kind = "entry", id = "battle:sample", source_sha256 = "3333333333333333333333333333333333333333333333333333333333333333" }
+guidance = ["Preserve the name placeholder."]
+facts = ["The inserted name may include a prefix."]
+status = "unreviewed"
+evidence = [{ method = "static", verification = "recorded", locations = [{ kind = "symbol", value = "{TARGET_NAME}" }], related_subjects = [{ kind = "entry", id = "battle:related" }] }]
+
+[[note]]
+id = "graphic-label-width"
+subject = { kind = "graphic", id = "G01" }
+scope = { kind = "language", language = "zz" }
+binding = { kind = "graphic", id = "G01" }
+reason = ["The label has a fixed drawing area."]
+status = "proposed"
+author = "contributor"
+created = "2026-11-11T10:00:00Z"
+updated = "2026-11-11T10:30:00+00:00"
+
+[[note.evidence]]
+method = "runtime"
+verification = "checked"
+locations = [{ kind = "file", value = "captures/label.png" }]
+measurements = [{ name = "width", value = 80, unit = "pixels" }, { name = "scale", value = 1.5, unit = "ratio" }]
+captures = [{ address = "captures/label.png", sha256 = "4444444444444444444444444444444444444444444444444444444444444444", locator = "Frame 12" }]
+
+[[note]]
+id = "wording-capitals"
+subject = { kind = "wording_rule", id = "device-capitals" }
+scope = { kind = "language", language = "zz" }
+guidance = ["Capitalize the device name in labels."]
+status = "accepted"
+reviewed_by = "reviewer"
+reviewed_at = "2026-11-11"
+sources = [{ kind = "project", name = "Style guide", address = "style:device", verification = "checked", relation = "context" }]
+
+[[note]]
+id = "catalog-wording-source"
+subject = { kind = "entry", id = "table:moves/1/name" }
+scope = { kind = "language", language = "zz" }
+binding = { kind = "entry", id = "table:moves/1/name", source_sha256 = "5555555555555555555555555555555555555555555555555555555555555555" }
+reason = ["The wording follows the attested compact form."]
+related_notes = ["glossary-short-name"]
+status = "superseded"
+sources = [{ kind = "web", name = "Reference glossary", address = "https://example.test/terms#compact", relation = "alternative", verification = "recorded" }]

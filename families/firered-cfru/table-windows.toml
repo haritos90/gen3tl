@@ -1,0 +1,47 @@
+schema = 1
+family = "firered-cfru"
+version = "1.0.0"
+
+[[window]]
+function = "a7b0fe1b156371b899a75a2bcb34d49b67b1a5899c1eaad4d1f0876aa007db2e"
+slot = "call:154:r2:read:132"
+extent = "text-pointer-run"
+name = "berry-crush-messages"
+width = 208
+box = "dialogue"
+where = "Berry Crush message box"
+
+[[window]]
+function = "837778eb42025a342bf3e98148559de7d3d047e74237e115d387bfa281ffe9e8"
+slot = "call:42:r2:read:24"
+extent = "text-pointer-run"
+name = "trade-menu-messages"
+prompt_arrow_width = 10
+instant_print = true
+width = 176
+lines = 2
+where = "trade menu message window"
+
+[[window]]
+function = "6947af842639caf4b2d4901a6d3b8accb8119c1d93b77cc634b55345dc4a7c64"
+slot = "call:126:s2:table"
+extent = "reader-count"
+name = "shop-menu"
+width = 88
+where = "shop menu"
+
+[[window]]
+function = "d737b4a5d276f0f39c40e8d6a3fbb48880864e6f50cb6b93ee9cfcc74b0a2d93"
+slot = "call:104:s2:table"
+extent = "reader-count"
+name = "pc-item-storage-menu"
+width = 104
+where = "PC item storage menu"
+
+[[window]]
+function = "beb855e9e91decf6e10bed36989f045c33ef21dbacac4d14becae7bae346fe5f"
+slot = "call:80:s2:table"
+extent = "reader-count"
+name = "item-pc-context-menu"
+width = 48
+where = "item PC, item menu"

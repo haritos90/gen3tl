@@ -1,0 +1,10 @@
+.DS_Store
+build/
+/site/
+!/src/gen3tl/build/
+__pycache__/
+*.pyc
+*.egg-info/
+*.gba
+*.sav
+.venv/

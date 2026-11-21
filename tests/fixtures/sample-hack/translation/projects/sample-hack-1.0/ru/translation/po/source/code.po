@@ -1,0 +1,19 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: sample-hack-1.0\n"
+"Language: ru\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-ROM-SHA1: 8bbf30c3f11e0a4371231cff8301e64e62bd4f31\n"
+"X-Catalog-Status: draft\n"
+
+#. category: code; mode: field
+#. source validation: native menu probe
+#. source length: 9 bytes
+#. reachability, speaker, font and window: unknown
+#. references: 0x0000140 (pool), 0x0000144 (pool)
+#: 0x0000300
+#, fuzzy
+msgctxt "s0000300"
+msgid "NEW GAME"
+msgstr ""

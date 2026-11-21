@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="site-startup-deadline" content="2500">
+<title data-ui="Save converter">Save converter</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="site.css">
+<script src="js/theme.js"></script>
+<script type="module" src="js/save.js"></script>
+</head>
+<body class="save-page">
+<!-- site-shell: masthead -->
+<header class="mast" data-site-mast="">
+  <a class="brand" href="./"><span class="tile"></span>gen3tl</a>
+  <nav class="tools" aria-label="Site" data-ui-label="Site" data-ui-site="">
+    <button class="tools-toggle" type="button" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="tools-icon"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span class="tools-current" data-tools-current="" data-ui="Tools" data-ui-site="">Tools</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></button>
+    <div class="tools-list">
+      <a href="./" class="brand c-home" aria-label="Home" data-ui-label="Home" data-ui-site="" title="Home" data-ui-title="Home"><span class="c-home-arrow" aria-hidden="true">←</span><span data-ui="Home" data-ui-site="">Home</span></a>
+      <a data-tool="patch" href="patch" data-ui="Patcher" data-ui-site="">Patcher</a>
+      <a data-tool="editor" href="editor" data-ui="Translation editor" data-ui-site="">Translation editor</a>
+      <a data-tool="save" href="save" aria-current="page" data-ui="Save converter" data-ui-site="">Save converter</a>
+      <a data-tool="pokedex" href="pokedex" data-ui="Pokédex" data-ui-site="">Pokédex</a>
+      <a href="guide" data-ui="Guide" data-ui-site="">Guide</a>
+    </div>
+  </nav>
+  <div class="mast-controls">
+    <details class="lang-menu">
+      <summary title="Site and game language" data-ui-title="Site and game language" data-ui-site=""><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="globe"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"></path></svg><span class="lang-name" data-lang-name=""></span><span class="lang-code" data-lang-code="">EN</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></summary>
+      <div class="lang-list" role="group" aria-label="Language" data-ui-label="Language" data-ui-site="" data-lang-list=""></div>
+    </details>
+    <button class="theme" data-toggle-theme="" type="button" aria-label="Toggle dark mode" data-ui-label="Toggle dark mode" data-ui-site="" title="Toggle dark mode" data-ui-title="Toggle dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+  </div>
+</header>
+<!-- /site-shell: masthead -->
+
+<main class="page wrap snug">
+  <div class="intro">
+    <p class="eyebrow"><span id="game-name" data-ui="Loading…">Loading…</span><span id="change-game"> · <a href="pick?next=save" data-ui="change game">change game</a></span></p>
+    <div class="actions-row"><h1 class="page-title" data-ui="Save converter">Save converter</h1><a class="btn sm ghost" id="save-guide" href="save-guide" data-ui="Guide">Guide</a></div>
+    <p class="muted" data-ui="A save made in the English game loads on the translated ROM, but the names stored in it stay English: species names, nicknames, box names. Conversion rewrites them for the language you play in, and back again for the English game.">A save made in the English game loads on the translated ROM, but the names stored in it stay English: species names, nicknames, box names. Conversion rewrites them for the language you play in, and back again for the English game.</p>
+  </div>
+
+  <p id="load-error" class="note err" role="alert" hidden></p>
+
+  <div class="with-aside">
+    <section class="steps" aria-label="Conversion steps" data-ui-label="Conversion steps">
+      <article class="step is-active" id="step-direction">
+        <header><span class="n">1</span><h2 class="step-title" data-ui="Direction">Direction</h2><span id="engine-chip" class="chip plain" data-ui="Converter: loading">Converter: loading</span></header>
+        <label class="rename-toggle"><input type="checkbox" id="rename-only"><span data-ui="Rename only">Rename only</span></label>
+        <div class="dir" id="direction-pair">
+          <label class="field"><span data-ui="Save made in">Save made in</span><select class="select" id="from" disabled></select></label>
+          <span class="arrow" aria-hidden="true">→</span>
+          <label class="field"><span data-ui="Play it in">Play it in</span><select class="select" id="to" disabled></select></label>
+        </div>
+        <label class="field" id="edit-game-field" hidden><span data-ui="Name language and game">Name language and game</span><select class="select" id="edit-game" disabled></select></label>
+        <p class="note" id="rename-note" data-ui="Only edited names change, in the selected game's letters." hidden>Only edited names change, in the selected game's letters.</p>
+        <p class="note" id="language-note" hidden></p>
+        <p class="summary script-placeholder loading-copy" id="direction-summary-loading" aria-hidden="true" data-loading data-ui-hole="summary">Species names stored in the save become their translated names. Nicknames you typed yourself stay as they are unless you rename them below. Species names stored in the save become their translated names.</p>
+        <p class="summary" id="direction-summary"></p>
+      </article>
+
+      <article class="step is-locked" id="step-file">
+        <header><span class="n">2</span><h2 class="step-title" data-ui="Your save file">Your save file</h2><span id="file-chip" class="chip plain" hidden></span></header>
+        <div class="file" id="file-card" hidden>
+          <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span>
+          <div><div class="n" id="file-name"></div><div class="m" id="file-meta"></div></div>
+          <button class="btn sm" type="button" id="file-replace" data-ui="Replace">Replace</button>
+        </div>
+        <p id="file-note" class="note warn" hidden></p>
+        <p id="file-error" class="note err" role="alert" hidden></p>
+        <div class="drop" id="file-drop">
+          <strong id="file-drop-title" data-ui="Drop your save file here">Drop your save file here</strong>
+          <span class="small" id="file-drop-line" data-ui="or {browse}. The converted file downloads separately; the original stays as it is.">or <button class="browse" type="button" id="file-browse" data-ui-hole="browse" data-ui="browse">browse</button>. The converted file downloads separately; the original stays as it is.</span>
+        </div>
+        <input id="save-file" type="file" accept=".sav,.srm,.fla,.sps,.xps,.gsv,.SaveRAM,application/octet-stream" hidden>
+      </article>
+
+      <article class="step is-locked" id="step-names">
+        <header><span class="n">3</span><h2 class="step-title" data-ui="Names">Names</h2></header>
+        <div class="scroll-x">
+          <table class="table names">
+            <thead><tr><th data-ui="Where">Where</th><th data-ui="In the save">In the save</th><th id="names-after" data-ui="After conversion">After conversion</th></tr></thead>
+            <tbody id="names"></tbody>
+          </table>
+        </div>
+        <p class="small muted" id="names-note"></p>
+      </article>
+
+      <article class="step is-locked" id="step-convert">
+        <header><span class="n">4</span><h2 class="step-title" id="convert-title" data-ui="Convert and download">Convert and download</h2></header>
+        <label class="field output-field"><span data-ui="Output format">Output format</span><select class="select" id="output-format" disabled>
+          <option value="original" data-ui="Original format and extension">Original format and extension</option>
+          <option value="sav" data-ui="Raw save (.sav)">Raw save (.sav)</option>
+          <option value="srm" data-ui="Raw save (.srm)">Raw save (.srm)</option>
+        </select></label>
+        <div class="actions-row">
+          <button class="btn primary big" type="button" id="convert" disabled data-ui="Convert save">Convert save</button>
+          <a class="btn primary big" id="download" hidden data-ui="Download">Download</a>
+          <span class="muted small" id="convert-note"></span>
+        </div>
+        <p id="convert-status" class="small" role="status" aria-live="polite"></p>
+      </article>
+    </section>
+
+    <aside class="aside" aria-label="Good to know" data-ui-label="Good to know">
+      <div class="card">
+        <h2 class="aside-title" data-ui="What changes">What changes</h2>
+        <ul>
+          <li data-ui="Default species names, in the party and in every box.">Default species names, in the party and in every box.</li>
+          <li data-ui="The trainer name, Pokémon nicknames and box names you choose to rename.">The trainer name, Pokémon nicknames and box names you choose to rename.</li>
+          <li data-ui="Going back to the English game, unsupported name letters follow the translation pack’s conversion table.">Going back to the English game, unsupported name letters follow the translation pack’s conversion table.</li>
+          <li data-ui="Rename only: only edited names change, in the selected game's letters and within each field's limit.">Rename only: only edited names change, in the selected game's letters and within each field's limit.</li>
+          <li data-ui="Items, flags and progress stay as they are.">Items, flags and progress stay as they are.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2 class="aside-title" data-ui="Save files">Save files</h2>
+        <ul>
+          <li data-ui="Reads raw saves and supported emulator or cheat-device containers. The source format is detected from its bytes.">Reads raw saves and supported emulator or cheat-device containers. The source format is detected from its bytes.</li>
+          <li data-ui="Output keeps the original format by default, or writes raw .sav or .srm.">Output keeps the original format by default, or writes raw .sav or .srm.</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- site-shell: footer -->
+<footer class="foot" data-site-footer=""><div class="wrap"><a href="license-gen3tl.txt" rel="noreferrer" data-ui="gen3tl licence" data-ui-site="">gen3tl licence</a><a href="fonts/OFL.txt" rel="noreferrer" data-ui="Font licenses" data-ui-site="">Font licenses</a></div></footer>
+<!-- /site-shell: footer -->
+</body>
+</html>

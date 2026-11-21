@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "games": [],
+  "include": ["https://haritos90.github.io/unbound-tl/data/registry.json"],
+  "site": {
+    "licenses": [
+      {"label_key": "gen3tl licence", "url": "../license-gen3tl.txt"},
+      {"label_key": "Font licenses", "url": "../fonts/OFL.txt"}
+    ]
+  }
+}

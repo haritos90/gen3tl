@@ -1,0 +1,146 @@
+schema = 1
+family = "firered-cfru"
+version = "1.0.0"
+sources = [
+  "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/rom_header_gf.c",
+  "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/charmap.txt",
+  "https://github.com/Skeli789/Complete-Fire-Red-Upgrade/blob/72bf78e736a22d2a2ec42c67f03b36939cc0c3b1/src/Tables/battle_moves.c",
+]
+
+[identity]
+retail_sha1 = ["41cb23d8dccc8ebd7c649cd8fbb58eeace6e2fdc", "dd5945db9b930750cb39d00c84da8571feebf417"]
+game_code = "BPRE"
+header_offset = 256
+version = 4
+language = 2
+name = "pokemon red version"
+pointer_offsets = [40, 44, 48, 52, 56, 60, 64, 68, 72, 76]
+minimum_pointers = 8
+
+[classification]
+minimum_ratio = 0.8
+required_categories = ["renderer", "width", "script", "naming", "extension"]
+
+[codec]
+candidate = "gen3-western"
+controls = "gen3-frlg"
+anchors = ["Bulbasaur", "Ivysaur", "Venusaur", "Master Ball", "Ultra Ball", "Potion", "Antidote"]
+control_anchors = ["{COLOR 04}", "{COLOR 08}"]
+minimum_anchors = 4
+minimum_controls = 2
+
+[fonts]
+dispatch_ids = [0, 1, 2, 3, 4, 5, 6]
+record_size = 8
+id_offset = 0
+function_offset = 4
+latin_register = 1
+latin_value = 0
+
+[tables.header]
+species = 0x44
+moves = 0x48
+abilities = 0xC0
+ability_descriptions = 0xC4
+items = 0xC8
+battle_moves = 0xCC
+base_stats = 0xBC
+front = 0x28
+back = 0x2C
+palettes = 0x30
+shiny_palettes = 0x34
+icons = 0x38
+icon_palette_indices = 0x3C
+icon_palettes = 0x40
+
+[tables.names]
+species = [{ index = 1, text = "Bulbasaur" }, { index = 2, text = "Ivysaur" }, { index = 3, text = "Venusaur" }]
+moves = [{ index = 1, text = "Pound" }, { index = 2, text = "Karate Chop" }, { index = 3, text = "Double Slap" }]
+abilities = [{ index = 1, text = "Stench" }, { index = 2, text = "Drizzle" }, { index = 3, text = "Speed Boost" }]
+items = [{ index = 1, text = "Master Ball" }, { index = 2, text = "Ultra Ball" }, { index = 3, text = "Great Ball" }]
+
+[tables.records.species]
+header = "base_stats"
+names = "species"
+indices = [1, 4, 7, 19, 25, 150]
+fields = { hp = [45, 39, 44, 30, 35, 106], attack = [49, 52, 48, 56, 55, 110], defense = [49, 43, 65, 35, 40, 90], speed = [45, 65, 43, 72, 90, 130], sp_attack = [65, 60, 50, 25, 50, 154], sp_defense = [65, 50, 64, 35, 50, 90], type1 = [12, 10, 11, 0, 13, 14], type2 = [3, 10, 11, 0, 13, 14], catch_rate = [45, 45, 45, 255, 190, 3], base_exp = [64, 65, 66, 57, 82, 220], gender_ratio = [31, 31, 31, 127, 127, 255], growth = [3, 3, 3, 0, 0, 5], base_friendship = [50, 50, 50, 50, 50, 0], egg_group1 = [1, 1, 1, 5, 5, 15], egg_group2 = [7, 14, 2, 5, 6, 15], ability1 = [65, 66, 67, 129, 9, 46], ability2 = [0, 0, 0, 62, 0, 0], hidden_ability = [34, 96, 44, 55, 31, 192] }
+
+[tables.records.moves]
+header = "battle_moves"
+names = "moves"
+indices = [1, 2, 3, 39, 98, 7, 45]
+fields = { effect = [0, 43, 29, 19, 103, 4, 18], power = [40, 50, 15, 0, 40, 75, 0], type = [0, 1, 0, 0, 0, 10, 0], accuracy = [100, 100, 85, 100, 100, 100, 100], pp = [35, 25, 10, 30, 30, 15, 40], secondary_chance = [0, 0, 0, 0, 0, 10, 0], target = [0, 0, 0, 8, 0, 0, 8], priority = [0, 0, 0, 0, 1, 0, 0], flags = [19, 19, 19, 22, 19, 19, 22], z_move_power = [100, 100, 100, 0, 100, 140, 0], damage_category = [0, 0, 0, 2, 0, 0, 2] }
+
+[tables.extra_names.types]
+anchors = [{ index = 0, text = "Normal" }, { index = 1, text = "Fight" }, { index = 2, text = "Flying" }, { index = 18, text = "-" }]
+
+[tables.extra_names.types_short]
+anchors = [{ index = 0, text = "Normal" }, { index = 1, text = "Fight" }, { index = 2, text = "Flying" }, { index = 18, text = "Fight" }]
+blank = true
+candidate_reason = "The anchored short-name copy has no confirmed linked indexed reader; live use remains unproved."
+
+[tables.extra_names.trainer_classes]
+anchors = [{ index = 3, text = "Agent" }, { index = 4, text = "Waiter" }, { index = 5, text = "Waitress" }, { index = 7, text = "Cyclist" }]
+blank = true
+pointers = true
+
+[tables.move_lists]
+reckless = [361, 38, 434]
+punching = [4, 5, 7]
+sheer_force = [356, 246, 310]
+pulse_aura = [359, 367, 370]
+biting = [44, 242, 431]
+dance = [14, 80, 297]
+powder = [178, 77, 652]
+sound = [45, 46, 47]
+ballistic = [425, 359, 140]
+me_first_banned = [165, 641, 563]
+gravity_banned = [19, 26, 136]
+substitute_bypass = [174, 176, 457]
+type_change_exception = [237, 500, 506]
+metronome_banned = [68, 102, 118]
+sky_battle_banned = [21, 23, 34]
+parental_bond_banned = [120, 153, 283]
+
+[tables.dex]
+indices = [1, 4, 7, 25]
+categories = ["Seed", "Lizard", "Tiny Turtle", "Mouse"]
+height = [7, 6, 5, 4]
+weight = [69, 85, 90, 60]
+
+[tables.credits]
+headings = ["Director", "Creator"]
+names = "Skeli"
+
+[save]
+ram_base = 33554432
+ram_size = 262144
+storage_last = 0x450
+daycare_offset = 0x2F80
+preset_box = 25
+header = { player_name_length = 0x74, saveblock2_size = 0x88, saveblock1_size = 0x8C, party_count = 0x90, party_offset = 0x94, trainer_id = 0x9C, player_name = 0xA0 }
+flash = { total_sectors = 32, sector_size = 0x1000, data_size = 0xFF0, signature = 17963417, slot_sectors = 14 }
+sections = { saveblock2 = [0], saveblock1 = [1, 2, 3, 4], storage = [5, 6, 7, 8, 9, 10, 11, 12, 13] }
+parasite_sections = [[0, 0xCC], [4, 0x258], [13, 0xBA0]]
+party = { slots = 6, stride = 100, species = 0x20, ivs = 0x48 }
+daycare = { slots = 2, stride = 0x8C, species = 0x20, ivs = 0x48 }
+box_record = { size = 58, species = 0x1C, ivs = 0x36, per_box = 30 }
+box_ranges = [
+  { first = 1, count = 19, block = "storage", offset = 4 },
+  { first = 20, count = 3, block = "extra", offset = 0xB0C },
+  { first = 23, count = 2, block = "saveblock1", offset = 0x1F08 },
+  { first = 25, count = 1, block = "saveblock2", offset = 0xB0 },
+]
+block_pools = { saveblock2 = { reader = "save-block-addresses", offset = 16 }, saveblock1 = { reader = "save-block-addresses", offset = 22 }, storage = { reader = "save-block-addresses", offset = 30 } }
+parasite_pool = { reader = "save-parasite", offset = 22 }
+extra_pool = { reader = "save-extra", offset = 212 }
+extra_sector_offsets = [200, 234]
+name_pools = { egg = { reader = "save-egg-name", offset = 560, text = "Egg" }, box = { reader = "save-box-name", offset = 98, text = "Box" }, preset = { reader = "save-preset-name", offset = 10, text = "Preset" } }
+mon_names = { personality = 0, ot_id = 4, nickname = 8, nickname_size = 10, nickname_limit = 10, ot_name = 0x14, ot_name_size = 7, ot_name_limit = 7 }
+rival = { reader = "save-rival-naming", block = "saveblock1", offset = 8, add = 10, screen = 22, kind = 4 }
+box_names = { reader = "save-box-name-pointer", offset = 6, pointers = 0x64, size = 9, limit = 8 }
+mail = { reader = "save-mail-clear", offset = 12, stride = [6, 8, 10], count = 30, author_pad = 6, record = { reader = "save-mail-record-clear", author = 34, trainer_id = 30, item = 72, author_count = 48 } }
+daycare_mail = { reader = "save-daycare-store", fields = { mail = 0x40, ot_name = 0x12, nickname = 0x1E }, ot_name_size = 8, nickname_size = 11 }
+link_records = { reader = "save-link-records", offset = 6, add = 8, clearer = "save-link-record-clear", count = 4, stride = 12, search = "save-link-record-search", trainer_id = 26 }
+hall_of_fame = { reader = "save-hall-sectors", sectors = [46, 58], size = 42, shift = 44, signature_reader = "save-hall-signature", signature = 38, team_size = 0x90, mons = 6, mon_size = 0x18, trainer_id = 0, personality = 4, species = 8, nickname = 0xB, nickname_size = 10, nickname_limit = 10, egg_species = 412 }
+egg_hatch = { step_from_daycare = 0x11A, cycles = 0x29, eggs_waiting = 0x2F4 }

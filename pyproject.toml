@@ -1,0 +1,69 @@
+# The gen3tl package: command, profiles, packs, site sources
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gen3tl"
+description = "Translation toolkit for Gen 3 (GBA) Pokemon ROM hacks"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [
+    { name = "haritos90 and gen3tl contributors" },
+]
+keywords = ["translation", "localization", "rom-hacking", "game-boy-advance", "pokemon"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Games/Entertainment",
+    "Topic :: Software Development :: Internationalization",
+]
+dynamic = ["version", "optional-dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/haritos90/gen3tl"
+Issues = "https://github.com/haritos90/gen3tl/issues"
+Changelog = "https://github.com/haritos90/gen3tl/releases"
+
+[project.scripts]
+gen3tl = "gen3tl.__main__:run"
+
+[tool.setuptools]
+include-package-data = false
+packages = [
+    "gen3tl", "gen3tl.build", "gen3tl.catalog", "gen3tl.check", "gen3tl.cli", "gen3tl.core", "gen3tl.data",
+    "gen3tl.discover", "gen3tl.families", "gen3tl.lang", "gen3tl.profile", "gen3tl.project", "gen3tl.verify", "gen3tl.web",
+    "gen3tl.share.families", "gen3tl.share.profiles", "gen3tl.share.assets.lang", "gen3tl.share.web",
+]
+
+# gen3tl/share is the toolkit root of an installed package
+[tool.setuptools.package-dir]
+"" = "src"
+"gen3tl.share.families" = "families"
+"gen3tl.share.profiles" = "profiles"
+"gen3tl.share.assets.lang" = "assets/lang"
+"gen3tl.share.web" = "web"
+
+[tool.setuptools.package-data]
+"gen3tl.verify" = ["emu_bridge.lua"]
+"gen3tl.share.families" = ["**/*"]
+"gen3tl.share.profiles" = ["**/*"]
+"gen3tl.share.assets.lang" = ["**/*"]
+"gen3tl.share.web" = ["**/*"]
+
+[tool.setuptools.exclude-package-data]
+"gen3tl.share.assets.lang" = ["*.pyc"]
+"gen3tl.share.web" = ["test/*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "gen3tl.__version__" }
+optional-dependencies = { morphology = { file = ["requirements.txt"] } }

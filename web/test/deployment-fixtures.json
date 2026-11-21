@@ -1,0 +1,93 @@
+{
+  "game": {
+    "id": "sample-game",
+    "name": "Sample game",
+    "stage": "translation",
+    "engine": "sample-engine",
+    "source_language": "ja",
+    "data": "./sample/"
+  },
+  "peer": {
+    "id": "other-game",
+    "name": "Other game",
+    "stage": "catalog",
+    "engine": "other-engine",
+    "source_language": "ko",
+    "data": "./other/"
+  },
+  "cases": [
+    {
+      "name": "one game with one language",
+      "languages": ["nl"],
+      "catalogs": ["nl"],
+      "released": "nl",
+      "stored": "en",
+      "browser": ["nl"],
+      "chosen": "en",
+      "shown": "en",
+      "order": ["nl"],
+      "states": ["Released"]
+    },
+    {
+      "name": "one game with four languages",
+      "languages": ["it", "es", "de", "nl"],
+      "catalogs": ["nl"],
+      "released": "nl",
+      "stored": "nl",
+      "browser": ["en"],
+      "chosen": "nl",
+      "shown": "nl",
+      "order": ["nl", "de", "es", "it"],
+      "states": ["Released", "Open for translation", "Open for translation", "Open for translation"]
+    },
+    {
+      "name": "two games",
+      "languages": ["nl"],
+      "catalogs": ["nl"],
+      "released": "nl",
+      "stored": "en",
+      "browser": ["nl"],
+      "chosen": "en",
+      "shown": "en",
+      "order": ["nl"],
+      "states": ["Released"],
+      "peer": true
+    },
+    {
+      "name": "a game without a release",
+      "languages": ["nl"],
+      "catalogs": ["nl"],
+      "released": null,
+      "stored": "en",
+      "browser": ["nl"],
+      "chosen": "en",
+      "shown": "en",
+      "order": ["nl"],
+      "states": ["Open for translation"]
+    },
+    {
+      "name": "a missing interface catalog",
+      "languages": ["sv"],
+      "catalogs": [],
+      "released": "sv",
+      "stored": "sv",
+      "browser": ["en"],
+      "chosen": "sv",
+      "shown": "en",
+      "order": ["sv"],
+      "states": ["Released"]
+    },
+    {
+      "name": "a regional language tag",
+      "languages": ["pt", "pt-BR"],
+      "catalogs": ["pt", "pt-BR"],
+      "released": "pt-BR",
+      "stored": null,
+      "browser": ["pt-br", "en"],
+      "chosen": "pt-BR",
+      "shown": "pt-BR",
+      "order": ["pt-BR", "pt"],
+      "states": ["Released", "Open for translation"]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "1.0.0",
+  "profile": "sample-hack-1.0",
+  "language": "ru",
+  "rom_sha1": "8bbf30c3f11e0a4371231cff8301e64e62bd4f31",
+  "status": "draft",
+  "capabilities": {
+    "build": false,
+    "layout": false,
+    "fonts": false,
+    "encoding": false,
+    "check": "tokens"
+  },
+  "entries": 6,
+  "translations": 0,
+  "categories": {
+    "code": 1,
+    "data-table": 3,
+    "script": 2
+  },
+  "excluded": {
+    "unverified": 1
+  },
+  "limitations": [
+    "Source bytes and reference patterns were checked against the exact ROM.",
+    "Reference patterns do not establish script reachability or speaker identity.",
+    "Fixed name tables and unreferenced strings may be missing.",
+    "Game fonts, target encoding and display limits remain unverified.",
+    "Draft translations can be exported; translation builds remain unavailable."
+  ],
+  "files": {
+    "po/source/code.po": "717522f8f42dafa29ce48fe2af5278fb132ca86f7d4061beaaf8cecaea4859d8",
+    "po/source/data-table.po": "0a02b6efe85af6cbd7b952a91e894a441cca92bc1ddeb90b27ccb832a8523635",
+    "po/source/script.po": "e45f00ae0d219941f02d21a83e9848f316c01949345e04bca6b6fa9bd3d68d57"
+  },
+  "source_sha256": "51f835764f81962b1009f230de98edefb8e0c9df8e885337c0f753ca4ef6fa0c"
+}

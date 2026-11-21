@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title data-ui="Contributor guide">Contributor guide</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preload" href="fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-sans-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-mono-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-mono-400-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-mono-500-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-mono-500-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="site.css">
+<script src="js/theme.js"></script>
+<script type="module" src="js/guide.js"></script>
+</head>
+<body>
+<!-- site-shell: masthead -->
+<header class="mast" data-site-mast="">
+  <a class="brand" href="./"><span class="tile"></span>gen3tl</a>
+  <nav class="tools" aria-label="Site" data-ui-label="Site" data-ui-site="">
+    <button class="tools-toggle" type="button" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="tools-icon"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span class="tools-current" data-tools-current="" data-ui="Tools" data-ui-site="">Tools</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></button>
+    <div class="tools-list">
+      <a href="./" class="brand c-home" aria-label="Home" data-ui-label="Home" data-ui-site="" title="Home" data-ui-title="Home"><span class="c-home-arrow" aria-hidden="true">←</span><span data-ui="Home" data-ui-site="">Home</span></a>
+      <a href="patch.html" data-ui="Patcher" data-ui-site="">Patcher</a>
+      <a href="editor.html" data-ui="Translation editor" data-ui-site="">Translation editor</a>
+      <a href="save.html" data-ui="Save converter" data-ui-site="">Save converter</a>
+      <a href="pokedex.html" data-ui="Pokédex" data-ui-site="">Pokédex</a>
+      <a href="guide.html" aria-current="page" data-ui="Guide" data-ui-site="">Guide</a>
+    </div>
+  </nav>
+  <div class="mast-controls">
+    <details class="lang-menu">
+      <summary title="Site and game language" data-ui-title="Site and game language" data-ui-site=""><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="globe"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"></path></svg><span class="lang-name" data-lang-name=""></span><span class="lang-code" data-lang-code="">EN</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></summary>
+      <div class="lang-list" role="group" aria-label="Language" data-ui-label="Language" data-ui-site="" data-lang-list=""></div>
+    </details>
+    <button class="theme" data-toggle-theme="" type="button" aria-label="Toggle dark mode" data-ui-label="Toggle dark mode" data-ui-site="" title="Toggle dark mode" data-ui-title="Toggle dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+  </div>
+</header>
+<!-- /site-shell: masthead -->
+
+<main class="page wrap snug">
+  <div class="intro">
+    <p class="eyebrow">Translation editor</p>
+    <h1 class="page-title">Contributor guide</h1>
+    <p class="muted">The editor changes the translation catalog of one game in one language: its texts, its glossary
+      terms and the text pixels of its pictures. This guide explains writing and checking translations, exporting and
+      submitting changes, and review before a release.</p>
+  </div>
+
+  <div class="with-aside">
+    <article class="guide">
+
+      <section id="quick">
+        <h2>Quick start</h2>
+        <ol>
+          <li>Open the <a href="editor.html">Translation editor</a> and choose the game and the <b>Catalog language</b>.</li>
+          <li>Optional: give <b>Your ROM</b>, the original or a patched one. The editor then shows the English text and
+            runs every check. The file stays in your browser.</li>
+          <li><b>Open the editor</b>. Find a text with the search or the filters and type its translation. The line
+            meters show where a line is too wide for its window.</li>
+          <li>Your changes stay in this browser as drafts; you can continue later.</li>
+          <li>Press <b>Submit</b>. The page lists your drafts; add <b>Notes for the reviewers</b> if you wish.</li>
+          <li>Press <b>Open a GitHub issue with these changes</b>; a GitHub account is needed. A long submission
+            downloads as a JSON file: drag it into <b>Export file</b> on the form. Drag each downloaded picture into
+            <b>Pictures</b>.</li>
+          <li>Submit the issue. A check answers on it: a pull request with your changes, or the reason they were not
+            applied. Correct the issue and the check runs again.</li>
+          <li>A maintainer reviews the pull request. Approved changes enter a later version of the patch.</li>
+        </ol>
+        <p>The sections below specify each step.</p>
+      </section>
+
+      <section id="requirements">
+        <h2>Requirements</h2>
+        <ul>
+          <li>A current browser with JavaScript and local storage. The check runs the toolkit's Python code in the
+            browser with Pyodide, which the page loads from its CDN.</li>
+          <li>For a game's English text and exact ROM glyphs: the original base ROM, a published patched ROM, or a
+            recognised base ROM together with its UPS patch.
+            The ROM is optional for editing the keys and translations; the site interface needs no ROM.</li>
+          <li>For a submission through the editor, a GitHub account (see <a href="#submit">Submitting</a>).</li>
+        </ul>
+        <p>A game project’s catalogs are key-only: an entry’s <code>msgctxt</code> and <code>msgid</code> hold its
+          stable key and <code>msgstr</code> its translation. The repository and the editor data hold keys,
+          translations, states and measurements. The editor recovers the game’s English text locally from the verified
+          ROM. Site-interface catalogs and draft source catalogs carry their own source text and need no ROM for it.</p>
+        <p>The ROM is read in the browser and stays local.</p>
+      </section>
+
+      <section id="open">
+        <h2>Opening the editor</h2>
+        <p>The start screen of the <a href="editor.html">editor</a> offers a game and an optional ROM.</p>
+        <ol>
+          <li><b>Game.</b> The games of the site, those at translation stage first.</li>
+          <li><b>Your ROM</b>, optional.</li>
+        </ol>
+        <p><b>Open the editor</b> opens the workspace.</p>
+      </section>
+
+      <section id="find">
+        <h2>Finding entries</h2>
+        <p>With the ROM, the search matches English, translation or id; without it, translation or id. The filters:</p>
+        <div class="scroll-x">
+          <table class="table">
+            <tr><th>Filter</th><th>Values</th></tr>
+            <tr><td>Status</td><td>Untranslated; Translated: merged into the project and used in patches; Approved:
+              confirmed by a reported playtest or by the review of the project; Nothing to translate: no English, such as an unused table slot; Edited here: a draft in this
+              browser.</td></tr>
+            <tr><td>Check result</td><td>Overflowing, With errors, With warnings.</td></tr>
+            <tr><td>File</td><td>One catalog file or a group of files.</td></tr>
+            <tr><td>Map</td><td>The maps where the text is used.</td></tr>
+            <tr><td>Window kind</td><td>Dialogue, Battle, Multi-line, Single line, Fixed field.</td></tr>
+            <tr><td>Reach</td><td>Reachable, Possibly reachable, Never shown: whether the game shows the text.</td></tr>
+            <tr><td>Terms</td><td>Shortened term: the entry shows the short label of a term.</td></tr>
+            <tr><td>Sort entries</td><td>Story order or File order.</td></tr>
+          </table>
+        </div>
+        <p><b>Story order</b> puts shown map files in the profile's map-name order, then system files, tables, other
+          shown categories and battle entries; Never shown entries come last. <b>File order</b> follows the catalog.
+          Changing the order retains the selected entry, its draft and the list scroll; filters, search and marks do
+          not change.</p>
+        <p>A list row shows the status, the id, the window kind and the marks edited, overflow, errors, warnings, never
+          shown and shortened. The keys are listed in <a href="#keys">Keys</a>.</p>
+      </section>
+
+      <section id="write">
+        <h2>Writing the translation</h2>
+        <p>The field edits the catalog text as units: characters, breaks and tokens. A break or a token is inserted and
+          deleted whole. A backslash cannot be typed, so a break is inserted only by a key or a button above the field.</p>
+        <div class="scroll-x">
+          <table class="table">
+            <tr><th>Break</th><th>Mark</th><th>Key</th><th>Effect</th></tr>
+            <tr><td><code>\n</code></td><td>↵</td><td><kbd>Enter</kbd></td><td>Line break.</td></tr>
+            <tr><td><code>\l</code></td><td>⤓</td><td><kbd>Alt+Enter</kbd></td><td>Scrolling line break: the box
+              scrolls to show the next line, so a box with <code>\l</code> may hold more lines than the window shows.</td></tr>
+            <tr><td><code>\p</code></td><td>¶</td><td><kbd>Shift+Enter</kbd></td><td>New box.</td></tr>
+          </table>
+        </div>
+        <p>In dialogue and battle boxes <kbd>Enter</kbd> inserts <code>\n</code> for the first break of a box and
+          <code>\l</code> for every later one; in other windows it inserts <code>\n</code>.</p>
+        <p>Tokens: the chips above the field list the tokens of the English. A click inserts one at the caret; a chip
+          is marked while the translation lacks it. A placeholder is text the game inserts, such as the player's name;
+          a control code has no width, such as a text colour; a symbol is a named byte or a key icon. A token the
+          character map does not know is reported by the check.</p>
+        <p>Pasted text keeps the breaks and tokens it writes as <code>\n</code>, <code>\l</code>, <code>\p</code> and
+          braces; a real newline becomes <code>\n</code>. Copying puts the catalog form on the clipboard. Where the game
+          shows the version of the translation, the text holds the token <code>@VERSION@</code>, which the check
+          replaces with the release version.</p>
+        <p><kbd>Ctrl+Z</kbd> undoes; <kbd>Ctrl+Shift+Z</kbd> or <kbd>Ctrl+Y</kbd> redoes (<kbd>Cmd</kbd> instead of
+          <kbd>Ctrl</kbd> on macOS). <b>Discard draft</b> restores the catalog translation. Entries the language
+          pack supplies, such as the naming keyboard rows, are read-only.</p>
+      </section>
+
+      <section id="check">
+        <h2>The check</h2>
+        <p>The check runs after each change. It is the toolkit's per-entry check, the code its command-line batch check
+          runs, executed in the browser with Pyodide: exact with the ROM, approximate without it. Without English the
+          token and layout checks use the tracked snapshot, while typography and glossary checks that need English are
+          explicitly unavailable.</p>
+        <h3>Line meters</h3>
+        <p>One meter per line, grouped by box, labelled with the width against the limit:</p>
+        <div class="scroll-x">
+          <table class="table">
+            <tr><th>Label</th><th>Meaning</th></tr>
+            <tr><td><i>w / limit px</i></td><td>The line fits; a meter past the wrap target marks a line longer than
+              the preferred wrap width.</td></tr>
+            <tr><td><i>fits: shadow clipped</i></td><td>1 px over, and the cut column of the last glyph holds only
+              shadow: the line fits.</td></tr>
+            <tr><td><i>n px over</i></td><td>The line is wider than the window.</td></tr>
+            <tr><td><i>not encodable</i></td><td>A character has no byte in the character map.</td></tr>
+          </table>
+        </div>
+        <p>The meters show each line’s width against its visible limit and the number of lines against the window’s
+          limit. Character and byte limits appear where they apply. Keyboard rows count keys.</p>
+        <h3>Problems</h3>
+        <p>Errors and warnings as the command-line check reports them, among them:</p>
+        <ul>
+          <li>characters the language cannot encode;</li>
+          <li>placeholders or control codes that differ from the English;</li>
+          <li>lines wider than the window, or more lines than it shows, also in the windows of other font styles and
+            on a sprite font's canvas;</li>
+          <li>a pair too wide for its line, naming the partner and a species that shows them;</li>
+          <li>written breaks the layout does not use because a line is too wide (warning);</li>
+          <li>a box that wraps to more lines than the English box (warning);</li>
+          <li>the typography rules of the language;</li>
+          <li>a glossary term of the English whose translation is not found (warning);</li>
+          <li>an empty translation of a non-empty English (warning).</li>
+        </ul>
+        <p>A problem against an unmeasured limit ends in <i>[unmeasured limit: the English width]</i>, one against an
+          unverified estimate in <i>[unverified limit: an estimate for this language]</i>.</p>
+        <h3>In the game</h3>
+        <p>With a ROM, English and translation are drawn in the original game font at the window's size, in the speaker's
+          text colour where recorded, at 1×, 2× or 3×. Without a ROM only the translation appears, with stand-ins for
+          ROM glyphs. The part of a line the game cuts is marked and its width shown, and a note names the line and the
+          fix. When a written line is wider than its window, the layout may wrap the box anew without the written
+          breaks; a warning names the line, and the meters and preview show the layout the build uses.</p>
+        <p>Until the check is loaded the page estimates the widths itself and reports no problems. At catalog stage the
+          check covers tokens only (placeholders and control codes kept, braces matched, no control characters), and
+          the preview shows the text without the game font. Game-catalog pull requests run the same checks with the
+          project's quality gate (see <a href="#workflow">Checks and review</a>).</p>
+      </section>
+
+      <section id="export">
+        <h2>Drafts and export</h2>
+        <p>Every change is a draft, kept in the local storage of the browser per game and language. Drafts survive a
+          reload; they are not shared between browsers or devices, and clearing the data of the site deletes them.
+          Where the browser refuses storage, drafts last only while the page is open. A text changed back to the
+          catalog translation is no longer a draft.</p>
+        <p>After a site update, a page that stayed open may show <b>The site was updated. Reload this page to
+          continue.</b> with the button <b>Reload</b>. The drafts are kept across the reload; the ROM is chosen
+          again.</p>
+        <p><b>Export</b> downloads every draft of the open game and language as one file,
+          <code>gen3tl-&lt;language&gt;-edits-&lt;YYYYMMDDHHMM&gt;.json</code> (time in UTC). Exporting keeps the drafts.</p>
+        <div class="scroll-x">
+          <table class="table">
+            <tr><th>Key</th><th>Content</th></tr>
+            <tr><td><code>language</code>, <code>profile</code></td><td>The language code and the game id.</td></tr>
+            <tr><td><code>entries</code></td><td><code>[{id, translation, note}]</code>: the changed texts.</td></tr>
+            <tr><td><code>pictures</code></td><td><code>[{id, base, areas, tiles, png}]</code>: kept uploads in area
+              form; <code>base</code> identifies the project picture the edit was made on and <code>png</code> is
+              base64 (see <a href="#pictures">Pictures</a>).</td></tr>
+            <tr><td><code>terms</code></td><td><code>[{id, english, base, changes, include}]</code>: term edits in
+              glossary columns; <code>base</code> holds the values the edit was made on, <code>changes</code> the new
+              ones, <code>include</code> the form-only entries the rename covers.</td></tr>
+            <tr><td><code>glyphs</code></td><td><code>[{style, char or slot, width, rows, base}]</code>: glyphs redrawn
+              in the Fonts view, named as the art file names them; <code>rows</code> holds the cell rows of the art
+              (<code>#</code> ink, <code>s</code> shadow or outline, <code>_</code> background), <code>base</code> the
+              width and rows the redraw was made on, for a copied letter its source <code>copy:&lt;byte&gt;</code>
+              (see <a href="#fonts">Fonts</a>).</td></tr>
+            <tr><td><code>keyboard</code></td><td><code>{rows, pages, base}</code>: changed naming or chat rows by pack
+              row name, the new page order where changed, and the values the edits were made on.</td></tr>
+          </table>
+        </div>
+        <p>The export holds texts, glossary values, pictures in area form, glyph art and keyboard edits; it holds no
+          ROM file and no ROM colour.</p>
+      </section>
+
+      <section id="submit">
+        <h2>Submitting</h2>
+        <p><b>Submit</b> opens the submit page: this browser's drafts against the values they were made on, text widths,
+          and a field for reviewer notes. <b>Open a GitHub issue with these changes</b> fills the appropriate repository's
+          issue form; a GitHub account is needed. <b>Download JSON</b> saves every draft and is the route to
+          use when no submission repository is configured or when a change must be sent another way.</p>
+        <div class="scroll-x">
+          <table class="table">
+            <tr><th>Submission kind</th><th>Issue destination and content</th></tr>
+            <tr><td>Game texts, terms or pictures</td><td>The game repository. Texts, terms and pictures travel in the
+              issue; any glyph or keyboard edits in the same mixed export travel only in its JSON file.</td></tr>
+            <tr><td>Pack-only glyphs or keyboard</td><td>The toolkit repository. An export with no game texts, terms or
+              pictures carries the glyph redraws and keyboard records in the issue itself.</td></tr>
+            <tr><td>Site-interface texts</td><td>The toolkit repository. The issue carries the changed interface entries;
+              no ROM is involved.</td></tr>
+          </table>
+        </div>
+        <h3 id="issue">The issue</h3>
+        <p>The game form <i>Translation submission</i> has three fields. The toolkit form has the first two:</p>
+        <div class="scroll-x">
+          <table class="table">
+            <tr><th>Field</th><th>Content</th></tr>
+            <tr><td>Editor export</td><td>The submission as JSON: changed texts with their base translations; term edits
+              with their base glossary values; pictures with text areas, tile counts and base identities;
+              pack-only glyph and keyboard records where applicable; reviewer notes. The page fills the field while the
+              form link stays within 8000 characters.</td></tr>
+            <tr><td>Export file</td><td>For a longer submission, the page downloads JSON and opens the form without the
+              inline document; drag that file into this field.</td></tr>
+            <tr><td>Pictures</td><td>For a game picture submission, drag each downloaded area-form PNG,
+              <code>&lt;id&gt;.png</code>, into this field before submitting the issue.</td></tr>
+          </table>
+        </div>
+        <h3 id="workflow">Checks and review</h3>
+        <p>Opening or editing an issue runs automatic validation. Errors are reported on the issue, and invalid changes
+          are not applied. A valid submission becomes a pull request with automatic checks.</p>
+        <p>A maintainer reviews the pull request and merges it after the required checks pass. After the merge a new
+          translation has the status Translated and enters the next patch; a text that was Approved stays Approved (see
+          <a href="#review">Review and release</a>).</p>
+        <h3 id="import">The JSON file</h3>
+        <p><b>Download JSON</b> and <b>Export</b> save every draft. Import a game export into review with:</p>
+        <pre>gen3tl web import &lt;export&gt;.json --source contributor</pre>
+        <p>The catalog stays unchanged until the review batch passes.</p>
+        <h3 id="local">From a working copy</h3>
+        <p>Run the editor against a working copy with:</p>
+        <pre>PYTHONPATH=src python3 -m gen3tl web server start --page editor --foreground --profile &lt;game&gt; --lang &lt;code&gt;</pre>
+        <p>The local page offers <b>Save drafts</b> to write text drafts into the catalog for review.</p>
+      </section>
+
+      <section id="terms">
+        <h2>Terms</h2>
+        <p>The Terms view lists every glossary term with the entries whose English names it and those whose translation
+          holds one of its forms, most used first. Filters: category; use (used by entries, unused, shortened in use,
+          edited here); order by uses, by English or as in the glossary.</p>
+        <p>Editable fields: translation; label, the form of short fields, empty when it equals the translation; gender;
+          sources; notes; and the inflected forms by case and number. Forms are written by hand: the page has no
+          morphology library. <b>Revert</b> restores the glossary row.</p>
+        <p>A change of the translation, the label, the gender or a form is a rename: it replaces each whole-word form
+          of the term in every translation that uses it with the form of the same case and number. A different glossary
+          term whose name encloses that form is protected and needs its own explicit rename. A change of notes or
+          sources alone changes no line. When the translation changes while forms keep the old text, the view lists
+          those forms.</p>
+        <p><b>Check the change</b> previews the rename as the term rename command of the toolkit reports it: every line
+          the rename changes and every line whose inserted-word slot it widens, each checked as a text is, with approved
+          lines and lines with findings listed apart. The preview needs the check, and its widths are approximate
+          without the ROM.</p>
+        <p>The entries using a term carry marks: <i>English</i>, the English names the term; <i>form</i>, the
+          translation holds a form; <i>shortened</i>, the label stands for the full form; <i>no form</i>, translated
+          without a form of the term (a glossary warning); <i>form only</i>, a form appears where the English does not
+          name the term. A form-only entry is renamed only when <i>include in the rename</i> is checked.</p>
+        <p>A term edit is a draft; Export and the submission issue carry it in <code>terms</code>. The project applies a
+          record only while its <code>base</code> equals the current glossary row.</p>
+        <h3>Families</h3>
+        <p>The Families view shows related terms side by side: the terms of one category that share an English word,
+          the moves of one move type and the moves of one move list of the game. Its marks are review hints: wording, hyphens, shortened labels and, for moves, whether the names grow with the power. Terms are
+          edited in the Terms view.</p>
+      </section>
+
+      <section id="pictures">
+        <h2>Pictures</h2>
+        <p>The Pictures view lists the graphics that carry text, with screen, English text, category (translate,
+          optional or keep) and reason, filtered by category, edit status (edited in the project, uploaded here, not
+          edited, no ROM source) and text. The list needs no ROM. The pixels come only from the user's ROM: the page
+          extracts each graphic in the browser with the graphics extraction code of the toolkit.</p>
+        <p>With the ROM loaded the view shows the original sheet with its text areas, the project's edit laid over it
+          as the build lays it, and the upload, at 1× to 4×, with the palette.</p>
+        <ol>
+          <li><b>Download original sheet</b>: an indexed PNG with the palette of the ROM. <b>Download edited sheet</b>
+            gives the project's edit or the upload over the sheet of the ROM.</li>
+          <li>Change only the text pixels in an image editor; keep the dimensions and the palette.</li>
+          <li>Enter the text areas as <code>x,y,w,h</code> in sheet pixels, separated by semicolons. Tiles stays empty
+            for the original tile count; a larger count appends tiles after the last one, which needs evidence that the
+            game loads them over unused memory, and not every graphic can grow.</li>
+          <li><b>Upload edited sheet</b>. The page checks it as the pixel check of the toolkit does and lists the
+            findings: a pixel changed outside the text areas, a change of dimensions or palette, a colour outside the
+            palette, a change past the last tile.</li>
+        </ol>
+        <div class="scroll-x">
+          <table class="table">
+            <tr><th>Result</th><th>Meaning</th></tr>
+            <tr><td><i>Kept: included in the export.</i></td><td>The sheet passes and differs from the original and from
+              the project's edit.</td></tr>
+            <tr><td><i>Not kept: the sheet fails the check.</i></td><td>See the findings.</td></tr>
+            <tr><td><i>Not kept: no pixel differs from the original.</i></td><td>Nothing to keep.</td></tr>
+            <tr><td><i>Not kept: the sheet equals the project's edit.</i></td><td>Nothing to keep.</td></tr>
+          </table>
+        </div>
+        <p>A kept upload is stored in area form: an indexed PNG of the size of the sheet that holds the palette indices
+          inside the text areas and the appended tiles, index 0 elsewhere, and a grey palette with no ROM colour.
+          <b>Remove upload</b> deletes it. The downloaded sheets are built from the ROM and stay on the contributor's
+          machine. Submit downloads the area form as <code>&lt;id&gt;.png</code> for the issue (see
+          <a href="#issue">The issue</a>).</p>
+      </section>
+
+      <section id="keyboards">
+        <h2>Keyboards</h2>
+        <p>The Keyboards view shows the pages of the naming screen keyboard that the language pack declares, in the
+          order Select cycles through them from the page the screen opens on. The rows come from the pack's keyboard
+          file, and the catalog holds them as read-only entries.</p>
+        <ul>
+          <li><b>Screen preview</b>: the key window of the page with every row at its pixel position, the frame in the
+            colour of the page's look. With the ROM loaded every glyph is the game's; colours approximate the
+            palette.</li>
+          <li><b>Keys</b>: one cell per key, row by row: the glyph printed at that place, the character the key enters
+            and its code, the x position and the 8-pixel tile in the key window, and the glyph's source (a language
+            pack glyph, a copy of a base glyph, a base font glyph, or none). Keys outside the columns the cursor
+            reaches are dimmed; a key without a glyph, a key printed as another character, a key that is not
+            printed and a glyph outside the cursor frame of its column are marked. The game places the cursor from
+            the column table of the ROM: the frame of a column spans 12 pixels from the column's x plus 8 in the key
+            window.</li>
+          <li><b>Page label</b>: the page's name on the page-swap button, which shows it while the page before it is
+            open: the project's translated graphic where one exists, else the ROM's, drawn from your ROM as the
+            Pictures view draws it. The game has one label per look, so pages of the same look share it; the graphic's
+            id opens it in Pictures.</li>
+          <li><b>Page order</b> lists the cycle, <b>Page</b> the keyboard, its base keyboard and look, the column count,
+            the x of each cursor column and the page Select leads to, and <b>Catalog rows</b> the entries of the keys and of the printed rows,
+            which open in the Texts view.</li>
+        </ul>
+        <p>A page marked <i>base ROM keys</i> shows the keys of the original game; the other pages show the rows the
+          build writes.</p>
+        <p>To change a key of the language pack, select it in <b>Keys</b>, type the character and choose
+          <b>Apply</b>: the key enters the character and the printed row places its glyph in the middle of the key's
+          cursor frame, the keys around it keeping their places. The arrows of <b>Page order</b> move a page in the
+          Select cycle. The preview, the marks and the page list follow every change. The changes stay in this browser
+          like text drafts, count in Export, travel as <code>keyboard</code> and are written to the pack's keyboard
+          file by <code>gen3tl web import</code>; <b>Discard keyboard changes</b> drops them. A mixed game issue
+          excludes them; a pack-only issue includes them (see <a href="#submit">Submitting</a>).</p>
+        <h3>Union Room chat</h3>
+        <p>Where declared, <b>Union Room chat</b> follows the naming pages. The current Unbound data has three chat
+          pages (uppercase, lowercase and symbols), ten rows each. Every row holds exactly five keys, including spaces;
+          extended keyboard symbols are supported. The row shows its key count, pixel width against the row limit and
+          encoded bytes against its slot capacity, with a preview. <b>Apply</b> accepts only a row that meets all three
+          limits and whose keys are encodable; an invalid row reports its fit error and does not replace the last
+          accepted draft. Chat edits join the other <code>keyboard</code> records in Export and JSON import.</p>
+      </section>
+
+      <section id="fonts">
+        <h2>Fonts</h2>
+        <p>The Fonts view lists every glyph sheet the translation installs: each font of the profile (the font ids
+          that select it, its glyph and width tables) and each sprite font, whose routine draws one tile per text byte
+          through a byte-to-tile table. The art file of the language pack is linked; a glyph the pack draws can be
+          redrawn in the view.</p>
+        <ul>
+          <li><b>Sample</b>: an editable text drawn in the sheet, by default the characters of the language pack. A
+            sprite font draws every byte through its table, so a byte without a tile shows the fallback tile as the
+            game does.</li>
+          <li><b>Tile sheet</b>: for a sprite font, every tile in sheet order, 16 to a row: the ROM's tiles, then
+            one tile for each letter the pack draws, framed. <code>gen3tl lang sprite-sheet</code> writes the same
+            image as a PNG.</li>
+          <li><b>Glyphs</b>: one cell per glyph with its character, code (hexadecimal), tile number and width; a red
+            line marks the width or the advance. Cells the language pack adds, copies from another glyph or redraws
+            are marked; with your ROM loaded, a glyph the pack redraws shows the original of your ROM beside it. The
+            filter shows every glyph with a character, the pack's glyphs only, or every tile of the sheet in sheet
+            order.</li>
+          <li><b>Redraw the glyph</b>: clicking a glyph the pack draws opens a pixel grid at the cell size of the
+            sheet. With your ROM loaded, a letter the pack copies from a ROM glyph opens too, drawn as the glyph it
+            copies; redrawn, it becomes a letter of its own, which needs a drawing in every font style, so the view
+            names the other sheets that still copy it. The palette holds ink, shadow and background, for a sprite font ink, outline and transparent with
+            their palette indices; the width sets the columns of the art. Pixels outside the cell rows of the style
+            and beyond the width stay dimmed. Every stroke updates the sample, the glyph's cell and the tile sheet,
+            and is kept as a draft of this browser like a text edit; Export carries it in <code>glyphs</code>.
+            Discarding the redraw returns to the pack's art. Before any import, the <b>Texts</b> view draws and measures
+            the redrawn glyph at its new width in its previews, meters and check, the steps of a sprite font
+            included, and the submit page measures the texts the same way.</li>
+          <li><b>Byte-to-tile table</b>: for a sprite font, the tile drawn for each of the 256 byte values, the
+            pack's entries marked.</li>
+        </ul>
+      </section>
+
+      <section id="pokedex">
+        <h2>Pokédex</h2>
+        <p>The <a href="pokedex.html">Pokédex</a> is a read-only view of the game's published data in the selected
+          language. Its names and descriptions resolve through that language's keyed catalog. Changing the site and
+          game language keeps the open card and the page, list and detail scroll positions.</p>
+        <p>A move with variable power shows an explanatory formula paragraph. Where the data distinguishes conditions, a <b>Condition / Power</b> table lists the tiers; a
+          compact move popup shows a dash for such a formula. These texts explain the implemented game behavior.</p>
+        <p>In a species' move table, a weight-based move's power is calculated against that target species' unmodified
+          base weight. The cell tooltip, <i>Power against this species at its base weight</i>, states this basis; other
+          move powers and their formula explanations remain unchanged.</p>
+      </section>
+
+      <section id="review">
+        <h2>Review and release</h2>
+        <p>The checks of the editor cover fit and form; meaning is left to people. Every text has one of three
+          statuses:</p>
+        <div class="scroll-x">
+          <table class="table">
+            <tr><th>Status</th><th>Meaning</th><th>In a patch</th></tr>
+            <tr><td>Untranslated</td><td>No translation yet.</td><td>The game shows the original text.</td></tr>
+            <tr><td>Translated</td><td>A maintainer merged the translation.</td><td>Yes.</td></tr>
+            <tr><td>Approved</td><td>The text was part of a version whose playtest was reported, or it passed the
+              review of the project.</td><td>Yes.</td></tr>
+          </table>
+        </div>
+        <p>Merging the pull request is the review of a contribution. A playtest of a released version is reported
+          with the <b>Playtest report</b> form of the game project; the translated texts that have not changed since
+          that version then become approved. A later edit of an approved text stays approved.</p>
+        <p>For the languages the project maintains itself,
+          texts are grouped into batches by origin (one map's scripts, one battle text table, one description table),
+          each batch with its context, and every batch passes three review passes, each independent of the translation
+          it checks:</p>
+        <div class="scroll-x">
+          <table class="table">
+            <tr><th>Pass</th><th>What it checks</th></tr>
+            <tr><td>Accuracy</td><td>Meaning against the English and the context; glossary terms; character and place
+              names; the gender of speaker and addressee; placeholders and control codes.</td></tr>
+            <tr><td>Proofreading</td><td>Spelling, grammar, punctuation and typography by the norms of the written
+              standard language.</td></tr>
+            <tr><td>Editorial</td><td>Register and character voice; the form of address per speaker as the glossary
+              records it; tone matching the original; consistency with approved batches.</td></tr>
+          </table>
+        </div>
+        <p>Every finding goes back to the translation, and the affected pass is repeated. A batch is approved when
+          all three passes report no findings. Sweeps over all approved batches repeat
+          the proofreading and editorial passes after every few batches and before a release. Before every build the quality gate checks
+          that placeholders and control codes are preserved and only encodable characters are used, the layout fit,
+          the glossary usage and the consistency of identical source strings. Translated and approved texts enter the
+          next release of the translation patch.</p>
+        <h3>What a translation keeps</h3>
+        <ul>
+          <li>The meaning of the English in its context: speaker, addressee, map and neighbouring lines.</li>
+          <li>Glossary terms and names as the glossary records them.</li>
+          <li>Every placeholder and control code of the English, except those the rules of the entry allow to drop.</li>
+          <li>The fixed form of an inserted word: the sentence is built around it.</li>
+          <li>Text addressed to the player avoids forms that mark the player's gender: the player character can be of
+            either gender.</li>
+          <li>Consistency with the approved translations of the same English, which the context pane lists.</li>
+        </ul>
+      </section>
+
+      <section id="save">
+        <h2>Save converter</h2>
+        <p>See the <a href="save-guide.html">Save converter guide</a> for conversion, renaming and downloading.</p>
+      </section>
+
+      <section id="keys">
+        <h2>Keys</h2>
+        <div class="scroll-x">
+          <table class="table">
+            <tr><th>Key</th><th>Effect</th></tr>
+            <tr><td><kbd>Enter</kbd></td><td>Next line: <code>\n</code>, or <code>\l</code> after the first break of a
+              dialogue or battle box.</td></tr>
+            <tr><td><kbd>Alt+Enter</kbd></td><td>Scrolling line break <code>\l</code>.</td></tr>
+            <tr><td><kbd>Shift+Enter</kbd></td><td>New box <code>\p</code>.</td></tr>
+            <tr><td><kbd>Ctrl+Z</kbd></td><td>Undo in the field.</td></tr>
+            <tr><td><kbd>Ctrl+Shift+Z</kbd>, <kbd>Ctrl+Y</kbd></td><td>Redo in the field.</td></tr>
+            <tr><td><kbd>Alt+Up</kbd>, <kbd>Alt+Down</kbd></td><td>Previous, next item of the view.</td></tr>
+            <tr><td><kbd>K</kbd>, <kbd>J</kbd></td><td>Previous, next item, outside a text field.</td></tr>
+            <tr><td><kbd>Up</kbd>, <kbd>Down</kbd></td><td>Previous, next entry in the focused list; <kbd>Enter</kbd>
+              moves to the field.</td></tr>
+            <tr><td><kbd>Escape</kbd></td><td>Closes a drawer.</td></tr>
+          </table>
+        </div>
+      </section>
+
+    </article>
+
+    <aside class="aside guide-toc" aria-label="Contents">
+      <nav class="card" aria-label="Guide sections">
+        <h2 class="aside-title">Contents</h2>
+        <ul>
+          <li><a href="#quick">Quick start</a></li>
+          <li><a href="#requirements">Requirements</a></li>
+          <li><a href="#open">Opening the editor</a></li>
+          <li><a href="#find">Finding entries</a></li>
+          <li><a href="#write">Writing the translation</a></li>
+          <li><a href="#check">The check</a></li>
+          <li><a href="#export">Drafts and export</a></li>
+          <li><a href="#submit">Submitting</a></li>
+          <li><a href="#terms">Terms</a></li>
+          <li><a href="#pictures">Pictures</a></li>
+          <li><a href="#keyboards">Keyboards</a></li>
+          <li><a href="#fonts">Fonts</a></li>
+          <li><a href="#pokedex">Pokédex</a></li>
+          <li><a href="#review">Review and release</a></li>
+          <li><a href="#save">Save converter</a></li>
+          <li><a href="#keys">Keys</a></li>
+        </ul>
+      </nav>
+    </aside>
+  </div>
+</main>
+
+<!-- site-shell: footer-static -->
+<footer class="foot" data-site-footer="static"><div class="wrap"><a href="license-gen3tl.txt" rel="noreferrer" data-ui="gen3tl licence" data-ui-site="">gen3tl licence</a><a href="fonts/OFL.txt" rel="noreferrer" data-ui="Font licenses" data-ui-site="">Font licenses</a><a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noreferrer" data-ui="Content licence" data-ui-site="">Content licence</a></div></footer>
+<!-- /site-shell: footer-static -->
+</body>
+</html>

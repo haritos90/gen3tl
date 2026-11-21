@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title data-ui="Translation editor">Translation editor</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="site.css">
+<script src="js/theme.js"></script>
+<script src="js/editor-startup.js"></script>
+<script type="module" src="js/editor/editor.js"></script>
+</head>
+<body class="editor-page">
+
+<div id="start" class="start">
+<!-- site-shell: masthead -->
+<header class="mast" data-site-mast="" data-site-language="display">
+  <a class="brand" href="./"><span class="tile"></span>gen3tl</a>
+  <nav class="tools" aria-label="Site" data-ui-label="Site" data-ui-site="">
+    <button class="tools-toggle" type="button" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="tools-icon"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span class="tools-current" data-tools-current="" data-ui="Tools" data-ui-site="">Tools</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></button>
+    <div class="tools-list">
+      <a href="./" class="brand c-home" aria-label="Home" data-ui-label="Home" data-ui-site="" title="Home" data-ui-title="Home"><span class="c-home-arrow" aria-hidden="true">←</span><span data-ui="Home" data-ui-site="">Home</span></a>
+      <a data-tool="patch" href="patch" data-ui="Patcher" data-ui-site="">Patcher</a>
+      <a data-tool="editor" href="editor" aria-current="page" data-ui="Translation editor" data-ui-site="">Translation editor</a>
+      <a data-tool="save" href="save" data-ui="Save converter" data-ui-site="">Save converter</a>
+      <a data-tool="pokedex" href="pokedex" data-ui="Pokédex" data-ui-site="">Pokédex</a>
+      <a href="guide" data-ui="Guide" data-ui-site="">Guide</a>
+    </div>
+  </nav>
+  <div class="mast-controls">
+    <details class="lang-menu">
+      <summary title="Display language" data-ui-title="Display language" data-ui-site=""><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="globe"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"></path></svg><span class="lang-name" data-lang-name=""></span><span class="lang-code" data-lang-code="">EN</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></summary>
+      <div class="lang-list" role="group" aria-label="Language" data-ui-label="Language" data-ui-site="" data-lang-list=""></div>
+    </details>
+    <button class="theme" data-toggle-theme="" type="button" aria-label="Toggle dark mode" data-ui-label="Toggle dark mode" data-ui-site="" title="Toggle dark mode" data-ui-title="Toggle dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+  </div>
+</header>
+<!-- /site-shell: masthead -->
+<main class="page wrap snug">
+  <section class="intro">
+    <p class="eyebrow" data-ui="Translation editor">Translation editor</p>
+    <h1 class="page-title" data-ui="Choose a game.">Choose a game.</h1>
+    <p class="muted" data-ui="The editor opens with the catalog of one game in one language.">The editor opens with the catalog of one game in one language.</p>
+    <p class="muted" data-ui="The {guide} describes editing, checking, exporting and submitting.">The <a href="guide" data-ui-hole="guide" data-ui="contributor guide">contributor guide</a> describes editing, checking, exporting and submitting.</p>
+  </section>
+  <form id="start-lookup" class="object-lookup">
+    <label for="start-reference" data-ui="Open reference">Open reference</label>
+    <input id="start-reference" class="input" type="text" spellcheck="false" autocomplete="off" placeholder="Paste a reference, editor address or catalog key" data-ui-placeholder="Paste a reference, editor address or catalog key" aria-describedby="start-lookup-status">
+    <button class="btn sm" type="submit" data-ui="Open">Open</button>
+    <p id="start-lookup-status" class="small lookup-status" role="status" aria-live="polite" aria-atomic="true"></p>
+  </form>
+  <p id="start-error" class="note err" role="alert" hidden></p>
+  <div class="with-aside">
+    <section class="steps" aria-label="Editor setup" data-ui-label="Editor setup">
+      <article class="step is-active" id="start-game">
+        <header><span class="n">1</span><h2 class="step-title" data-ui="Game">Game</h2><span id="start-game-chip" class="chip ok" hidden></span></header>
+        <div class="opts" role="radiogroup" aria-label="Game" data-ui-label="Game" id="start-games">
+          <div class="loading-row skeleton" aria-hidden="true"></div>
+        </div>
+        <div class="field">
+          <label for="start-lang" data-ui="Catalog language">Catalog language</label>
+          <select id="start-lang" class="select" disabled></select>
+        </div>
+        <p class="summary" id="start-game-note"></p>
+        <div id="start-source" class="note" hidden></div>
+      </article>
+      <article class="step is-locked" id="start-rom">
+        <header><span class="n">2</span><h2 class="step-title" data-ui="Your ROM">Your ROM</h2><span class="chip plain" data-ui="Optional">Optional</span></header>
+        <div class="file" id="start-rom-file" hidden>
+          <span class="ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg></span>
+          <div><div class="n" id="start-rom-name"></div><div class="m"><span class="chip ok" data-ui="Verified">Verified</span></div></div>
+          <button id="start-replace" class="btn sm" type="button" data-ui="Replace">Replace</button>
+        </div>
+        <div class="drop" id="start-drop">
+          <strong id="start-drop-title" data-ui="Drop your ROM here">Drop your ROM here</strong>
+          <span class="small" data-ui="or {browse}. The file is read in this browser and stays local.">or <button class="browse" type="button" id="start-browse" data-ui-hole="browse" data-ui="browse">browse</button>. The file is read in this browser and stays local.</span>
+          <span class="small mono" id="start-expected"></span>
+          <button id="start-replace-cancel" class="btn sm" type="button" hidden data-ui="Keep current ROM">Keep current ROM</button>
+        </div>
+        <p class="small muted" id="start-rom-help" data-ui="The game's text appears when the ROM, original or patched, is loaded.">The game's text appears when the ROM, original or patched, is loaded.</p>
+        <p id="start-rom-error" class="note err" role="alert" hidden></p>
+        <p id="start-rom-progress" class="note rom-progress" role="status" aria-live="polite" hidden data-ui="Verifying the ROM and any patches…">Verifying the ROM and any patches…</p>
+        <p id="start-patch-note" class="small muted" hidden></p>
+        <div id="start-patch" hidden></div>
+        <div class="romstate" id="start-rom-options">
+          <div class="card">
+            <h3 class="romstate-title"><span class="dot ok"></span><span data-ui="With your ROM">With your ROM</span></h3>
+            <p data-ui="The English of every line appears beside its translation, drawn with the exact game glyphs and measured against its real window. Pictures with text show the original sheet from your file.">The English of every line appears beside its translation, drawn with the exact game glyphs and measured against its real window. Pictures with text show the original sheet from your file.</p>
+          </div>
+          <div class="card">
+            <h3 class="romstate-title"><span class="dot none"></span><span data-ui="Without a ROM">Without a ROM</span></h3>
+            <p data-ui="The editor shows the keys and the translations with their states; the English, the search by it and the checks that need it wait for the ROM. Glyphs the toolkit does not ship are drawn as stand-ins with a fallback width. You can add the ROM later from the top bar.">The editor shows the keys and the translations with their states; the English, the search by it and the checks that need it wait for the ROM. Glyphs the toolkit does not ship are drawn as stand-ins with a fallback width. You can add the ROM later from the top bar.</p>
+          </div>
+        </div>
+      </article>
+      <div class="go">
+        <button class="btn primary big" type="button" id="start-open" disabled data-ui="Open the editor">Open the editor</button>
+        <span class="muted small" id="start-summary"></span>
+      </div>
+    </section>
+    <aside class="aside" aria-label="Good to know" data-ui-label="Good to know">
+      <div class="card">
+        <h2 class="aside-title" data-ui="What you can do">What you can do</h2>
+        <ul>
+          <li data-ui="Translate texts, with line and page breaks placed by key or button.">Translate texts, with line and page breaks placed by key or button.</li>
+          <li data-ui="Edit glossary terms and see every line they affect.">Edit glossary terms and see every line they affect.</li>
+          <li data-ui="Redraw the text pixels of pictures over the original sheet.">Redraw the text pixels of pictures over the original sheet.</li>
+          <li data-ui="Check the Pokédex names in your language.">Check the Pokédex names in your language.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h2 class="aside-title" data-ui="How changes land">How changes land</h2>
+        <ul>
+          <li data-ui="Drafts stay in this browser until you export them.">Drafts stay in this browser until you export them.</li>
+          <li data-ui="Export them as JSON for review; every change is checked and reviewed before a release.">Export them as JSON for review; every change is checked and reviewed before a release.</li>
+          <li data-ui="With {command} running on your machine, text drafts save into the catalog.">With <code data-ui-hole="command">gen3tl web server start --page editor</code> running on your machine, text drafts save into the catalog.</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</main>
+<!-- site-shell: footer -->
+<footer class="foot" data-site-footer=""><div class="wrap"><a href="license-gen3tl.txt" rel="noreferrer" data-ui="gen3tl licence" data-ui-site="">gen3tl licence</a><a href="fonts/OFL.txt" rel="noreferrer" data-ui="Font licenses" data-ui-site="">Font licenses</a></div></footer>
+<!-- /site-shell: footer -->
+</div>
+
+<div id="app" class="app">
+<!-- site-shell: masthead-workspace -->
+<header class="mast" data-site-mast="" data-site-language="display">
+  <a class="brand" href="./"><span class="tile"></span>gen3tl</a>
+  <nav class="tools" aria-label="Site" data-ui-label="Site" data-ui-site="">
+    <button class="tools-toggle" type="button" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="tools-icon"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span class="tools-current" data-tools-current="" data-ui="Tools" data-ui-site="">Tools</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></button>
+    <div class="tools-list">
+      <a href="./" class="brand c-home" aria-label="Home" data-ui-label="Home" data-ui-site="" title="Home" data-ui-title="Home"><span class="c-home-arrow" aria-hidden="true">←</span><span data-ui="Home" data-ui-site="">Home</span></a>
+      <a data-tool="patch" href="patch" data-ui="Patcher" data-ui-site="">Patcher</a>
+      <a href="#start" id="link-start" aria-current="page" data-ui="Translation editor" data-ui-site="">Translation editor</a>
+      <a data-tool="save" href="save" data-ui="Save converter" data-ui-site="">Save converter</a>
+      <a data-tool="pokedex" href="pokedex" id="link-pokedex" data-ui="Pokédex" data-ui-site="">Pokédex</a>
+      <a href="guide" target="_blank" rel="noopener" title="Contributor guide, in a new tab" data-ui-title="Contributor guide, in a new tab" data-ui="Guide" data-ui-site="">Guide</a>
+    </div>
+  </nav>
+  <div class="mast-controls">
+    <details class="lang-menu">
+      <summary title="Display language" data-ui-title="Display language" data-ui-site=""><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="globe"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"></path></svg><span class="lang-name" data-lang-name=""></span><span class="lang-code" data-lang-code="">EN</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></summary>
+      <div class="lang-list" role="group" aria-label="Language" data-ui-label="Language" data-ui-site="" data-lang-list=""></div>
+    </details>
+    <button class="theme" data-toggle-theme="" type="button" aria-label="Toggle dark mode" data-ui-label="Toggle dark mode" data-ui-site="" title="Toggle dark mode" data-ui-title="Toggle dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+  </div>
+</header>
+<!-- /site-shell: masthead-workspace -->
+<div class="pagebar">
+  <div class="state">
+    <label class="small muted" for="catalog-language" data-ui="Catalog language">Catalog language</label>
+    <select id="catalog-language" class="select mini" disabled></select>
+    <span id="rom-state" class="chip plain" data-ui="No ROM">No ROM</span>
+    <span id="check-status" class="chip plain" data-ui="Check: loading">Check: loading</span>
+    <div class="progress" id="progress" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="progress-label"><span class="label" id="progress-label" data-ui="Translated entries">Translated entries</span><div class="bar"><i class="more" id="progress-more"></i><i id="progress-bar"></i></div><span class="pct" id="progress-pct"></span></div>
+  </div>
+  <div class="acts" role="group" aria-label="Actions" data-ui-label="Actions">
+    <button id="rom-button" class="btn sm" type="button" data-ui="Load your ROM">Load your ROM</button>
+    <input id="rom-file" type="file" accept=".gba,.bin,application/octet-stream" hidden>
+    <button id="export" class="btn sm" type="button" title="Download the changes of this browser as JSON" data-ui-title="Download the changes of this browser as JSON"><span data-ui="Export">Export</span> <span class="kbd" id="edit-count">0</span></button>
+    <button id="save-local" class="btn sm primary" type="button" hidden disabled data-ui="Save drafts">Save drafts</button>
+    <button id="submit" class="btn sm" type="button" disabled title="Review the changes of this browser and submit them" data-ui-title="Review the changes of this browser and submit them" data-ui="Submit">Submit</button>
+  </div>
+</div>
+<nav class="tabs" aria-label="Views" data-ui-label="Views">
+  <span class="tabs-back"><button id="go-back" class="btn sm go-back" type="button" hidden></button></span>
+  <button id="view-texts" type="button" class="on" aria-pressed="true"><span data-ui="Texts">Texts</span> <span class="count" id="count-texts"></span></button>
+  <button id="view-terms" type="button" aria-pressed="false" title="Glossary terms" data-ui-title="Glossary terms"><span data-ui="Terms">Terms</span> <span class="count" id="count-terms"></span></button>
+  <button id="view-families" type="button" aria-pressed="false" title="Related terms side by side" data-ui-title="Related terms side by side"><span data-ui="Families">Families</span> <span class="count" id="count-families"></span></button>
+  <button id="view-pictures" type="button" aria-pressed="false" title="Graphics with text" data-ui-title="Graphics with text"><span data-ui="Pictures">Pictures</span> <span class="count" id="count-pictures"></span></button>
+  <button id="view-keyboards" type="button" aria-pressed="false" title="Naming screen keyboard pages" data-ui-title="Naming screen keyboard pages"><span data-ui="Keyboards">Keyboards</span> <span class="count" id="count-keyboards"></span></button>
+  <button id="view-fonts" type="button" aria-pressed="false" title="Every glyph sheet of the translation" data-ui-title="Every glyph sheet of the translation"><span data-ui="Fonts">Fonts</span> <span class="count" id="count-fonts"></span></button>
+  <button id="view-enginerules" type="button" aria-pressed="false" data-ui="Engine language rules">Engine language rules</button>
+  <span class="grow"></span>
+  <span class="drawer-btns">
+    <button id="show-list" class="drawer-btn" type="button" aria-expanded="false" data-ui="List">List</button>
+    <button id="show-ctx" class="drawer-btn ctx-btn" type="button" aria-expanded="false" data-ui="Context">Context</button>
+  </span>
+</nav>
+<div class="notices">
+  <form id="workspace-lookup" class="object-lookup">
+    <label for="workspace-reference" data-ui="Open reference">Open reference</label>
+    <input id="workspace-reference" class="input" type="text" spellcheck="false" autocomplete="off" placeholder="Paste a reference, editor address or catalog key" data-ui-placeholder="Paste a reference, editor address or catalog key" aria-describedby="workspace-lookup-status">
+    <button class="btn sm" type="submit" data-ui="Open">Open</button>
+    <p id="workspace-lookup-status" class="small lookup-status" role="status" aria-live="polite" aria-atomic="true"></p>
+  </form>
+  <p id="copy-status" class="small" role="status" aria-live="polite" aria-atomic="true"></p>
+  <label id="copy-fallback" class="copy-fallback" hidden><span data-ui="Copy this reference">Copy this reference</span>
+    <input id="copy-value" class="input mono" type="text" readonly spellcheck="false">
+  </label>
+  <div id="banner" class="banner" role="status" hidden></div>
+  <div id="rom-patch" hidden></div>
+  <p id="rom-progress" class="note rom-progress" role="status" aria-live="polite" hidden data-ui="Verifying the ROM and any patches…">Verifying the ROM and any patches…</p>
+  <section id="project-empty" class="banner" aria-live="polite" data-ui="Loading…">Loading…</section>
+</div>
+<div class="views">
+<main id="texts" class="panes three">
+  <aside class="pane side" aria-label="Entries" data-ui-label="Entries">
+    <button class="btn sm drawer-close" type="button" data-drawer-close data-ui="Close">Close</button>
+    <div class="filters">
+      <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="search" class="input" type="search" placeholder="Search English, translation or id" data-ui-placeholder="Search English, translation or id" aria-label="Search" data-ui-label="Search"></div>
+      <div class="pair">
+        <select id="f-status" class="select" aria-label="Status" data-ui-label="Status">
+        <option value="" data-ui="All statuses">All statuses</option>
+        <option value="untranslated" data-ui="Untranslated">Untranslated</option>
+        <option value="approved" data-ui="Approved">Approved</option>
+        <option value="fuzzy" data-ui="Translated">Translated</option>
+        <option value="nothing" data-ui="Nothing to translate">Nothing to translate</option>
+        <option value="edited" data-ui="Edited here">Edited here</option>
+      </select>
+        <select id="f-problems" class="select" aria-label="Problems" data-ui-label="Problems">
+        <option value="" data-ui="Any check result">Any check result</option>
+        <option value="overflow" data-ui="Overflowing">Overflowing</option>
+        <option value="errors" data-ui="With errors">With errors</option>
+        <option value="warnings" data-ui="With warnings">With warnings</option>
+      </select>
+      </div>
+      <div class="pair">
+        <select id="f-file" class="select" aria-label="PO file" data-ui-label="PO file"><option value="" data-ui="All files">All files</option></select>
+        <select id="f-map" class="select" aria-label="Map" data-ui-label="Map"><option value="" data-ui="All maps">All maps</option></select>
+      </div>
+      <div class="pair">
+        <select id="f-kind" class="select" aria-label="Window kind" data-ui-label="Window kind">
+        <option value="" data-ui="All windows">All windows</option>
+        <option value="dialogue" data-ui="Dialogue">Dialogue</option>
+        <option value="battle" data-ui="Battle">Battle</option>
+        <option value="multiline" data-ui="Multi-line">Multi-line</option>
+        <option value="single" data-ui="Single line">Single line</option>
+        <option value="field" data-ui="Fixed field">Fixed field</option>
+      </select>
+        <select id="f-reach" class="select" aria-label="Reach" data-ui-label="Reach" title="Whether the game shows the text (reach study and reviews)" data-ui-title="Whether the game shows the text (reach study and reviews)">
+        <option value="" data-ui="Any reach">Any reach</option>
+        <option value="reachable" data-ui="Reachable">Reachable</option>
+        <option value="possibly reachable" data-ui="Possibly reachable">Possibly reachable</option>
+        <option value="never shown" data-ui="Never shown">Never shown</option>
+      </select>
+      </div>
+      <div class="pair">
+        <select id="f-terms" class="select" aria-label="Terms" data-ui-label="Terms" title="Entries that show a term's label for its full form" data-ui-title="Entries that show a term's label for its full form">
+        <option value="" data-ui="Any term forms">Any term forms</option>
+        <option value="shortened" data-ui="Shortened term">Shortened term</option>
+      </select>
+        <select id="list-sort" class="select" aria-label="Sort entries" data-ui-label="Sort entries">
+        <option value="relevance" data-ui="Story order">Story order</option>
+        <option value="file" data-ui="File order">File order</option>
+      </select>
+      </div>
+    </div>
+    <div id="count" class="count"></div>
+    <div id="list" class="list" tabindex="0" role="listbox" aria-label="Entry list" data-ui-label="Entry list">
+      <div id="list-space" class="list-space"></div>
+    </div>
+  </aside>
+  <section id="entry" class="pane main" aria-label="Entry" data-ui-label="Entry">
+    <div class="entry">
+      <div class="head">
+        <span id="e-id" class="id"></span>
+        <button id="copy-text" class="btn sm" type="button" disabled data-ui="Copy reference">Copy reference</button>
+        <div class="meta"><span id="e-window" class="chip plain" hidden></span><span id="e-status" class="badge"></span><span id="e-reach" class="badge never" hidden data-ui="never shown">never shown</span></div>
+        <div class="nav"><button id="prev" class="btn sm" type="button" title="Previous entry (Alt+Up)" data-ui-title="Previous entry (Alt+Up)" >&#8593; <span data-ui="Prev">Prev</span></button><button id="next" class="btn sm" type="button" title="Next entry (Alt+Down)" data-ui-title="Next entry (Alt+Down)" ><span data-ui="Next">Next</span> &#8595;</button></div>
+      </div>
+
+      <div class="block">
+        <div class="lbl">
+          <label for="reference-language" data-ui="Reference language">Reference language</label>
+          <select id="reference-language" class="select mini"><option value="" data-ui="None">None</option></select>
+        </div>
+      </div>
+
+      <div id="english-block" class="block">
+        <div class="lbl"><span data-ui="English">English</span> <span class="spacer"></span><span id="e-file" class="mono"></span></div>
+        <div id="english" class="text ro src-text"></div>
+      </div>
+
+      <div id="reference-block" class="block" hidden>
+        <div class="lbl"><span id="reference-label"></span><span class="spacer"></span><span data-ui="read-only">read-only</span></div>
+        <div id="reference" class="text ro" contenteditable="false" role="textbox" aria-readonly="true" aria-multiline="true" aria-labelledby="reference-label"></div>
+      </div>
+
+      <div class="block">
+        <div class="lbl"><span data-ui="Translation">Translation</span> <span class="spacer"></span><span id="e-draft" class="draft-state"></span></div>
+        <div class="editor-area">
+          <div class="tools">
+            <button class="btn sm" type="button" data-break="\n" title="Line break (\n)" data-ui-title="Line break (\n)">\n <kbd class="kbd">Enter</kbd></button>
+            <button class="btn sm" type="button" data-break="\l" title="Scrolling line break (\l)" data-ui-title="Scrolling line break (\l)">\l <kbd class="kbd">Alt+Enter</kbd></button>
+            <button class="btn sm" type="button" data-break="\p" title="New box (\p)" data-ui-title="New box (\p)">\p <kbd class="kbd">Shift+Enter</kbd></button>
+            <span id="tokens" class="tokens"></span>
+            <span class="spacer"></span>
+            <button id="revert" class="btn sm ghost" type="button" title="Back to the translation of the data" data-ui-title="Back to the translation of the data" data-ui="Discard draft">Discard draft</button>
+          </div>
+          <div id="field" class="text editable" aria-label="Translation" data-ui-label="Translation" aria-multiline="true" role="textbox"></div>
+        </div>
+        <p id="break-note" class="hint" hidden></p>
+        <p class="hint" data-ui="Enter: next line (in a message box the first break is \n, later ones scroll with \l) · Alt+Enter: \l · Shift+Enter: new box · codes are inserted from the chips above">Enter: next line (in a message box the first break is \n, later ones scroll with \l) &middot; Alt+Enter: \l &middot; Shift+Enter: new box &middot; codes are inserted from the chips above</p>
+        <div id="bars" class="lines" aria-label="Line widths" data-ui-label="Line widths"></div>
+        <p id="lines-note" class="small muted"></p>
+      </div>
+
+      <div class="block">
+        <div class="lbl"><span id="problems-head" data-ui="Problems">Problems</span></div>
+        <ul id="problems" class="problems"></ul>
+      </div>
+
+      <div class="block boxwrap">
+        <div class="lbl"><span data-ui="In the game">In the game</span> <span class="spacer"></span>
+          <select id="zoom" class="select mini" aria-label="Zoom" data-ui-label="Zoom">
+            <option value="1">1&times;</option>
+            <option value="2" selected>2&times;</option>
+            <option value="3">3&times;</option>
+          </select>
+        </div>
+        <div class="preview">
+          <div class="pv-label" id="pv-en-label" data-ui="English">English</div>
+          <canvas id="pv-en" role="img" aria-label="English" data-ui-label="English"></canvas>
+          <div class="pv-label" data-ui="Translation">Translation</div>
+          <canvas id="pv-tr" role="img" aria-label="Translation" data-ui-label="Translation"></canvas>
+        </div>
+        <div class="cap"><span id="preview-cap"></span><span class="spacer"></span><span id="clip-chip" class="chip err" hidden></span></div>
+        <p id="preview-note" class="small muted"></p>
+        <div id="fix-note" class="note err" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg><span id="fix-text"></span></div>
+      </div>
+    </div>
+  </section>
+  <aside class="pane ctx" aria-label="Context" data-ui-label="Context">
+    <button class="btn sm drawer-close" type="button" data-drawer-close data-ui="Close">Close</button>
+    <section class="ctx-sec"><h2 class="ctx-title" data-ui="Context">Context</h2><div id="context"></div></section>
+    <section class="ctx-sec"><h2 class="ctx-title" data-ui="Window">Window</h2><dl id="window" class="kv"></dl></section>
+    <section class="ctx-sec"><h2 class="ctx-title" data-ui="Notes">Notes</h2><div id="note"></div></section>
+    <section class="ctx-sec"><h2 class="ctx-title" data-ui="Terms">Terms</h2><div id="glossary"></div></section>
+    <section class="ctx-sec"><h2 class="ctx-title"><span data-ui="Rules">Rules</span> <span id="rules-note" class="muted"></span></h2><ul id="rules" class="rules"></ul></section>
+    <section class="ctx-sec"><h2 class="ctx-title" data-ui="Approved translations of the same English">Approved translations of the same English</h2><div id="approved"></div></section>
+    <section class="ctx-sec"><h2 class="ctx-title" data-ui="History">History</h2><div id="history" class="hist"></div></section>
+  </aside>
+</main>
+<main id="pictures" class="panes two" hidden>
+  <section class="pane side" aria-label="Graphics" data-ui-label="Graphics">
+    <button class="btn sm drawer-close" type="button" data-drawer-close data-ui="Close">Close</button>
+    <div class="filters">
+      <input id="p-search" type="search" placeholder="Search id, English, screen or notes" data-ui-placeholder="Search id, English, screen or notes" aria-label="Search graphics" data-ui-label="Search graphics" aria-describedby="p-search-help">
+      <p id="p-search-help" class="filter-help muted small" data-ui="Search includes active notes and their review status, sources and evidence.">Search includes active notes and their review status, sources and evidence.</p>
+      <select id="p-category" aria-label="Category" data-ui-label="Category">
+        <option value="" data-ui="All categories">All categories</option>
+        <option value="translate" data-ui="Translate">Translate</option>
+        <option value="optional" data-ui="Optional">Optional</option>
+        <option value="keep" data-ui="Keep">Keep</option>
+      </select>
+      <select id="p-status" aria-label="Edit status" data-ui-label="Edit status">
+        <option value="" data-ui="Any edit status">Any edit status</option>
+        <option value="edited" data-ui="Edited in the project">Edited in the project</option>
+        <option value="uploaded" data-ui="Uploaded here">Uploaded here</option>
+        <option value="none" data-ui="Not edited">Not edited</option>
+        <option value="nosource" data-ui="No ROM source">No ROM source</option>
+      </select>
+    </div>
+    <div id="p-count" class="count"></div>
+    <div id="p-list" class="list g-list" tabindex="0" role="listbox" aria-label="Graphics list" data-ui-label="Graphics list"></div>
+  </section>
+  <section id="picture" class="pane main detail" aria-label="Graphic" data-ui-label="Graphic">
+    <div class="entry-head">
+      <button id="p-prev" type="button" title="Previous graphic" data-ui-title="Previous graphic">&#8593;</button>
+      <button id="p-next" type="button" title="Next graphic" data-ui-title="Next graphic">&#8595;</button>
+      <span id="p-id" class="eid"></span>
+      <button id="copy-picture" class="btn sm" type="button" disabled data-ui="Copy reference">Copy reference</button>
+      <span id="p-category-badge" class="badge"></span>
+      <span id="p-status-badge" class="badge"></span>
+      <span id="p-screen" class="muted"></span>
+    </div>
+    <div class="columns">
+      <div class="col-main">
+        <div class="block">
+          <h2><span data-ui="Pictures">Pictures</span>
+            <select id="p-zoom" aria-label="Zoom" data-ui-label="Zoom">
+              <option value="1">1&times;</option>
+              <option value="2" selected>2&times;</option>
+              <option value="3">3&times;</option>
+              <option value="4">4&times;</option>
+            </select>
+            <label class="muted"><input id="p-show-areas" type="checkbox" checked> <span data-ui="text areas">text areas</span></label>
+            <span id="p-note" class="muted"></span>
+          </h2>
+          <div id="p-sheets" class="sheets"></div>
+          <div id="p-palette" class="swatches"></div>
+        </div>
+        <div class="block">
+          <h2 data-ui="Edit the sheet">Edit the sheet</h2>
+          <p class="hint" data-ui="Download the original sheet (an indexed PNG with the ROM palette), change only the text pixels and keep the palette, then upload it with its text areas. The page checks it as gen3tl build gfx-check does; a sheet that passes is kept in its area form (the text areas only) and included in the export.">Download the original sheet (an indexed PNG with the ROM palette), change only the
+            text pixels and keep the palette, then upload it with its text areas. The page checks it as
+            gen3tl build gfx-check does; a sheet that passes is kept in its area form (the text areas only) and
+            included in the export.</p>
+          <div class="toolbar">
+            <button id="p-download" type="button" data-ui="Download original sheet">Download original sheet</button>
+            <button id="p-download-edited" type="button" title="The project's edit or your upload, over your ROM's sheet" data-ui-title="The project's edit or your upload, over your ROM's sheet" data-ui="Download edited sheet">Download edited sheet</button>
+          </div>
+          <div class="p-form">
+            <label><span data-ui="Text areas">Text areas</span> <input id="p-area-input" type="text" placeholder="x,y,w,h; x,y,w,h" spellcheck="false"></label>
+            <label><span data-ui="Tiles">Tiles</span> <input id="p-tiles" type="number" min="1" placeholder="original" data-ui-placeholder="original"></label>
+            <button id="p-upload" type="button" data-ui="Upload edited sheet">Upload edited sheet</button>
+            <input id="p-file" type="file" accept=".png,image/png" hidden>
+          </div>
+          <div id="p-result" class="result"></div>
+          <div id="p-kept" class="kept"></div>
+        </div>
+      </div>
+      <div class="col-side">
+        <div class="block"><h2 data-ui="Graphic">Graphic</h2><dl id="p-facts" class="kv"></dl></div>
+        <div class="block"><h2 data-ui="Project edit">Project edit</h2><div id="p-project"></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+<main id="fonts" class="panes two" hidden>
+  <section class="pane side" aria-label="Glyph sheets" data-ui-label="Glyph sheets">
+    <button class="btn sm drawer-close" type="button" data-drawer-close data-ui="Close">Close</button>
+    <div id="fo-count" class="count"></div>
+    <div id="fo-list" class="list g-list" tabindex="0" role="listbox" aria-label="Glyph sheet list" data-ui-label="Glyph sheet list"></div>
+  </section>
+  <section id="font" class="pane main detail" aria-label="Glyph sheet" data-ui-label="Glyph sheet">
+    <div class="entry-head">
+      <button id="fo-prev" type="button" title="Previous sheet (Alt+Up)" data-ui-title="Previous sheet (Alt+Up)">&#8593;</button>
+      <button id="fo-next" type="button" title="Next sheet (Alt+Down)" data-ui-title="Next sheet (Alt+Down)">&#8595;</button>
+      <span id="fo-name" class="eid"></span>
+      <button id="copy-font" class="btn sm" type="button" disabled data-ui="Copy reference">Copy reference</button>
+      <span id="fo-kind" class="badge"></span>
+      <span id="fo-style" class="muted"></span>
+    </div>
+    <div class="columns">
+      <div class="col-main">
+        <div class="block">
+          <h2><span data-ui="Sample">Sample</span>
+            <select id="fo-zoom" aria-label="Zoom" data-ui-label="Zoom">
+              <option value="1">1&times;</option>
+              <option value="2" selected>2&times;</option>
+              <option value="3">3&times;</option>
+              <option value="4">4&times;</option>
+            </select>
+          </h2>
+          <textarea id="fo-sample-text" class="fo-sample-text" rows="2" spellcheck="false" aria-label="Sample text" data-ui-label="Sample text"></textarea>
+          <div class="fo-sample"><canvas id="fo-sample" role="img" aria-label="Sample text" data-ui-label="Sample text"></canvas></div>
+          <p id="fo-sample-note" class="small muted"></p>
+        </div>
+        <div class="block" id="fo-sheet-block" hidden>
+          <h2 data-ui="Tile sheet">Tile sheet</h2>
+          <p class="hint" data-ui="The sheet as the build writes it: the ROM's tiles, then one tile for each letter the pack draws, framed. gen3tl lang sprite-sheet renders the same image from your ROM.">The sheet as the build writes it: the ROM's tiles, then one tile for each letter the pack draws,
+            framed. gen3tl lang sprite-sheet renders the same image from your ROM.</p>
+          <div class="fo-sample"><canvas id="fo-sheet" role="img" aria-label="Tile sheet" data-ui-label="Tile sheet"></canvas></div>
+          <p id="fo-sheet-note" class="small muted"></p>
+        </div>
+        <div class="block">
+          <h2><span data-ui="Glyphs">Glyphs</span>
+            <select id="fo-filter" aria-label="Glyphs shown" data-ui-label="Glyphs shown">
+              <option value="" data-ui="Every glyph with a character">Every glyph with a character</option>
+              <option value="pack" data-ui="Added or changed by the pack">Added or changed by the pack</option>
+              <option value="tiles" data-ui="Every tile of the sheet">Every tile of the sheet</option>
+            </select>
+            <span id="fo-note" class="muted"></span>
+          </h2>
+          <p class="hint" data-ui="Each cell shows the glyph as the translation installs it, its character, code, tile number and width; a red line marks the width. Marked cells come from the language pack; with your ROM loaded, a glyph the pack redraws shows the original of your ROM beside it. Click a glyph the pack draws to redraw it; the redraw stays in this browser until you export or submit it.">Each cell shows the glyph as the translation installs it, its character, code, tile number and
+            width; a red line marks the width. Marked cells come from the language pack; with your ROM loaded, a
+            glyph the pack redraws shows the original of your ROM beside it. Click a glyph the pack draws to redraw
+            it; the redraw stays in this browser until you export or submit it.</p>
+          <div id="fo-grid" class="glyph-grid"></div>
+        </div>
+      </div>
+      <div class="col-side">
+        <div class="block" id="fo-edit-block" hidden>
+          <h2><span data-ui="Redraw the glyph">Redraw the glyph</span> <span id="fo-edit-name" class="eid"></span></h2>
+          <div id="fo-palette" class="fo-palette" role="group" aria-label="Pixel to draw" data-ui-label="Pixel to draw"></div>
+          <label class="fo-width"><span data-ui="Width">Width</span>
+            <input id="fo-width" type="number" min="1" max="16" step="1"></label>
+          <canvas id="fo-art" class="fo-art" role="img" aria-label="Redraw the glyph" data-ui-label="Redraw the glyph"></canvas>
+          <div class="fo-edit-actions">
+            <button id="fo-discard" class="btn sm" type="button" data-ui="Discard the redraw">Discard the redraw</button>
+          </div>
+          <p id="fo-edit-note" class="small muted"></p>
+        </div>
+        <div class="block"><h2 data-ui="Sheet">Sheet</h2><dl id="fo-facts" class="kv"></dl></div>
+        <div class="block" id="fo-table-block" hidden>
+          <h2 data-ui="Byte-to-tile table">Byte-to-tile table</h2>
+          <p class="hint" data-ui="The tile the game draws for each text byte; marked entries are the pack's, dimmed ones the fallback tile.">The tile the game draws for each text byte; marked entries are the pack's, dimmed ones the
+            fallback tile.</p>
+          <table id="fo-table" class="byte-table mono"></table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<main id="terms" class="panes two" hidden>
+  <section class="pane side" aria-label="Terms" data-ui-label="Terms">
+    <button class="btn sm drawer-close" type="button" data-drawer-close data-ui="Close">Close</button>
+    <div class="filters">
+      <input id="t-search" type="search" placeholder="Search id, English or translation" data-ui-placeholder="Search id, English or translation" aria-label="Search terms" data-ui-label="Search terms">
+      <select id="t-category" aria-label="Category" data-ui-label="Category"><option value="" data-ui="All categories">All categories</option></select>
+      <select id="t-status" aria-label="Term use" data-ui-label="Term use">
+        <option value="" data-ui="Any use">Any use</option>
+        <option value="used" data-ui="Used by entries">Used by entries</option>
+        <option value="unused" data-ui="Unused">Unused</option>
+        <option value="shortened" data-ui="Shortened in use">Shortened in use</option>
+        <option value="edited" data-ui="Edited here">Edited here</option>
+      </select>
+      <select id="t-sort" aria-label="Sort" data-ui-label="Sort">
+        <option value="uses" data-ui="Most used first">Most used first</option>
+        <option value="english" data-ui="By English">By English</option>
+        <option value="glossary" data-ui="Glossary order">Glossary order</option>
+      </select>
+    </div>
+    <div id="t-count" class="count"></div>
+    <div id="t-list" class="list" tabindex="0" role="listbox" aria-label="Term list" data-ui-label="Term list">
+      <div id="t-list-space" class="list-space"></div>
+    </div>
+  </section>
+  <section id="term" class="pane main detail" aria-label="Term" data-ui-label="Term">
+    <div class="entry-head">
+      <button id="t-prev" type="button" title="Previous term (Alt+Up)" data-ui-title="Previous term (Alt+Up)">&#8593;</button>
+      <button id="t-next" type="button" title="Next term (Alt+Down)" data-ui-title="Next term (Alt+Down)">&#8595;</button>
+      <span id="t-id" class="eid"></span>
+      <button id="copy-term" class="btn sm" type="button" disabled data-ui="Copy reference">Copy reference</button>
+      <span id="t-category-badge" class="badge"></span>
+      <span id="t-status-badge" class="badge"></span>
+      <span id="t-uses" class="muted"></span>
+    </div>
+    <div class="columns">
+      <div class="col-main">
+        <div class="block">
+          <h2><span data-ui="Term">Term</span> <span class="grow"></span><button id="t-revert" type="button" title="Back to the glossary row of the data" data-ui-title="Back to the glossary row of the data" data-ui="Revert">Revert</button></h2>
+          <dl class="kv t-form">
+            <dt data-ui="English">English</dt><dd id="t-english"></dd>
+            <dt><label for="t-translation" data-ui="Translation">Translation</label></dt><dd><input id="t-translation" type="text" spellcheck="false"></dd>
+            <dt><label for="t-label" data-ui="Label">Label</label></dt><dd><input id="t-label" type="text" spellcheck="false" placeholder="the translation" data-ui-placeholder="the translation" title="The form of short fields; empty when it equals the translation" data-ui-title="The form of short fields; empty when it equals the translation"></dd>
+            <dt><label for="t-gender" data-ui="Gender">Gender</label></dt><dd><select id="t-gender"></select></dd>
+            <dt data-ui="Declension">Declension</dt><dd id="t-declension"></dd>
+            <dt><label for="t-sources" data-ui="Sources">Sources</label></dt><dd><input id="t-sources" type="text"></dd>
+            <dt id="t-notes-label"><label for="t-notes" data-ui="Notes">Notes</label></dt><dd id="t-notes-field"><textarea id="t-notes" rows="3"></textarea></dd>
+          </dl>
+          <div id="t-note-controls" hidden></div>
+        </div>
+        <div class="block">
+          <h2 data-ui="Inflected forms">Inflected forms</h2>
+          <table id="t-forms" class="t-forms"></table>
+          <p id="t-stale" class="error"></p>
+          <p class="hint" data-ui="A rename replaces each form of the term in every translation with the form of the same case and number given here. Forms are written by hand: the page has no morphology library.">A rename replaces each form of the term in every translation with the form of the same case
+            and number given here. Forms are written by hand: the page has no morphology library.</p>
+        </div>
+        <div class="block">
+          <h2><span data-ui="Rename preview">Rename preview</span>
+            <button id="t-preview" type="button" disabled title="Check every line the change renames, as gen3tl lang rename does" data-ui-title="Check every line the change renames, as gen3tl lang rename does" data-ui="Check the change">Check the change</button>
+            <select id="t-report-filter" aria-label="Lines" data-ui-label="Lines">
+              <option value="" data-ui="All lines">All lines</option>
+              <option value="approved" data-ui="Approved lines">Approved lines</option>
+              <option value="flagged" data-ui="Lines with findings">Lines with findings</option>
+            </select>
+            <span id="t-preview-note" class="muted"></span>
+          </h2>
+          <div id="t-report" class="report"></div>
+        </div>
+      </div>
+      <div class="col-side">
+        <div class="block"><h2 data-ui="Glossary row">Glossary row</h2><dl id="t-facts" class="kv"></dl></div>
+        <div class="block"><h2 data-ui="Families">Families</h2><div id="t-families"></div></div>
+        <div class="block"><h2 data-ui="Entries using the term">Entries using the term</h2><div id="t-usage"></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+<main id="families" class="panes two" hidden>
+  <section class="pane side" aria-label="Families" data-ui-label="Families">
+    <button class="btn sm drawer-close" type="button" data-drawer-close data-ui="Close">Close</button>
+    <div class="filters">
+      <input id="fam-search" type="search" placeholder="Search family, English or translation" data-ui-placeholder="Search family, English or translation" aria-label="Search families" data-ui-label="Search families">
+      <select id="fam-kind" aria-label="Kind" data-ui-label="Kind">
+        <option value="" data-ui="All kinds">All kinds</option>
+        <option value="word" data-ui="English word">English word</option>
+        <option value="type" data-ui="Move type">Move type</option>
+        <option value="list" data-ui="Game move list">Game move list</option>
+      </select>
+      <select id="fam-category" aria-label="Category" data-ui-label="Category"><option value="" data-ui="All categories">All categories</option></select>
+    </div>
+    <div id="fam-count" class="count"></div>
+    <div id="fam-list" class="list g-list" tabindex="0" role="listbox" aria-label="Family list" data-ui-label="Family list"></div>
+  </section>
+  <section id="family" class="pane main detail" aria-label="Family" data-ui-label="Family">
+    <div class="entry-head">
+      <button id="fam-prev" type="button" title="Previous family (Alt+Up)" data-ui-title="Previous family (Alt+Up)">&#8593;</button>
+      <button id="fam-next" type="button" title="Next family (Alt+Down)" data-ui-title="Next family (Alt+Down)">&#8595;</button>
+      <span id="fam-title"></span>
+      <span id="fam-id" class="eid"></span>
+      <button id="copy-family" class="btn sm" type="button" disabled data-ui="Copy reference">Copy reference</button>
+      <span id="fam-kind-badge" class="badge"></span>
+      <span id="fam-size" class="muted"></span>
+    </div>
+    <div class="block">
+      <h2 data-ui="Marks">Marks</h2>
+      <div id="fam-marks"></div>
+      <p class="hint" data-ui="Review hints: compare wording, hyphens, shortened labels and, for moves, whether the names grow with the power. A term is edited in the Terms view.">Review hints, not check failures: compare wording, hyphens, shortened labels and, for moves,
+        whether the names grow with the power. A term is edited in the Terms view.</p>
+    </div>
+    <div class="block"><h2 data-ui="Members">Members</h2><div id="fam-table" class="fam-wrap"></div></div>
+  </section>
+</main>
+<main id="enginerules" class="panes two" hidden>
+  <section class="pane side" aria-label="Engine language rules" data-ui-label="Engine language rules">
+    <button class="btn sm drawer-close" type="button" data-drawer-close data-ui="Close">Close</button>
+    <div class="filters">
+      <input id="er-search" type="search" placeholder="Search rules or affected texts" data-ui-placeholder="Search rules or affected texts" aria-label="Search rules" data-ui-label="Search rules">
+    </div>
+    <div id="er-count" class="count" role="status" aria-live="polite"></div>
+    <div class="er-scroll">
+      <div id="er-list" class="er-list"></div>
+      <details id="er-fills">
+        <summary data-ui="Engine-filled text">Engine-filled text</summary>
+        <div id="er-fill-list" class="er-list"></div>
+      </details>
+    </div>
+  </section>
+  <section class="pane main detail" aria-label="Engine language rule" data-ui-label="Engine language rule">
+    <p id="er-empty" class="muted" role="status"></p>
+    <div id="er-detail" hidden>
+      <div class="entry-head">
+        <button id="er-prev" type="button" title="Previous rule (Alt+Up)" data-ui-title="Previous rule (Alt+Up)">&#8593;</button>
+        <button id="er-next" type="button" title="Next rule (Alt+Down)" data-ui-title="Next rule (Alt+Down)">&#8595;</button>
+        <h2 id="er-title"></h2>
+        <span id="er-id" class="eid"></span>
+        <button id="copy-engine-rule" class="btn sm" type="button" disabled data-ui="Copy reference">Copy reference</button>
+      </div>
+      <div id="er-body"></div>
+    </div>
+  </section>
+</main>
+<main id="keyboards" class="panes two" hidden>
+  <section class="pane side" aria-label="Keyboard pages" data-ui-label="Keyboard pages">
+    <button class="btn sm drawer-close" type="button" data-drawer-close data-ui="Close">Close</button>
+    <div id="k-count" class="count"></div>
+    <div id="k-list" class="list g-list" tabindex="0" role="listbox" aria-label="Page list" data-ui-label="Page list"></div>
+  </section>
+  <section id="keyboard" class="pane main detail" aria-label="Keyboard page" data-ui-label="Keyboard page">
+    <div class="entry-head">
+      <button id="k-prev" type="button" title="Previous page" data-ui-title="Previous page">&#8593;</button>
+      <button id="k-next" type="button" title="Next page" data-ui-title="Next page">&#8595;</button>
+      <span id="k-name" class="eid"></span>
+      <button id="copy-keyboard-page" class="btn sm" type="button" disabled data-ui="Copy reference">Copy reference</button>
+      <span id="k-board-badge" class="badge"></span>
+      <span id="k-source-badge" class="badge"></span>
+      <span id="k-switch" class="muted"></span>
+    </div>
+    <div class="columns">
+      <div class="col-main">
+        <div class="block">
+          <h2><span data-ui="Screen preview">Screen preview</span>
+            <select id="k-zoom" aria-label="Zoom" data-ui-label="Zoom">
+              <option value="1">1&times;</option>
+              <option value="2" selected>2&times;</option>
+              <option value="3">3&times;</option>
+              <option value="4">4&times;</option>
+            </select>
+          </h2>
+          <div id="k-note" class="k-note muted"></div>
+          <div id="k-preview" class="k-preview"></div>
+          <p class="hint" data-ui="The key window as the naming screen prints it: each row of the page at its pixel position. Colours approximate the game's palette; glyphs come from the language pack and, for the base font, from your ROM.">The key window as the naming screen prints it: each row of the page at its pixel position.
+            Colours approximate the game's palette; glyphs come from the language pack and, for the base font, from your ROM.</p>
+        </div>
+        <div class="block">
+          <h2 data-ui="Keys">Keys</h2>
+          <div id="k-edit" class="k-edit"></div>
+          <div id="k-grid" class="k-wrap"></div>
+          <p class="hint" data-ui="Each key: the glyph printed at its place, the character it enters with its code, the x position and the 8-pixel tile in the key window, and where the font takes the glyph from. Dimmed keys lie outside the columns the cursor reaches; a glyph outside the cursor frame of its column is marked. Select a key of the language pack to change the character it enters: its glyph is printed in the middle of its cursor frame.">Each key: the glyph printed at its place, the character it enters with its code, the x position
+            and the 8-pixel tile in the key window, and where the font takes the glyph from. Dimmed keys lie outside the
+            columns the cursor reaches; a glyph outside the cursor frame of its column is marked. Select a key of the
+            language pack to change the character it enters: its glyph is printed in the middle of its cursor frame.</p>
+        </div>
+      </div>
+      <div class="col-side">
+        <div class="block"><h2 data-ui="Page label">Page label</h2><div id="k-label" class="k-label"></div>
+          <p class="hint" data-ui="The name of the page on the page-swap button, as the game draws it: the project's translated graphic, else the ROM's. The button shows it while the page before it is open.">The name of the page on the page-swap button, as the game draws it: the
+            project's translated graphic, else the ROM's. The button shows it while the page before it is open.</p></div>
+        <div class="block"><h2 data-ui="Page order">Page order</h2><ol id="k-order" class="k-order"></ol>
+          <p class="hint" data-ui="Select moves down this list; from the last page it returns to the top. The arrows move a page; keyboard changes stay in this browser and travel in Export.">Select moves down this list; from the last page it returns to the top.
+            The arrows move a page; keyboard changes stay in this browser and travel in Export.</p></div>
+        <div class="block"><h2 data-ui="Page">Page</h2><dl id="k-facts" class="kv"></dl></div>
+        <div class="block"><h2 data-ui="Catalog rows">Catalog rows</h2><div id="k-rows"></div>
+          <p class="hint" data-ui="The language pack's keyboard file holds these rows; the catalog shows them read-only.">The language pack's keyboard file holds these rows; the catalog shows them read-only.</p></div>
+      </div>
+    </div>
+    <div id="k-chat" class="block"></div>
+  </section>
+</main>
+</div>
+<footer class="statusbar">
+  <span><span data-ui="Approved">Approved</span> <b id="sb-approved">0</b></span><span><span data-ui="Translated">Translated</span> <b id="sb-fuzzy">0</b></span><span><span data-ui="Untranslated">Untranslated</span> <b id="sb-untranslated">0</b></span><span><button id="sb-never-list" type="button" title="List the entries progress leaves out: the game never shows them (reach study and reviews)" data-ui-title="List the entries progress leaves out: the game never shows them (reach study and reviews)"><span data-ui="Never shown">Never shown</span> <b id="sb-never">0</b></button></span><span><span data-ui="Problems">Problems</span> <b id="sb-problems">0</b></span><span><span data-ui="Edited here">Edited here</span> <b id="sb-edited">0</b></span>
+  <span class="end" id="sb-version"></span>
+</footer>
+</div>
+</body>
+</html>

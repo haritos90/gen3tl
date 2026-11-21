@@ -1,0 +1,24 @@
+{
+ "language": "xx",
+ "profile": "site",
+ "entries": [
+  {
+   "id": "site:Patch",
+   "translation": "Патч",
+   "note": ""
+  },
+  {
+   "id": "site:Loading {game}…",
+   "translation": "Загрузка {game}…",
+   "note": ""
+  },
+  {
+   "id": "site:Home",
+   "translation": "Главная",
+   "note": "the masthead's first crumb"
+  }
+ ],
+ "pictures": [],
+ "terms": [],
+ "glyphs": []
+}

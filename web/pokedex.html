@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https:; img-src 'self' data:; script-src 'self'; style-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<title data-ui="Pokédex · gen3tl">Pokédex · gen3tl</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="site.css">
+<link rel="stylesheet" href="pokedex-explorer.css">
+<link rel="stylesheet" href="pokedex-share.css">
+<script src="js/theme.js"></script>
+<script src="js/language-tags.js"></script>
+<script src="data/site/startup.js"></script>
+<script src="js/pokedex-startup.js"></script>
+<script type="module" src="js/dexpage.js"></script>
+<script type="module" src="js/pokedexexplorer.js"></script>
+<script type="module" src="js/pokedexshare.js"></script>
+</head>
+<body class="c-app c-list">
+<div id="c-startup" class="c-startup" role="status" aria-live="polite" aria-atomic="true" aria-busy="true">
+  <div class="c-startup-panel">
+    <p id="c-startup-message" data-ui="Game and language setup" data-ui-site>Game and language setup</p>
+    <p id="c-startup-detail" data-ui="Loading interface language…" data-ui-site>Loading interface language…</p>
+    <div id="c-startup-progress" class="c-startup-progress" role="progressbar" aria-label="Pokédex loading progress" data-ui-label="Pokédex loading progress" data-ui-site aria-valuemin="0" aria-valuemax="5" aria-valuenow="0">
+      <span id="c-startup-fill"></span>
+    </div>
+    <p id="c-startup-count" data-ui="Stage 1 of 5 · 0 completed" data-ui-site>Stage 1 of 5 · 0 completed</p>
+    <div id="c-startup-actions" class="c-startup-actions" hidden>
+      <button id="c-startup-retry" class="btn primary" type="button" data-ui="Open the Pokédex" data-ui-site>Open the Pokédex</button>
+      <button id="c-startup-close" class="btn" type="button" data-ui="Close" data-ui-site>Close</button>
+    </div>
+  </div>
+</div>
+<!-- Published datasets and catalogs require no ROM or server. -->
+<div id="app" class="app dex">
+<!-- site-shell: masthead -->
+<header class="mast" data-site-mast="" data-site-menu-licenses="">
+  <a class="brand" href="./"><span class="tile"></span>gen3tl</a>
+  <nav class="tools" aria-label="Site" data-ui-label="Site" data-ui-site="">
+    <button class="tools-toggle" type="button" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="tools-icon"><path d="M4 6h16M4 12h16M4 18h16"></path></svg><span class="tools-current" data-tools-current="" data-ui="Tools" data-ui-site="">Tools</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></button>
+    <div class="tools-list">
+      <a href="./" class="brand c-home" aria-label="Home" data-ui-label="Home" data-ui-site="" title="Home" data-ui-title="Home"><span class="c-home-arrow" aria-hidden="true">←</span><span data-ui="Home" data-ui-site="">Home</span></a>
+      <a data-tool="patch" href="patch" id="link-patch" data-ui="Patcher" data-ui-site="">Patcher</a>
+      <a data-tool="editor" href="editor" id="link-editor" data-ui="Translation editor" data-ui-site="">Translation editor</a>
+      <a data-tool="save" href="save" id="link-save" data-ui="Save converter" data-ui-site="">Save converter</a>
+      <a data-tool="pokedex" href="pokedex" aria-current="page" data-ui="Pokédex" data-ui-site="">Pokédex</a>
+      <a href="guide" data-ui="Guide" data-ui-site="">Guide</a><div class="tools-licenses" data-site-licenses=""><a href="license-gen3tl.txt" rel="noreferrer" data-ui="gen3tl licence" data-ui-site="">gen3tl licence</a><a href="fonts/OFL.txt" rel="noreferrer" data-ui="Font licenses" data-ui-site="">Font licenses</a></div>
+    </div>
+  </nav>
+  <div class="mast-controls">
+    <details class="lang-menu">
+      <summary title="Site and game language" data-ui-title="Site and game language" data-ui-site=""><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="globe"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"></path></svg><span class="lang-name" data-lang-name=""></span><span class="lang-code" data-lang-code="">EN</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" class="caret"><path d="m6 9 6 6 6-6"></path></svg></summary>
+      <div class="lang-list" role="group" aria-label="Language" data-ui-label="Language" data-ui-site="" data-lang-list=""></div>
+    </details>
+    <button class="theme" data-toggle-theme="" type="button" aria-label="Toggle dark mode" data-ui-label="Toggle dark mode" data-ui-site="" title="Toggle dark mode" data-ui-title="Toggle dark mode"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg></button>
+  </div>
+</header>
+<!-- /site-shell: masthead -->
+<div class="pagebar">
+  <div class="c-page-heading"><div class="c-eyebrow eyebrow" data-ui="Pokédex" data-ui-site>Pokédex</div><h1 id="c-page-title" class="page-title" data-ui="Pokédex" data-ui-site>Pokédex</h1></div>
+  <div class="c-search">
+    <input id="x-search" class="input dex-search" type="search" placeholder="Search" data-ui-placeholder="Search" aria-label="Search" data-ui-label="Search" data-ui-site>
+    <button id="x-search-clear" type="button" aria-label="Clear search" data-ui-label="Clear search" data-ui-site hidden><span aria-hidden="true">×</span></button>
+  </div>
+  <details id="c-recent" open><summary data-ui="Recent">Recent</summary><div id="x-recent" class="dex-recent" aria-label="Recent" data-ui-label="Recent" hidden></div></details>
+  <div class="state">
+    <span id="data-lang" class="chip plain" hidden></span>
+    <span id="data-note" class="muted small" hidden></span>
+    <span id="status" class="muted small"></span>
+  </div>
+  <nav class="acts dex-entry-types" aria-label="Pokedex entry types" data-ui-label="Pokedex entry types" data-ui-site>
+    <button id="x-history-back" type="button" class="dex-back" disabled title="Go back" data-ui-title="Go back" data-ui="Go back">Go back</button>
+    <button id="x-mode-species" type="button" class="on" aria-pressed="true" data-ui="Species">Species</button>
+    <button id="x-mode-moves" type="button" aria-pressed="false" data-ui="Moves">Moves</button>
+    <button id="x-mode-items" type="button" aria-pressed="false" data-ui="Items">Items</button>
+    <button id="x-mode-trainers" type="button" aria-pressed="false" data-ui="Trainers">Trainers</button>
+    <button id="x-mode-locations" type="button" aria-pressed="false" data-ui="Locations">Locations</button>
+    <button id="x-mode-types" type="button" aria-pressed="false" data-ui="Type chart" data-ui-site>Type chart</button>
+  </nav>
+  <span class="drawer-btns"><button id="show-list" class="drawer-btn" type="button" aria-expanded="false" data-ui="List" data-ui-site>List</button></span>
+</div>
+<div class="notices"><div id="banner" class="banner" role="status" hidden></div></div>
+<main id="pokedex" class="panes two">
+  <section id="c-type-overview" class="block c-type-overview" aria-label="Type chart" data-ui-label="Type chart" data-ui-site hidden>
+    <h2 data-ui="Type chart" data-ui-site>Type chart</h2>
+    <p class="muted small" data-ui="Attacking type by row, defending type by column: 2 super effective, ½ not very effective, 0 no effect, blank normal damage.">Attacking type by row, defending type by column: 2 super effective, ½ not very effective, 0 no effect, blank normal damage.</p>
+    <div class="dex-chart-wrap"><table id="x-type-chart" class="dex-chart"></table></div>
+    <div id="x-chart-empty" class="muted"></div>
+  </section>
+  <section id="x-side" class="pane side" aria-label="Pokedex data entries" data-ui-label="Pokedex data entries" data-ui-site>
+    <button class="btn sm drawer-close" type="button" data-drawer-close data-ui="Close">Close</button>
+    <div id="c-list-bar" role="region" aria-label="Filters" data-ui-label="Filters">
+      <div class="c-list-field">
+        <input id="c-list-search" class="input" type="search" placeholder="Search" data-ui-placeholder="Search" aria-label="Search" data-ui-label="Search" data-ui-site>
+        <button id="c-list-clear" type="button" aria-label="Clear search" data-ui-label="Clear search" data-ui-site hidden><span aria-hidden="true">×</span></button>
+      </div>
+      <button id="c-list-toggle" type="button" aria-expanded="false" data-ui="Filters">Filters</button>
+      <div id="c-list-controls"></div>
+    </div>
+    <div class="filters dex-filters">
+      <div id="x-favourites" class="dex-favourites" hidden></div>
+      <div id="x-filters"></div>
+    </div>
+    <div id="x-count" class="count"></div>
+    <div id="x-list" class="list" tabindex="0" role="listbox" aria-label="Pokedex data entries" data-ui-label="Pokedex data entries" data-ui-site>
+      <div id="x-list-space" class="list-space"></div>
+    </div>
+  </section>
+  <section id="x-detail" class="pane main detail" aria-label="Pokedex data record" data-ui-label="Pokedex data record" data-ui-site>
+    <div class="entry-head c-readerbar">
+      <span id="c-reader-category"></span>
+      <button id="x-prev" type="button" title="Previous entry" data-ui-title="Previous entry" data-ui-site>&#8593;</button>
+      <button id="x-next" type="button" title="Next entry" data-ui-title="Next entry" data-ui-site>&#8595;</button>
+      <span id="x-id" class="eid"></span>
+      <button id="c-back" type="button" class="c-back" aria-label="Go back" data-ui-label="Go back" hidden>&#8592;</button>
+      <button id="c-close" type="button" class="c-close" data-ui="Close">Close</button>
+      <button id="x-data-pin" type="button" aria-pressed="false" hidden>☆</button>
+      <button id="x-types-pin" type="button" aria-pressed="false" hidden>☆</button>
+    </div>
+    <div id="c-card-recent" hidden>
+      <span data-ui="Recent">Recent</span>
+      <div id="x-card-recent" class="dex-recent" aria-label="Recent" data-ui-label="Recent" hidden></div>
+    </div>
+    <p id="x-not-listed" class="block muted" data-ui="Not listed" data-ui-site hidden>Not listed</p>
+    <div id="x-species-card" aria-label="Species" data-ui-label="Species">
+    <span id="x-dex" class="muted" hidden></span>
+    <div class="dex-layout">
+      <div class="dex-top">
+        <section class="block dex-overview">
+          <div class="dex-portrait">
+            <div id="x-sprite" class="dex-sprite"></div>
+          </div>
+          <div class="dex-identity">
+            <h2 id="x-name" class="dex-name" hidden></h2>
+            <div class="toolbar dex-sprite-bar">
+              <button id="c-sprite-side" type="button" aria-pressed="false" aria-label="Sprite side" data-ui-label="Sprite side" title="Sprite side" data-ui-title="Sprite side"></button>
+              <span class="dex-seg" role="group" aria-label="Sprite side" data-ui-label="Sprite side">
+                <button id="x-front" type="button" class="on" aria-pressed="true" data-ui="Front">Front</button>
+                <button id="x-back" type="button" aria-pressed="false" data-ui="Back">Back</button>
+              </span>
+              <button id="x-shiny" type="button" aria-pressed="false" title="Shiny" data-ui-title="Shiny" aria-label="Shiny colours" data-ui-label="Shiny colours">☆</button>
+              <button id="x-pin" type="button" aria-pressed="false" hidden>☆</button>
+            </div>
+            <div id="x-entry-text" class="text ro dex-entry-text"></div>
+            <div class="dex-line"><span class="muted" data-ui="Types">Types</span><div id="x-types" class="dex-types"></div></div>
+            <div class="dex-line"><span class="muted" data-ui="Abilities">Abilities</span><div id="x-abilities" class="dex-types dex-abilities"></div></div>
+          </div>
+        </section>
+        <section class="block dex-stats"><h2 data-ui="Base stats">Base stats</h2><table id="x-stats" class="t-forms"></table><div id="x-stats-legend" class="dex-tiers"></div></section>
+        <section class="block dex-info">
+          <h2 data-ui="Training">Training</h2>
+          <dl class="kv dex-training">
+            <div class="dex-info-row"><dt><span class="dex-info-label" data-ui="National number">National number</span><span class="dex-info-leader" aria-hidden="true"></span></dt><dd id="x-national-number"></dd></div>
+            <div class="dex-info-row"><dt><span class="dex-info-label" data-ui="Category">Category</span><span class="dex-info-leader" aria-hidden="true"></span></dt><dd id="x-category"></dd></div>
+            <div class="dex-info-row"><dt><span class="dex-info-label" data-ui="Height (m)">Height (m)</span><span class="dex-info-leader" aria-hidden="true"></span></dt><dd id="x-height"></dd></div>
+            <div class="dex-info-row"><dt><span class="dex-info-label" data-ui="Weight (kg)">Weight (kg)</span><span class="dex-info-leader" aria-hidden="true"></span></dt><dd id="x-weight"></dd></div>
+            <div class="dex-info-row"><dt><span class="dex-info-label" data-ui="Catch rate">Catch rate</span><span class="dex-info-leader" aria-hidden="true"></span></dt><dd id="x-catch-rate"></dd></div>
+            <div class="dex-info-row"><dt><span class="dex-info-label" data-ui="Base experience">Base experience</span><span class="dex-info-leader" aria-hidden="true"></span></dt><dd id="x-base-exp"></dd></div>
+            <div class="dex-info-row"><dt><span class="dex-info-label" data-ui="EV">EV</span><span class="dex-info-leader" aria-hidden="true"></span></dt><dd id="x-ev-yield"></dd></div>
+            <div class="dex-info-row"><dt><span class="dex-info-label" data-ui="Growth rate">Growth rate</span><span class="dex-info-leader" aria-hidden="true"></span></dt><dd id="x-growth"></dd></div>
+            <div class="dex-info-row"><dt><span class="dex-info-label" data-ui="Egg groups">Egg groups</span><span class="dex-info-leader" aria-hidden="true"></span></dt><dd id="x-egg-groups"></dd></div>
+            <div class="dex-info-row"><dt><span class="dex-info-label" data-ui="Gender ratio">Gender ratio</span><span class="dex-info-leader" aria-hidden="true"></span></dt><dd id="x-gender"></dd></div>
+          </dl>
+          <p class="dex-catch-open"><button id="x-catch-open" type="button" data-ui="Catch calculator" hidden>Catch calculator</button></p>
+          <div id="x-catch" class="dex-catch"></div>
+        </section>
+      </div>
+      <section class="block">
+        <h2 data-ui="Evolutions">Evolutions</h2>
+        <div id="x-evolutions" class="dex-evolutions"></div>
+        <div id="x-evolutions-empty" class="muted"></div>
+      </section>
+      <section class="block" id="x-formes-block" hidden>
+        <h2 data-ui="Formes">Formes</h2>
+        <div id="x-formes" class="dex-formes"></div>
+      </section>
+      <section class="block">
+        <h2 data-ui="Effectiveness">Effectiveness</h2>
+        <div id="x-defense" class="dex-defense"></div>
+      </section>
+      <section class="block">
+        <h2 data-ui="Moves">Moves</h2>
+        <div id="x-moves" class="dex-moves"></div>
+        <div id="x-moves-empty" class="muted"></div>
+      </section>
+      <section class="block">
+        <h2 data-ui="Where to find">Where to find</h2>
+        <div id="x-locations" class="dex-locations"></div>
+        <div id="x-locations-empty" class="muted"></div>
+      </section>
+      <details class="block dex-record"><summary data-ui="Technical record">Technical record</summary><dl id="x-facts" class="kv"></dl></details>
+    </div>
+  </div>
+  <div id="x-data-card" hidden>
+    <span id="x-data-id" class="eid" hidden></span>
+    <h2 id="x-data-title" class="dex-name" hidden></h2>
+    <div id="x-data-content"></div>
+  </div>
+  <div id="x-chart-card" aria-label="Type chart" data-ui-label="Type chart" data-ui-site hidden>
+    <div class="dex-layout">
+      <section class="block">
+        <h2 data-ui="Dual-type chart">Dual-type chart</h2>
+        <p class="muted small" data-ui="Pick the first type: one row per second type with the number of species of the pair and the combined multiplier of every attacking type (4, 2, ½, ¼, 0; blank normal damage).">Pick the first type: one row per second type with the number of species of the pair and the combined multiplier of every attacking type (4, 2, ½, ¼, 0; blank normal damage).</p>
+        <div id="x-dual-pick" class="dex-dual-pick" role="group" aria-label="First type" data-ui-label="First type"></div>
+        <div class="dex-chart-wrap"><table id="x-dual-chart" class="dex-chart dex-dual"></table></div>
+      </section>
+    </div>
+    </div>
+  </section>
+</main>
+<!-- site-shell: footer -->
+<footer class="foot" data-site-footer=""><div class="wrap"><a href="license-gen3tl.txt" rel="noreferrer" data-ui="gen3tl licence" data-ui-site="">gen3tl licence</a><a href="fonts/OFL.txt" rel="noreferrer" data-ui="Font licenses" data-ui-site="">Font licenses</a></div></footer>
+<!-- /site-shell: footer -->
+</div>
+</body>
+</html>

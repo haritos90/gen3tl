@@ -1,0 +1,93 @@
+[family]
+schema = 1
+name = "firered-cfru"
+version = "1.0.0"
+sources = [
+  "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/text.c",
+  "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/include/text.h",
+  "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/naming_screen.c",
+  "https://github.com/Skeli789/Complete-Fire-Red-Upgrade/tree/72bf78e736a22d2a2ec42c67f03b36939cc0c3b1",
+]
+
+[rom]
+engine = "frlg"
+
+[[font]]
+name = "font0"
+count = 512
+codes = [1]
+
+[[font]]
+name = "font1"
+count = 512
+codes = [2, 3]
+
+[[font]]
+name = "font2"
+count = 512
+codes = [4]
+
+[[font]]
+name = "font3"
+count = 512
+codes = [5]
+
+[[font]]
+name = "small"
+count = 512
+format = "8x16"
+codes = [0]
+
+[keyboard]
+base_pages = 3
+first_page = 1
+opening_keyboards = [1, 0]
+
+[[fact]]
+id = "rom.engine"
+scope = "family"
+tier = "crossref"
+source = "firered-cfru/engine.toml 1.0.0"
+evidence = {method = "engine-source", sentence = "CFRU extends FireRed and retains its FRLG text and naming interfaces; the instance verifies the selected engine identity."}
+
+[[fact]]
+id = "font[name=font0]"
+scope = "family"
+tier = "crossref"
+source = "firered-cfru/engine.toml 1.0.0"
+evidence = {method = "engine-source", counts = {glyphs = 512}, sentence = "FireRed FONT_NORMAL_COPY_1 selects GetGlyphWidth_NormalCopy1 and its 512-entry Latin width table; the instance font0 binding verifies the same printer interface."}
+
+[[fact]]
+id = "font[name=font1]"
+scope = "family"
+tier = "crossref"
+source = "firered-cfru/engine.toml 1.0.0"
+evidence = {method = "engine-source", counts = {glyphs = 512}, sentence = "FireRed FONT_NORMAL and FONT_NORMAL_COPY_2 select the shared 512-entry normal Latin font; the instance font1 binding verifies both printer identifiers."}
+
+[[fact]]
+id = "font[name=font2]"
+scope = "family"
+tier = "crossref"
+source = "firered-cfru/engine.toml 1.0.0"
+evidence = {method = "engine-source", counts = {glyphs = 512}, sentence = "FireRed FONT_MALE selects the 512-entry male Latin font; the instance font2 binding verifies that printer identifier."}
+
+[[fact]]
+id = "font[name=font3]"
+scope = "family"
+tier = "crossref"
+source = "firered-cfru/engine.toml 1.0.0"
+evidence = {method = "engine-source", counts = {glyphs = 512}, sentence = "FireRed FONT_FEMALE selects the 512-entry female Latin font; the instance font3 binding verifies that printer identifier."}
+
+[[fact]]
+id = "font[name=small]"
+scope = "family"
+tier = "crossref"
+source = "firered-cfru/engine.toml 1.0.0"
+evidence = {method = "engine-source", counts = {glyphs = 512}, sentence = "FireRed FONT_SMALL selects a 512-entry Latin width table and DecompressGlyph_Small reads two vertically stacked tiles per glyph; the instance small-font binding verifies this 8x16 format."}
+
+[[fact]]
+id = "keyboard"
+scope = "family"
+tier = "crossref"
+source = "firered-cfru/engine.toml 1.0.0"
+evidence = {method = "engine-source", counts = {pages = 3}, sentence = "FireRed MainState_FadeIn starts on the upper page with upper and lower keyboard windows; page swapping cycles through three pages. The instance code verifies this interface retained by CFRU."}

@@ -1,0 +1,87 @@
+name: Toolkit checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12', '3.13', '3.14']
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26'
+      - name: Install the toolkit from the tree
+        run: python -m pip install .
+      - name: Run the toolkit suite
+        run: PYTHONPATH=src python tests/run.py
+      - name: Check shared page markup
+        run: PYTHONPATH=src python -m gen3tl web site-shell --web web
+      - name: Assemble the fixture workspaces
+        run: |
+          data="$(mktemp -d)"
+          PYTHONPATH=src python -m gen3tl web site-catalog --data "$data"
+          test -f "$data/sample-hack-1.0/ru/index.json"
+      - name: Build the wheel
+        run: |
+          python -m pip install build
+          python -m build
+      - name: Check the share file counts against the tree
+        run: |
+          wheel="$(ls dist/gen3tl-*.whl)"
+          python - "$wheel" <<'PY'
+          import sys
+          import zipfile
+          from pathlib import Path
+
+          wheel = Path(sys.argv[1])
+          shares = {
+              "web": "gen3tl/share/web/",
+              "profiles": "gen3tl/share/profiles/",
+              "language packs": "gen3tl/share/assets/lang/",
+          }
+          with zipfile.ZipFile(wheel) as archive:
+              names = [name for name in archive.namelist() if not name.endswith("/")]
+          for label, prefix in shares.items():
+              count = sum(name.startswith(prefix) for name in names)
+              tree = Path("assets/lang" if label == "language packs" else label)
+              if label == "web":
+                  have = sum(1 for path in tree.rglob("*")
+                             if path.is_file() and not path.is_relative_to("web/test")
+                             and "__pycache__" not in path.parts and not path.name.endswith(".pyc"))
+              else:
+                  have = sum(1 for path in tree.rglob("*")
+                             if path.is_file() and "__pycache__" not in path.parts
+                             and not path.name.endswith(".pyc"))
+              print(f"share        {label} wheel {count} files, tree {have} files")
+              if count != have:
+                  raise SystemExit(f"{label}: wheel {count} files, tree {have} files")
+          PY
+      - name: Smoke test the installed command
+        run: |
+          gen3tl --help
+          gen3tl check --help
+          gen3tl --project-root tests/fixtures/sample-hack check unmeasured --help
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+
+          sys.path[:0] = ["src", "tests/support"]
+          from project_fixture import sample_rom
+
+          Path("sample.gba").write_bytes(sample_rom())
+          PY
+          gen3tl --profile profiles/sample-hack-1.0.toml --rom sample.gba rom identify

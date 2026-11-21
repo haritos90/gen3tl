@@ -1,0 +1,2940 @@
+{
+  "schema": 1,
+  "family": "firered-cfru",
+  "version": "1.0.0",
+  "reference_sha1": "b4776b82a4c7915d0fadeaa27e013523f99dfd94",
+  "sources": [
+    "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/naming_screen.c",
+    "https://github.com/Skeli789/Complete-Fire-Red-Upgrade/blob/72bf78e736a22d2a2ec42c67f03b36939cc0c3b1/src/item.c",
+    "https://github.com/Skeli789/Complete-Fire-Red-Upgrade/blob/72bf78e736a22d2a2ec42c67f03b36939cc0c3b1/assembly/data/move_tables.json",
+    "https://github.com/Skeli789/Complete-Fire-Red-Upgrade/blob/72bf78e736a22d2a2ec42c67f03b36939cc0c3b1/assembly/data/move_tables.json",
+    "https://github.com/Skeli789/Complete-Fire-Red-Upgrade/blob/72bf78e736a22d2a2ec42c67f03b36939cc0c3b1/src/wild_encounter.c",
+    "https://github.com/Skeli789/Complete-Fire-Red-Upgrade/blob/72bf78e736a22d2a2ec42c67f03b36939cc0c3b1/include/new/wild_encounter.h",
+    "https://github.com/Skeli789/Complete-Fire-Red-Upgrade/blob/72bf78e736a22d2a2ec42c67f03b36939cc0c3b1/src/learn_move.c",
+    "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/include/fieldmap.h",
+    "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/data/specials.inc",
+    "https://github.com/pret/pokefirered/blob/ce6406d8c2eaf46d543c8a2606de0c3cb1951982/src/fieldmap.c"
+  ],
+  "normalization": "Semantic Thumb instructions; literal displacements, pool values and branch targets omitted. Named roles select operations, not instance addresses.",
+  "functions": [
+    {
+      "name": "keyboard-character",
+      "category": "table-reader",
+      "length": 46,
+      "instructions": 22,
+      "sha256": "f0920e9d3269ff11a327f830bb4ed9bbaaede9520be51aa1fb49cff524b57dab",
+      "prefix_sha256": "01669d4e47297cc16771f81a19bc6e7906ffb19d8dfa0945c8c8fce1d879f680",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-cursor",
+      "category": "table-reader",
+      "length": 132,
+      "instructions": 54,
+      "sha256": "211da86630a7173def9b7114dd2d5e29b266fa1ce31f44c047ad0b79e984a91b",
+      "prefix_sha256": "cbc9943aa3708f5b4a88d48450c6ff64260d6f080491309cc0c6f4216282c8f6",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          7,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-columns",
+      "category": "table-reader",
+      "length": 22,
+      "instructions": 10,
+      "sha256": "82f7a59a61d72176ceebdf88e252afa35700c8dda25c7beecc5777911b3a8164",
+      "prefix_sha256": "6a9833551277bce7fccfcfcb7c3a92c76be81e2d56d97981e938bb7864c6ae3e",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-print",
+      "category": "table-reader",
+      "length": 106,
+      "instructions": 50,
+      "sha256": "937bfaa50f1b14c1dd4ca57f48eb2cf7fb0b71803cfc738de7f4891eadce8201",
+      "prefix_sha256": "cdac8a6c65f4b1de143f898c11791cde305d5313e236bad5778836386cf9c350",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          7,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-page",
+      "category": "table-reader",
+      "length": 18,
+      "instructions": 9,
+      "sha256": "7c4ca4f9f34ffa8c353fc99ab0c6f2b48972135c979298806758d138792c7d4e",
+      "prefix_sha256": "bac05003894bd518aec3ba7c6707d55ce3e288ff5f2bfd0b2ec69ed8d37a804c",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        1,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-next",
+      "category": "table-reader",
+      "length": 18,
+      "instructions": 9,
+      "sha256": "7c4ca4f9f34ffa8c353fc99ab0c6f2b48972135c979298806758d138792c7d4e",
+      "prefix_sha256": "bac05003894bd518aec3ba7c6707d55ce3e288ff5f2bfd0b2ec69ed8d37a804c",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        1,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-next-label",
+      "category": "table-reader",
+      "length": 12,
+      "instructions": 6,
+      "sha256": "dc3d612c539a00edf5418fed58c3eff3c9d8dd07a0ed9669e59010af7914aa5e",
+      "prefix_sha256": "742c45c955759a828fddbe3356d3b24961d743a43c672bca8553613483da5da0",
+      "prefix_count": 4,
+      "entry": [
+        "lsl",
+        2,
+        0,
+        0,
+        null,
+        24,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-label",
+      "category": "table-reader",
+      "length": 84,
+      "instructions": 40,
+      "sha256": "22b4bfa80e7133b31d7ad5c2290e465a3a1e37befdd6c8801ec5e70c1b5c6d11",
+      "prefix_sha256": "975faea5470f06eb0ac779f8ac4416264663c296ef4ea8f8ae65895032c4af88",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          6
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-subsprites",
+      "category": "table-reader",
+      "length": 158,
+      "instructions": 74,
+      "sha256": "4ca7a466b679536d7c675062db93a9d18080e1beddb55169248c230d2d3a389a",
+      "prefix_sha256": "0d8e0b4a33d8482736b97949c1431f9a7030e506160186dc46740bb1f8a0b647",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          6
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-sheets",
+      "category": "table-reader",
+      "length": 80,
+      "instructions": 34,
+      "sha256": "3bb47e186d881693d7fedb4f7a2a7053591e857d98f101147d15f9750c8ae08f",
+      "prefix_sha256": "ecb8d3aca05ae505a262ce20489444a134333d0543544ddeed58181bd6134340",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-next-tilemap",
+      "category": "table-reader",
+      "length": 114,
+      "instructions": 46,
+      "sha256": "c9f4e2eb5a71d22c28087f9d995334530582c344131b679974ac4d8ea6cb4530",
+      "prefix_sha256": "7da8309bd10a13085497ba802d74657e25e354118741118d01b17c477df74f50",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-page-swap",
+      "category": "table-reader",
+      "length": 70,
+      "instructions": 33,
+      "sha256": "7e354cba2b1e51712f833c98dd85f883e1e751073a7a3c6529598b8b8839c25b",
+      "prefix_sha256": "8007140a550bee4d793610bf58dd6a0e64fee825ce7a71943e263207662ad344",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-opening",
+      "category": "table-reader",
+      "length": 148,
+      "instructions": 61,
+      "sha256": "890fa5546833f944f6887d1bbf78714c8ca912fe8908f96a1d13e7592d10a4e0",
+      "prefix_sha256": "68c3c8b725e5afe128b3ea2a18afea3658ca81aeb262b4b47cd4b5bbbbff729b",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-page-count",
+      "category": "table-reader",
+      "length": 104,
+      "instructions": 47,
+      "sha256": "b529122848fca4c369877f9ee146460a7ce2b6042e276041f6dd5971a368b15a",
+      "prefix_sha256": "27c59564c4134f447a28d373af686296f736671002d114a1893f66a904dbfe07",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "keyboard-label-count",
+      "category": "table-reader",
+      "length": 106,
+      "instructions": 50,
+      "sha256": "fd0cf6109e26601c4798b480bbf41c0e22963fbbc516f547d11cf6e80abd9bb4",
+      "prefix_sha256": "0149c403de97cc063beb030d860b27c93d15c28e82897d2d08eda373c16d53ed",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "save-block-addresses",
+      "category": "table-reader",
+      "length": 52,
+      "instructions": 23,
+      "sha256": "aff5d3c00af06aed26e4c99ddca81cd7c82d18cea676eeddac02d24d281b4012",
+      "prefix_sha256": "2fee50c3b606747a1eade27dc63cb52ed4375b7c887c7219e6fa618f61b81bd6",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [4, 5, 14], 0, false, null]
+    },
+    {
+      "name": "save-parasite",
+      "category": "table-reader",
+      "length": 84,
+      "instructions": 30,
+      "sha256": "94bd9dfcba550458c4cd34dfb66a8db8cb4b256d8e92ca487216e05e0a47185a",
+      "prefix_sha256": "c8337bb1410cfb93144257e267a2a2c8886d407e8f3c20828d20aa3de73ae30e",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [4, 14], 0, false, null]
+    },
+    {
+      "name": "save-extra",
+      "category": "table-reader",
+      "length": 328,
+      "instructions": 123,
+      "sha256": "31a38c36cc7d33b5809a965708a6a7a1e6f7d719436e78e6f925ef17219d8000",
+      "prefix_sha256": "8731f4542ac4dbd1b41c07edcb551e5375d28365622e9ecdfbac9cf106a13d30",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [3, 4, 7], 0, false, null]
+    },
+    {
+      "name": "save-egg-name",
+      "category": "table-reader",
+      "length": 584,
+      "instructions": 56,
+      "sha256": "6ac58fc81a7fa69a5398e8a1803e679fc3276937a1f9d3aa9a44bac4de5d25e6",
+      "prefix_sha256": "ed964926698acf7f0b67901bbc511f479468456db2da933567590ae317e50fa2",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [4, 5, 6, 7, 14], 0, false, null]
+    },
+    {
+      "name": "save-box-name",
+      "category": "table-reader",
+      "length": 160,
+      "instructions": 11,
+      "sha256": "e9488b37dd4965bf073980d9eaa13ada8a1ca349e9210cb73771b13a2f5d3466",
+      "prefix_sha256": "a61940bc4b5432a0c8ae3165b4ecd3e373f8da28ede77d8c1e4803d80fff1df3",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [14], 0, false, null]
+    },
+    {
+      "name": "save-preset-name",
+      "category": "table-reader",
+      "length": 24,
+      "instructions": 8,
+      "sha256": "1574d4344e6928ff57ac31739c4ca7582cf2ea6ec8bc6e2b4df8018b7b70ddf7",
+      "prefix_sha256": "64c498e6fcc1c7992828f58be6d51111621794e81534912b39a9d2a53dc2039d",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [4, 14], 0, false, null]
+    },
+    {
+      "name": "save-rival-naming",
+      "category": "table-reader",
+      "length": 48,
+      "instructions": 14,
+      "sha256": "ad7cbea1192be8431e1eb57eb18c85f0e2f6d2b407ccf1c813dc28f459b61cd9",
+      "prefix_sha256": "f1b858a021868811de08bbb1eea45e929806557810899a1d7fe24b198f3c46db",
+      "prefix_count": 4,
+      "entry": ["mov", 2, 2, null, null, 0, [], 0, false, null]
+    },
+    {
+      "name": "save-daycare-store",
+      "category": "table-reader",
+      "length": 132,
+      "instructions": 56,
+      "sha256": "c111276f22290129f8cbec91c5992bee1feb0b00df5c012e104e5c660913aedd",
+      "prefix_sha256": "54d43c1f948d05886ab8db5267def0ae5356573bc65e92adbd10ed8cc8e6baf0",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [4, 5, 6, 14], 0, false, null]
+    },
+    {
+      "name": "save-mail-clear",
+      "category": "table-reader",
+      "length": 48,
+      "instructions": 19,
+      "sha256": "5c27f27d4f9b200b5cad2d008a97cac2ad74a493b763bd76b39d3b788325b31e",
+      "prefix_sha256": "58a9a734422e17426840c2b28a0de5b02b3a1034302856fcf3a28e035844c64b",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [4, 5, 14], 0, false, null]
+    },
+    {
+      "name": "save-mail-record-clear",
+      "category": "table-reader",
+      "length": 80,
+      "instructions": 40,
+      "sha256": "896b104e08dfe275808666bf6f3454de40d3d0beca2719a45211651d216bd356",
+      "prefix_sha256": "4b2eb1bc7bf46c929d22e2335aa36c6304f7d057ec8e0f2efd848fe1b6b726c4",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [4, 5, 6, 14], 0, false, null]
+    },
+    {
+      "name": "save-link-records",
+      "category": "table-reader",
+      "length": 20,
+      "instructions": 8,
+      "sha256": "cdf157489c4105a890ad0a38c286096ec173a33530c2c3b082e75b2f3c047725",
+      "prefix_sha256": "9b483532e204ae1a03f32dc44c75cb825e5ae12549571365a66f03a67b619ecd",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [14], 0, false, null]
+    },
+    {
+      "name": "save-link-record-clear",
+      "category": "table-reader",
+      "length": 52,
+      "instructions": 21,
+      "sha256": "cd8280b4c3ba67c5ab178221a9b10dc8093019f618b9847b5a8f4d452b5e2204",
+      "prefix_sha256": "d65e69f542029f43d8db90acf760ac2ae0a1948d15bd00024677be4f32fa78a7",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [4, 5, 14], 0, false, null]
+    },
+    {
+      "name": "save-link-record-search",
+      "category": "table-reader",
+      "length": 52,
+      "instructions": 25,
+      "sha256": "a9532fbe307f9c61473ca97e54d806065078912bc7cc95c71e27558186e3619d",
+      "prefix_sha256": "3c52dd7f93b71e0a63cbe78ffbf981687bed2b2ca2e4f0404533ed222820d091",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [4, 5, 6, 7, 14], 0, false, null]
+    },
+    {
+      "name": "save-box-name-pointer",
+      "category": "table-reader",
+      "length": 20,
+      "instructions": 9,
+      "sha256": "aa2dbb06371089bdc0231bb43bdf9de56f2fe72f5b5ca8f96e643210c3b34aa1",
+      "prefix_sha256": "545d8367933d74f315af6176194c74158131a74b49bff3164fecf546acd9de88",
+      "prefix_count": 4,
+      "entry": ["mov", 2, 3, null, null, 0, [], 0, false, null]
+    },
+    {
+      "name": "save-hall-sectors",
+      "category": "table-reader",
+      "length": 82,
+      "instructions": 34,
+      "sha256": "10fd4807b02ea4f7554bbf248c9a1ac6a033d0073339947db613872edf72dd5c",
+      "prefix_sha256": "61fef342a09c8a103ff9eafe82138893ee1de39c0cda336acbd68a7db0edf862",
+      "prefix_count": 4,
+      "entry": ["mov", 2, 4, null, null, 28, [], 0, false, null]
+    },
+    {
+      "name": "save-hall-signature",
+      "category": "table-reader",
+      "length": 100,
+      "instructions": 47,
+      "sha256": "b8ffb7760ae38a0dd2cdf683decf8d9756b5ce8400b1ea4083e87aab0f343782",
+      "prefix_sha256": "6f1cb4c8c0c84672c92ae14e6e332f61aace09621655db27e7c82b93767533fc",
+      "prefix_count": 4,
+      "entry": ["push", 2, null, 13, null, null, [4, 5, 6, 7, 14], 0, false, null]
+    },
+    {
+      "name": "item-name",
+      "category": "table-reader",
+      "length": 54,
+      "instructions": 27,
+      "sha256": "32d78f0178ba4cb74a8d11396617f05a1ddef7cfbc9a6b4385f2d83ce12c27de",
+      "prefix_sha256": "f39e523b79eeb915338c3831f9b10382da0b7abf1e8cf3d36e06e35a420898a8",
+      "prefix_count": 4,
+      "entry": [
+        "mov",
+        2,
+        3,
+        null,
+        null,
+        182,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "item-price",
+      "category": "table-reader",
+      "length": 28,
+      "instructions": 13,
+      "sha256": "443ba2d85b77178fc261b70a05930a4b7875b8e59fec5b87dc2bb599b7652508",
+      "prefix_sha256": "aa4764e6fb614af65de787432e09c0eadc34ff21942935d3d044bcefbe2e7404",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "item-held-effect",
+      "category": "table-reader",
+      "length": 28,
+      "instructions": 14,
+      "sha256": "168a169cfa04af07320899f9fbfed662af4e9a29b77dbfd559437d872bb31aad",
+      "prefix_sha256": "5271f468d140862c6bf83195a15e6d9096b773f5d1b52cb27d8505757318cceb",
+      "prefix_count": 4,
+      "entry": [
+        "mov",
+        2,
+        3,
+        null,
+        null,
+        182,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "item-effect-parameter",
+      "category": "table-reader",
+      "length": 30,
+      "instructions": 14,
+      "sha256": "d4acf0a28401214d29973d6c9f173dc93a97c8c60a4393916fad3d71e9213b2d",
+      "prefix_sha256": "aa4764e6fb614af65de787432e09c0eadc34ff21942935d3d044bcefbe2e7404",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "item-description",
+      "category": "table-reader",
+      "length": 32,
+      "instructions": 15,
+      "sha256": "33e4ac994d78514457d7ef39d3e3ddce993913931c059d0fbc2658f2e671c981",
+      "prefix_sha256": "aa4764e6fb614af65de787432e09c0eadc34ff21942935d3d044bcefbe2e7404",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "item-pocket",
+      "category": "table-reader",
+      "length": 30,
+      "instructions": 14,
+      "sha256": "8746cd3ed55f5aae4eb35e879c8fc36696b957598448a938208adecff585a021",
+      "prefix_sha256": "aa4764e6fb614af65de787432e09c0eadc34ff21942935d3d044bcefbe2e7404",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "item-battle-usage",
+      "category": "table-reader",
+      "length": 32,
+      "instructions": 15,
+      "sha256": "1dda3dc7f50aa430a7ee07bed501b83463da204f5c20135e4a9bb8168a36242e",
+      "prefix_sha256": "aa4764e6fb614af65de787432e09c0eadc34ff21942935d3d044bcefbe2e7404",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "item-plural",
+      "category": "table-reader",
+      "length": 84,
+      "instructions": 42,
+      "sha256": "970d80997c7dac93a8f96c3b3311aae430652ba6cdc59e12ace7907b31df2de9",
+      "prefix_sha256": "3fd84e769f68b01eef80d65d66a816788943e2ba0e19705c5798fdf87da797bf",
+      "prefix_count": 4,
+      "entry": [
+        "sub",
+        2,
+        2,
+        1,
+        null,
+        1,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "item-plural-command",
+      "category": "table-reader",
+      "length": 80,
+      "instructions": 33,
+      "sha256": "5c36a2ee4876392d1b1cda99be3cebebf7ec0aa26d483648d54a56a8af0ea87e",
+      "prefix_sha256": "9f4cd971718e977e0155838a1e7a1ad6c7bda439edd870ae7624ae741ee79222",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          0,
+          1,
+          2,
+          4,
+          5,
+          6,
+          7,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "item-plural-trade",
+      "category": "table-reader",
+      "length": 124,
+      "instructions": 61,
+      "sha256": "8230988aaa1eb488f8529dffc9635b9cea972a9a52ad54eb5e3131408345d0ba",
+      "prefix_sha256": "d237807524fe0b7b3eef29671fad802b953e9e6fa0ddb283b3061cbc54ce3ce0",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        3,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "berry-name",
+      "category": "table-reader",
+      "length": 616,
+      "instructions": 289,
+      "sha256": "6422fb76fe93c6f1c4883e73abf3afc7fcaba759b6dd1ce0461bcb7277fa50db",
+      "prefix_sha256": "0fc679ad99c6c3726e1d5bb49e248a5a7948cb00ad4df5593eb2dd5cc9068ae6",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          7,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "count-plural",
+      "category": "table-reader",
+      "length": 112,
+      "instructions": 51,
+      "sha256": "6073155fd9532249fbc6e00f833ed17b4456c95f4c25c61170ab6c20f4426e6b",
+      "prefix_sha256": "ecf47f71d0a4f87bd842029dfce4fa29f8c5ec994d2f027093cb43f77884cfac",
+      "prefix_count": 4,
+      "entry": [
+        "mov",
+        2,
+        3,
+        null,
+        null,
+        0,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "egg-count-plural",
+      "category": "table-reader",
+      "length": 78,
+      "instructions": 36,
+      "sha256": "e6e371532354afa9af8f411bd93f750af67c7ed2321c641dce5c6aab520bea73",
+      "prefix_sha256": "c37f3eb0af06092af7638adac42f3011a4f9f36b257c3779da5cafd28b8c1b62",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "audio-name-prefixes",
+      "category": "table-reader",
+      "length": 62,
+      "instructions": 27,
+      "sha256": "2f69342f8904af29bf7411b3c2af772d192fe22571fc131b15b735e3e92ced23",
+      "prefix_sha256": "675a0a7033503fda78ed56b980bacaffac87298def7336692d8e1f4b2e43ba3c",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        5,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "shard-list",
+      "category": "table-reader",
+      "length": 152,
+      "instructions": 66,
+      "sha256": "8ce21ee07fa2c7bf82effca9d58833c3d044bcbd8617e1c7938013ff3b9bed84",
+      "prefix_sha256": "4a52ea2314e6420c5bd2ddc4219f78a6f9791c62c5f913b09fbd99f8b7faf5e5",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          7,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "ability-name-suffix",
+      "category": "table-reader",
+      "length": 44,
+      "instructions": 22,
+      "sha256": "8853a6237717b744c5e907c0288cb1f298a60c64d45cb3e2b6c0568b8de7ad8d",
+      "prefix_sha256": "ac5f1416b0850f9eb48627f4b0edf63d7f7095832ecb78eaf39429173ad7e318",
+      "prefix_count": 4,
+      "entry": [
+        "add",
+        2,
+        3,
+        1,
+        3,
+        null,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "byte-copy",
+      "category": "table-reader",
+      "length": 94,
+      "instructions": 47,
+      "sha256": "e3a55cdb5c0c9f08b4435db431ae813fa9518c33abdfade7daacd190441ab018",
+      "prefix_sha256": "39c8e9da48fba1bfd6278ae6dd959b95a577243ef9a04427fdbe91e0706ad618",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-reckless",
+      "category": "table-reader",
+      "length": 50,
+      "instructions": 13,
+      "sha256": "205b049ae589e8c3274c9047231e5c047caf870395be090ef221f79e25d9a0ba",
+      "prefix_sha256": "8912045552cffaf4775081977034b96e46d35bea7cd6802133b841c4587ce980",
+      "prefix_count": 3,
+      "entry": [
+        "mov",
+        2,
+        0,
+        null,
+        null,
+        120,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-punching",
+      "category": "table-reader",
+      "length": 36,
+      "instructions": 12,
+      "sha256": "1952eccbd99146dff26392ffc8db4c52c02c66c5c96022f85ef098a4ff810400",
+      "prefix_sha256": "4ae2289a71569cf06bbdf91db621fdf4ebe90f3db1564518f31d90ed3c15281c",
+      "prefix_count": 2,
+      "entry": [
+        "ldr",
+        2,
+        1,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-sheer-force",
+      "category": "table-reader",
+      "length": 42,
+      "instructions": 12,
+      "sha256": "1952eccbd99146dff26392ffc8db4c52c02c66c5c96022f85ef098a4ff810400",
+      "prefix_sha256": "4ae2289a71569cf06bbdf91db621fdf4ebe90f3db1564518f31d90ed3c15281c",
+      "prefix_count": 2,
+      "entry": [
+        "ldr",
+        2,
+        1,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-pulse-aura",
+      "category": "table-reader",
+      "length": 30,
+      "instructions": 12,
+      "sha256": "1952eccbd99146dff26392ffc8db4c52c02c66c5c96022f85ef098a4ff810400",
+      "prefix_sha256": "4ae2289a71569cf06bbdf91db621fdf4ebe90f3db1564518f31d90ed3c15281c",
+      "prefix_count": 2,
+      "entry": [
+        "ldr",
+        2,
+        1,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-biting",
+      "category": "table-reader",
+      "length": 24,
+      "instructions": 12,
+      "sha256": "1952eccbd99146dff26392ffc8db4c52c02c66c5c96022f85ef098a4ff810400",
+      "prefix_sha256": "4ae2289a71569cf06bbdf91db621fdf4ebe90f3db1564518f31d90ed3c15281c",
+      "prefix_count": 2,
+      "entry": [
+        "ldr",
+        2,
+        1,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-dance",
+      "category": "table-reader",
+      "length": 34,
+      "instructions": 17,
+      "sha256": "4a80c5233f5ada2fd2818fcb042b735b8466e604cb76d439a1e2b6bfe6d8c040",
+      "prefix_sha256": "bd31eec46e4e59eae6819c8a22fc73b9ee49967bfe588e7d0377e37f6b1b3a5a",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        1,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-powder",
+      "category": "table-reader",
+      "length": 20,
+      "instructions": 10,
+      "sha256": "dbe24104295e6ded53d0c9c9221f3ad401e7e4bff6354cef82c03b2ef0823573",
+      "prefix_sha256": "d3ab94ac18a96b92fdc59b1c06d6230ba648c36498cd1c5e054be962cdcf08ee",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        1,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-sound",
+      "category": "table-reader",
+      "length": 26,
+      "instructions": 13,
+      "sha256": "68646de8a0964de8a6ba81ab092ce2ba97abadbed1ccd9c151397bac7d07ae9c",
+      "prefix_sha256": "d568f4e141c0250969bc65140b6d3dd445de19a82efa04e51b654983e4e223ac",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        0,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-ballistic",
+      "category": "table-reader",
+      "length": 14,
+      "instructions": 7,
+      "sha256": "f197a50b93d2c5244a9032b3e2ff74ede7a1538b596b5cd7630340b2e087cb6e",
+      "prefix_sha256": "f163ad3574780bab9ff400f18a7602006c7d83700ed81661f14009750b306d4d",
+      "prefix_count": 4,
+      "entry": [
+        "cmp",
+        2,
+        0,
+        0,
+        null,
+        116,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-me-first-banned",
+      "category": "table-reader",
+      "length": 22,
+      "instructions": 11,
+      "sha256": "38144a2983176d06b6f8b144d78b1d909facf3ab40062e68f989dc31b8c2ce5a",
+      "prefix_sha256": "922806b5aa6c536351869136d7eca1030b974469c726be4cd800d8b403b3860e",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        0,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-gravity-banned",
+      "category": "table-reader",
+      "length": 24,
+      "instructions": 12,
+      "sha256": "45048f7796aaf08373b3d8f84d84586bb3254468afedd7eb5824171329a441f7",
+      "prefix_sha256": "96a81e5270168a8759aafe89de8457983f51729361c1b9e152ac568ac32cf2f5",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        0,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-substitute-bypass",
+      "category": "table-reader",
+      "length": 22,
+      "instructions": 11,
+      "sha256": "fca547299b7bb98756e10fc864986383c23efc17b2ee8261075e4280b8e6491a",
+      "prefix_sha256": "279eed7bbe21a98777ec7a370523e0ec6a65cdadc4ee695ff3826e792f3714cd",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        1,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-type-change-exception",
+      "category": "table-reader",
+      "length": 28,
+      "instructions": 13,
+      "sha256": "ae904706c3b2c2e795954386d65bebad19c5e1a463a3da15176023d0910e7503",
+      "prefix_sha256": "e268141f39965eb74fb34844abb26f9eef02c39cca0850ebaa9e3913f5f13c2b",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        3,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-metronome-banned",
+      "category": "table-reader",
+      "length": 18,
+      "instructions": 9,
+      "sha256": "b0c350d2d58d880b3a4f428baa9361270cc568690e474a2d985e23bde1b4e01a",
+      "prefix_sha256": "bd31eec46e4e59eae6819c8a22fc73b9ee49967bfe588e7d0377e37f6b1b3a5a",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        1,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-sky-battle-banned",
+      "category": "table-reader",
+      "length": 18,
+      "instructions": 9,
+      "sha256": "c97acb18eb6fa35822cc21064b2cd312011cf7027e1dfc9c673013bcacd1d45d",
+      "prefix_sha256": "40468b99b8d348b9118f6432a4165a1ec0a84a25c7927e6b9af81e561041ea4c",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        0,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "move-list-parental-bond-banned",
+      "category": "table-reader",
+      "length": 20,
+      "instructions": 10,
+      "sha256": "d020aee4946423230b50405d021ad7d439dbabe0876ef21dae222921ee358af4",
+      "prefix_sha256": "6cd31925da2c8b5ea9c9893480603267d4837db926de5adbcb91e6baae46c48b",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        2,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "dex-height-record",
+      "category": "table-reader",
+      "length": 12,
+      "instructions": 6,
+      "sha256": "4927bf88eab30a7e5433ce5be838096f8063f3ec4142c5296cdea11f1ecf39a5",
+      "prefix_sha256": "a116f72d44dbdb5b5ea80384623875ff2826a1a93b56ac77ee3698dc0e20f329",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        2,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "species-national-number",
+      "category": "table-reader",
+      "length": 34,
+      "instructions": 14,
+      "sha256": "c6e8465ee8cc8dad7e79580378779e52862a1ec99e3c6007bd3962dee4f5578e",
+      "prefix_sha256": "57a1e45a038676340d3701db1151e4de3be98482433110f5a4d0adad087a3d9a",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "dex-description-record",
+      "category": "table-reader",
+      "length": 14,
+      "instructions": 7,
+      "sha256": "cf0e1105d1788faff68ee7684d46d1381bd07045ab91daaa373198234559ed30",
+      "prefix_sha256": "c3d0a6bd6dcff054cda074f42faa2a9df0eed88979ea787141aa87348dd7b58f",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        1,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "wild-info-reader",
+      "category": "table-reader",
+      "length": 108,
+      "instructions": 49,
+      "sha256": "3afa8e5178b70184e1d265ae15d4b9c81d3674a2fdf9ae10d1c69d296d906562",
+      "prefix_sha256": "a6d83ad339ae72f7fd905aeff71c30fa1478aee09a3b7003ad17682875795f6b",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        2,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "wild-day-array",
+      "category": "table-reader",
+      "length": 22,
+      "instructions": 11,
+      "sha256": "a4df2a84876e13d4a153c708f9a22068a99140ca4c1d0c262f1759b25f4765a0",
+      "prefix_sha256": "84f73b3347c9cc52db7c58cb099c14799e8924ccf74f1615b1a0d1f2a34abec6",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        0,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "thumb-byte-cases",
+      "category": "table-reader",
+      "length": 18,
+      "instructions": 9,
+      "sha256": "01a35877bc5928125f3eb9b80746ba42cc4b6f233e82612b5c012c6b44427b50",
+      "prefix_sha256": "e06fdc1b5163b2e4ef142e50a12d29662dbcbf65a669cfb7bc50ba857b6e5294",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          1
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "wild-land-selector",
+      "category": "table-reader",
+      "length": 186,
+      "instructions": 91,
+      "sha256": "14324ba4c6cda120f4ae62a76c4f118df149e73bbd56d8c90c11cf933f856b0f",
+      "prefix_sha256": "8633553117fefb3fcad1240e954c3e22a651f92aeb1cd1513bd21f4964bfff8d",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "wild-water-selector",
+      "category": "table-reader",
+      "length": 84,
+      "instructions": 40,
+      "sha256": "e0c0e6807a51db00eb42395723b6cfa631e2ec588d20a31b0758d2e2cedb7d05",
+      "prefix_sha256": "8633553117fefb3fcad1240e954c3e22a651f92aeb1cd1513bd21f4964bfff8d",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "wild-fishing-selector",
+      "category": "table-reader",
+      "length": 156,
+      "instructions": 76,
+      "sha256": "7ab35cc9bfd27e6103387d44a91d01aea66418263b07e343d1c4dcf56d1749e3",
+      "prefix_sha256": "804568068159716ae1c45ed3751afdee9360a932cf75be35bddb9c4f2ea1619a",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "time-night",
+      "category": "table-reader",
+      "length": 20,
+      "instructions": 10,
+      "sha256": "769d5374b5c149f4da7ed70ab50ced1fd1edd52b42de1492ecb16f97e60744bd",
+      "prefix_sha256": "a105a9a956ea6badadc83b582c67e05866c4e7ebe3abbfc8fe7ead18cda7f02b",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        3,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "time-morning",
+      "category": "table-reader",
+      "length": 20,
+      "instructions": 10,
+      "sha256": "f5bbf8945d2052b397a461b28898b1689fac79e1d30db75ae18c92ab43a19835",
+      "prefix_sha256": "c1c25886fd55bb44ef4b60e3cff708e0030cfbf3a64a35106a6a9f1d471248a1",
+      "prefix_count": 4,
+      "entry": [
+        "mov",
+        2,
+        2,
+        null,
+        null,
+        2,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "time-evening",
+      "category": "table-reader",
+      "length": 20,
+      "instructions": 10,
+      "sha256": "eb0ee9743a9daaff0ce39d9c157c10c1da46d7b718274ed871f0fea60899f445",
+      "prefix_sha256": "c1c25886fd55bb44ef4b60e3cff708e0030cfbf3a64a35106a6a9f1d471248a1",
+      "prefix_count": 4,
+      "entry": [
+        "mov",
+        2,
+        2,
+        null,
+        null,
+        2,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "credits-heading-reader",
+      "category": "table-reader",
+      "length": 72,
+      "instructions": 35,
+      "sha256": "3c845a33ffbab6d17f4f603044b5efb41ed560cebd1fed08e532daed0901a9cb",
+      "prefix_sha256": "e02474c4ed2b72920f127925d5358b13609346876f712df9860255a7d5ae8dba",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        5,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "credits-name-reader",
+      "category": "table-reader",
+      "length": 76,
+      "instructions": 37,
+      "sha256": "fcb5dcf1fc9afc86c32e71301d9ce42b9b35d37119262ab770d797bb3909d848",
+      "prefix_sha256": "371ae388939f45240c4c5c6483f6c185314a962a040011c06095d5d89983d28a",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        3,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "tm-bit-reader",
+      "category": "table-reader",
+      "length": 136,
+      "instructions": 67,
+      "sha256": "dd512b1350b1da1df849097c25206af5d30918744ee4b08bb3ec735ce7ad5f3e",
+      "prefix_sha256": "2269b122d0234f7908d4d93fad7bf11be9b8e125a71dd553821651fe8e561934",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "tm-move-reader",
+      "category": "table-reader",
+      "length": 16,
+      "instructions": 7,
+      "sha256": "59a15f8dde50327591f2466826a8f8b478417ce3658dcf890dab30962f1ff0c3",
+      "prefix_sha256": "1387fc869a54cfa9ce75f7b1d4952aad5add809e5eee2a6f5138df4311e0d3b5",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "tutor-move-reader",
+      "category": "table-reader",
+      "length": 12,
+      "instructions": 6,
+      "sha256": "d4eb85bbde81090667be490504e35ff8f4de1f0eb8d3e1c212964c808c770ae9",
+      "prefix_sha256": "e40a6a61589e8bdbf009f8c17ad2bbbedf0547f9767bf55f2e3e67e336d51891",
+      "prefix_count": 4,
+      "entry": [
+        "cmp",
+        2,
+        0,
+        0,
+        null,
+        145,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "egg-move-reader",
+      "category": "table-reader",
+      "length": 24,
+      "instructions": 12,
+      "sha256": "5925f3304e99e11c8ebccab83449a66215258ed79030c18efd6b4524770ba9ca",
+      "prefix_sha256": "6788f9b99f509b39107d2eadcfdb457b72ffe88827935b3cf8c9f89d9d594f89",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        2,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "tutor-bit-reader",
+      "category": "table-reader",
+      "length": 206,
+      "instructions": 99,
+      "sha256": "83961c36fb525516f418dde8796417043dae5b7b0748d36930d819ae14a618ab",
+      "prefix_sha256": "171e82f2c9937818f6258cf597b0485337a15dc55723152fb5abc5a36d2d25a8",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          3,
+          4,
+          5,
+          6,
+          7,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "level-up-parser",
+      "category": "table-reader",
+      "length": 98,
+      "instructions": 46,
+      "sha256": "e183fbc765427d749c9a447b9eb3724db6165b35fd7da4f899f31f5b67ae7c2e",
+      "prefix_sha256": "1322d9242df97761065b7824a7e8535e9cb56a42daa742291a073a8477a5dc19",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          0,
+          1,
+          2,
+          4,
+          5,
+          6,
+          7,
+          14
+        ],
+        0,
+        false,
+        null
+      ],
+      "analysis": {
+        "start": 4,
+        "end": 36
+      }
+    },
+    {
+      "name": "trainer-records",
+      "category": "table-reader",
+      "length": 1076,
+      "instructions": 60,
+      "sha256": "6fc053f5f885c81aa2b627fe088105358f20830c17f845c7747551b471c16f26",
+      "prefix_sha256": "5090e13d391a4f210fecb2f4c1e986bdffd38494672512c8d5fe5e0d88927fec",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "trainer-pictures",
+      "category": "table-reader",
+      "length": 140,
+      "instructions": 56,
+      "sha256": "a8cba539d435b2a7cfa8e96b52ee0c0197f048814150c243d5802d86f8e95516",
+      "prefix_sha256": "bf52c7ea710080b189a5e4d6f8bd072087f03f3a47eea965601f0c45dace96af",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "mining-placement",
+      "category": "table-reader",
+      "length": 136,
+      "instructions": 66,
+      "sha256": "a162eb73fdd9383297a158561eeec8e5f8bc3f64d269ae6d21af6dbbc704795e",
+      "prefix_sha256": "dadd0109fdc87c87b40fa923985bec421362cbd91acf7d44f6c906b8397ebb69",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        3,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "mining-result",
+      "category": "table-reader",
+      "length": 216,
+      "instructions": 51,
+      "sha256": "5eec0bcc4aae8e48508c5a0cdc5c8637f8f84da712bbc624fa23be0f4f3e746e",
+      "prefix_sha256": "345c30c30c8cc031c72a2fffad40d06a94d58bce9b6d1ce7500ad1df99ebb5eb",
+      "prefix_count": 4,
+      "entry": [
+        "mov",
+        2,
+        4,
+        null,
+        null,
+        24,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "trade-format",
+      "category": "table-reader",
+      "length": 216,
+      "analysis": {
+        "start": 144,
+        "end": 216
+      },
+      "instructions": 63,
+      "sha256": "2f7569017948081c505e5c439cef39a8880e9abb62ca094218ad583e9e5abd8b",
+      "prefix_sha256": "f38f8fbdcda095b7334f87ddb1f6a6181e8b36a978dc22f3e1c9f6d7264e32dd",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "growth-summary",
+      "category": "table-reader",
+      "length": 208,
+      "instructions": 87,
+      "sha256": "41d43ea7525a057cb2a95c3c7ad83c58f2933a413f1bd7571dd8256bc083768d",
+      "prefix_sha256": "d6bfc324f5e9b0453f7bf91c13cff9074f2df6150b207c60c741a9d000b094e0",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "growth-level",
+      "category": "table-reader",
+      "length": 156,
+      "instructions": 67,
+      "sha256": "bc5304330e17207da907d48ca3373339b3ee91c8dd4e83849c901fec833613bb",
+      "prefix_sha256": "b0dfb91d5cabda8ed1c025872273fb100d024473e55e0ea15f7718645f4c6822",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          7,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "type-effectiveness",
+      "category": "table-reader",
+      "length": 80,
+      "instructions": 36,
+      "sha256": "7b3dcaf6d4f7a5d122b8e4a760e0fc3045ce9681cb147a9580a0e64a6b44c5c7",
+      "prefix_sha256": "ab6159e11234a1ce1cb584cfacb03c77595d0a68acd39d2b111fd290643c33e6",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "item-icons",
+      "category": "table-reader",
+      "length": 44,
+      "instructions": 17,
+      "sha256": "0b3446a3cbae6ff347429cc0b62ad9300d1470ca0ac1a2dbedd03ecbcd68ed42",
+      "prefix_sha256": "9a2ea118c199487cfb6232ff2bf0e170ac5d134a5b144bcb74656a1acac72938",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "split-icons",
+      "category": "table-reader",
+      "length": 140,
+      "instructions": 47,
+      "sha256": "e6231283022875d9d2d5a9364df38f2725877c424d0c5285c6bee520a1a758c0",
+      "prefix_sha256": "3ac430132e26c6701b5d2100cd8fd865b2cd28c0dd0de60c2b74120225a7d24d",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          0,
+          1,
+          2,
+          4,
+          5,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "type-icon-palette",
+      "category": "table-reader",
+      "length": 48,
+      "instructions": 17,
+      "sha256": "d0d5ef6d4f9f16a0ac5adaebe52eb88abf8617c79794a357ed97ff8750ee82c5",
+      "prefix_sha256": "f6436de97af8116e2e196d83ee1cb4ac522a89e12e8fa5ed10228dfcb466bd48",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "type-icon-sheet",
+      "category": "table-reader",
+      "length": 76,
+      "instructions": 33,
+      "sha256": "8a86faa8d603574823edbc666b1f8d3564de6d0867c16168810329c9e3ab7df4",
+      "prefix_sha256": "d898db6534479c1c30bee1a5758fdac6cb9e11030e7115e2f507ff54d3fdd232",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "gift-command",
+      "category": "table-reader",
+      "length": 128,
+      "instructions": 54,
+      "sha256": "943431b0388a7ea1c3dd07d1f2d30a78516a5fd5278e601110621d5e47ee1a16",
+      "prefix_sha256": "edc33bf5af14cfb64c88780bc4a9f0b442b243bb5459199169b59cd9e8fd65e2",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "egg-command",
+      "category": "table-reader",
+      "length": 80,
+      "instructions": 16,
+      "sha256": "82715b7ecb549872bdc7154f985332b910d9ff798518d52b88d2b7633ef0653c",
+      "prefix_sha256": "50da7bef335acc24611cd05777a69d8824917ba3c6e619aa466692ad0aec57fa",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "evo-core",
+      "category": "table-reader",
+      "length": 132,
+      "instructions": 64,
+      "sha256": "89dda3542a2bdc997cdb2c191fc16173e8e8cf507b6db07294e930559831fce2",
+      "prefix_sha256": "473401a830b2ef090d362b6e4c8dc9766100a703d364b904bf5d041798c572e0",
+      "prefix_count": 4,
+      "entry": [
+        "lsl",
+        2,
+        3,
+        4,
+        null,
+        7,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "map-lookup",
+      "category": "table-reader",
+      "length": 128,
+      "instructions": 53,
+      "sha256": "6d3ee510e56baea403b1b6ecf56e1d4af197d11b477eccdd39bad15e82affca9",
+      "prefix_sha256": "aa2c6fe166c51fc1f9310cb5cd7be1f4be6627210be3d83f6ababe6391bbb9a2",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "specials-dispatch",
+      "category": "table-reader",
+      "length": 54,
+      "instructions": 20,
+      "sha256": "8d6acef322b1338af32539572af4bbe28c3814b4d5ecadd924b8da7ab215eb10",
+      "prefix_sha256": "dfd5e9a45ecb91d5211f32f99261aa8ac691f75255b8e346b1f694c73ddad2d1",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "trade-special",
+      "category": "table-reader",
+      "length": 42,
+      "instructions": 17,
+      "sha256": "925c8a420856959a5ac64e439683ef9187a9b937e3c11dc5a2c4308fd2f2f621",
+      "prefix_sha256": "7f0315429462e279da7ed99d8d351ac82ef32c853a099767bb78e7ad198607af",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "map-tilesets",
+      "category": "table-reader",
+      "length": 40,
+      "instructions": 18,
+      "sha256": "bf72369ba45fd3df5925ccb151fda54e61ce6651ccadc276cd036449291fab85",
+      "prefix_sha256": "e18b6563f5c5e997118283cb94ba130655a2e60c5ee5657411c9e727078253da",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "map-palettes",
+      "category": "table-reader",
+      "length": 24,
+      "instructions": 10,
+      "sha256": "004934d730f57711b75eb058b665712811c048105f6767809eeb66dc6e0f40bb",
+      "prefix_sha256": "9efc884502166c6e695911489ba53258af498707d2b31993b167a850d3af1efc",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "map-metatile-partition",
+      "category": "table-reader",
+      "length": 122,
+      "instructions": 55,
+      "sha256": "a385fb5b60fbf7549a70b62ee5e690480c26356890599e4ef7281a6ffb9f70d7",
+      "prefix_sha256": "b09af828d60eb226d255023f19caac27bdfab72bbc962202caba8f1f758da95c",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          7,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "trade-task",
+      "category": "table-reader",
+      "length": 460,
+      "instructions": 23,
+      "sha256": "8b88f33ecda9c82a9b14989e6ca6d896034619a062787253c6f3da3304f1712a",
+      "prefix_sha256": "4acc09ac3be1ed9b56345ef627a74ae4c49f4032d9ef36ee366d468058a4db6e",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    }
+  ],
+  "constraints": [
+    {
+      "reader": "keyboard-page",
+      "caller": "keyboard-character",
+      "offset": 16
+    },
+    {
+      "reader": "keyboard-next",
+      "caller": "keyboard-next-tilemap",
+      "offset": 86
+    },
+    {
+      "reader": "keyboard-next-label",
+      "caller": "keyboard-page-swap",
+      "offset": 40
+    },
+    {
+      "reader": "item-plural",
+      "caller": "item-plural-command",
+      "offset": 72
+    },
+    {
+      "reader": "time-night",
+      "caller": "wild-info-reader",
+      "offset": 22
+    },
+    {
+      "reader": "time-morning",
+      "caller": "wild-info-reader",
+      "offset": 32
+    },
+    {
+      "reader": "time-evening",
+      "caller": "wild-info-reader",
+      "offset": 42
+    }
+  ],
+  "keyboard_layout": {
+    "reserved_bytes": 4096,
+    "immediates": {
+      "opening_keyboard_offsets": {
+        "callee": "keyboard-print",
+        "sites": [
+          {
+            "reader": "keyboard-opening",
+            "offset": 64
+          },
+          {
+            "reader": "keyboard-opening",
+            "offset": 50
+          }
+        ]
+      },
+      "page_count": {
+        "sites": [
+          {
+            "reader": "keyboard-page-count",
+            "offset": 80
+          },
+          {
+            "reader": "keyboard-label-count",
+            "offset": 74
+          }
+        ]
+      }
+    }
+  },
+  "keyboard": [
+    {
+      "name": "keys",
+      "loads": [
+        {
+          "reader": "keyboard-character",
+          "offset": 14
+        }
+      ],
+      "entry_method": "narrowed-index",
+      "scale_left": 30,
+      "scale_right": 32
+    },
+    {
+      "name": "columns",
+      "loads": [
+        {
+          "reader": "keyboard-cursor",
+          "offset": 38
+        },
+        {
+          "reader": "keyboard-columns",
+          "offset": 2
+        }
+      ],
+      "entry_method": "indexed"
+    },
+    {
+      "name": "column_x",
+      "loads": [
+        {
+          "reader": "keyboard-cursor",
+          "offset": 60
+        }
+      ],
+      "entry_method": "narrowed-index",
+      "scale_left": 62,
+      "scale_right": 64
+    },
+    {
+      "name": "fill",
+      "loads": [
+        {
+          "reader": "keyboard-print",
+          "offset": 16
+        }
+      ],
+      "entry_method": "indexed"
+    },
+    {
+      "name": "colours",
+      "loads": [
+        {
+          "reader": "keyboard-print",
+          "offset": 30
+        }
+      ],
+      "entry_method": "indexed"
+    },
+    {
+      "name": "rows",
+      "loads": [
+        {
+          "reader": "keyboard-print",
+          "offset": 38
+        }
+      ],
+      "entry_method": "indexed"
+    },
+    {
+      "name": "page_keyboard",
+      "loads": [
+        {
+          "reader": "keyboard-page",
+          "offset": 0
+        }
+      ],
+      "entry_method": "indexed"
+    },
+    {
+      "name": "next_keyboard",
+      "loads": [
+        {
+          "reader": "keyboard-next",
+          "offset": 0
+        }
+      ],
+      "entry_method": "indexed"
+    },
+    {
+      "name": "next_label",
+      "loads": [
+        {
+          "reader": "keyboard-next-label",
+          "offset": 4
+        }
+      ],
+      "entry_method": "indexed"
+    },
+    {
+      "name": "label_palette",
+      "loads": [
+        {
+          "reader": "keyboard-label",
+          "offset": 12
+        }
+      ],
+      "entry_method": "indexed"
+    },
+    {
+      "name": "label_tile",
+      "loads": [
+        {
+          "reader": "keyboard-label",
+          "offset": 40
+        }
+      ],
+      "entry_method": "indexed"
+    },
+    {
+      "name": "label_subsprites",
+      "loads": [
+        {
+          "reader": "keyboard-subsprites",
+          "offset": 86
+        }
+      ],
+      "entry_method": "subsprites"
+    },
+    {
+      "name": "sprite_sheets",
+      "loads": [
+        {
+          "reader": "keyboard-sheets",
+          "offset": 62
+        }
+      ],
+      "entry_method": "tagged-sheets"
+    },
+    {
+      "name": "next_tilemap",
+      "loads": [
+        {
+          "reader": "keyboard-next-tilemap",
+          "offset": 64
+        }
+      ],
+      "entry_method": "indexed"
+    }
+  ],
+  "item_fields": [
+    {
+      "id": "pokedex.items.fields",
+      "members": {
+        "held_effect": "item-held-effect",
+        "hold_effect_param": "item-effect-parameter",
+        "pocket": "item-pocket",
+        "battle_usage": "item-battle-usage"
+      }
+    },
+    {
+      "id": "pokedex.items.fields.price",
+      "reader": "item-price"
+    },
+    {
+      "id": "pokedex.items.fields.description",
+      "reader": "item-description"
+    }
+  ],
+  "item_name": {
+    "reader": "item-name",
+    "bank_subtract": 28,
+    "bank_compare": 30
+  },
+  "patches": [
+    {
+      "name": "ability_popup_possessive",
+      "reader": "ability-name-suffix",
+      "offsets": [
+        16,
+        30
+      ],
+      "method": "immediate"
+    },
+    {
+      "name": "berry_blender_possessive",
+      "reader": "berry-name",
+      "offsets": [
+        48
+      ],
+      "method": "literal"
+    },
+    {
+      "name": "berry_blender_apostrophe",
+      "reader": "berry-name",
+      "offsets": [
+        36
+      ],
+      "method": "immediate"
+    },
+    {
+      "name": "item_plural_s",
+      "reader": "item-plural",
+      "offsets": [
+        20
+      ],
+      "method": "immediate"
+    },
+    {
+      "name": "item_plural_lower",
+      "reader": "item-plural",
+      "offsets": [
+        46,
+        50
+      ],
+      "method": "immediate"
+    },
+    {
+      "name": "item_plural_upper",
+      "reader": "item-plural",
+      "offsets": [
+        66,
+        70
+      ],
+      "method": "immediate"
+    },
+    {
+      "name": "item_plural_s_trade",
+      "reader": "item-plural-trade",
+      "offsets": [
+        60
+      ],
+      "method": "immediate"
+    },
+    {
+      "name": "item_plural_lower_trade",
+      "reader": "item-plural-trade",
+      "offsets": [
+        86,
+        90
+      ],
+      "method": "immediate"
+    },
+    {
+      "name": "item_plural_upper_trade",
+      "reader": "item-plural-trade",
+      "offsets": [
+        106,
+        110
+      ],
+      "method": "immediate"
+    },
+    {
+      "name": "count_plural_s",
+      "reader": "count-plural",
+      "offsets": [
+        96
+      ],
+      "method": "immediate"
+    },
+    {
+      "name": "egg_count_plural_s",
+      "reader": "egg-count-plural",
+      "offsets": [
+        70
+      ],
+      "method": "immediate"
+    }
+  ],
+  "text_copies": [
+    {
+      "name": "music_prefix_battle",
+      "reader": "audio-name-prefixes",
+      "call": 10,
+      "span": 62,
+      "callee": "byte-copy"
+    },
+    {
+      "name": "music_prefix_team",
+      "reader": "audio-name-prefixes",
+      "call": 40,
+      "span": 62,
+      "callee": "byte-copy"
+    },
+    {
+      "name": "shard_plural_s",
+      "reader": "shard-list",
+      "call": 26,
+      "span": 52,
+      "callee": "byte-copy"
+    }
+  ],
+  "move_lists": [
+    {
+      "key": "reckless",
+      "reader": "move-list-reckless",
+      "offset": 2
+    },
+    {
+      "key": "punching",
+      "reader": "move-list-punching",
+      "offset": 0
+    },
+    {
+      "key": "sheer_force",
+      "reader": "move-list-sheer-force",
+      "offset": 0
+    },
+    {
+      "key": "pulse_aura",
+      "reader": "move-list-pulse-aura",
+      "offset": 0
+    },
+    {
+      "key": "biting",
+      "reader": "move-list-biting",
+      "offset": 0
+    },
+    {
+      "key": "dance",
+      "reader": "move-list-dance",
+      "offset": 0
+    },
+    {
+      "key": "powder",
+      "reader": "move-list-powder",
+      "offset": 0
+    },
+    {
+      "key": "sound",
+      "reader": "move-list-sound",
+      "offset": 4
+    },
+    {
+      "key": "ballistic",
+      "reader": "move-list-ballistic",
+      "offset": 4
+    },
+    {
+      "key": "me_first_banned",
+      "reader": "move-list-me-first-banned",
+      "offset": 0
+    },
+    {
+      "key": "gravity_banned",
+      "reader": "move-list-gravity-banned",
+      "offset": 0
+    },
+    {
+      "key": "substitute_bypass",
+      "reader": "move-list-substitute-bypass",
+      "offset": 0
+    },
+    {
+      "key": "type_change_exception",
+      "reader": "move-list-type-change-exception",
+      "offset": 4
+    },
+    {
+      "key": "metronome_banned",
+      "reader": "move-list-metronome-banned",
+      "offset": 0
+    },
+    {
+      "key": "sky_battle_banned",
+      "reader": "move-list-sky-battle-banned",
+      "offset": 0
+    },
+    {
+      "key": "parental_bond_banned",
+      "reader": "move-list-parental-bond-banned",
+      "offset": 0
+    }
+  ],
+  "dex": {
+    "record_reader": "dex-height-record",
+    "map_reader": "species-national-number",
+    "description_reader": "dex-description-record"
+  },
+  "encounters": {
+    "reader": "wild-info-reader",
+    "day": {
+      "reader": "wild-day-array",
+      "offset": 0
+    },
+    "variants": {
+      "night": {
+        "reader": "wild-info-reader",
+        "offset": 26,
+        "guard": "time-night",
+        "call": 22
+      },
+      "morning": {
+        "reader": "wild-info-reader",
+        "offset": 36,
+        "guard": "time-morning",
+        "call": 32
+      },
+      "evening": {
+        "reader": "wild-info-reader",
+        "offset": 62,
+        "guard": "time-evening",
+        "call": 42
+      }
+    },
+    "case_helper": "thumb-byte-cases",
+    "case_guard": 98,
+    "case_call": 104,
+    "methods": {
+      "land": 0,
+      "water": 1,
+      "fishing": 2,
+      "rock_smash": 3
+    },
+    "selectors": {
+      "land": {
+        "reader": "wild-land-selector",
+        "sample": 20,
+        "register": 1,
+        "modulus": 10
+      },
+      "water": {
+        "reader": "wild-water-selector",
+        "sample": 20,
+        "register": 1,
+        "modulus": 10
+      },
+      "fishing": {
+        "reader": "wild-fishing-selector",
+        "sample": 28,
+        "register": 1,
+        "modulus": 18
+      }
+    },
+    "rods": {
+      "old": 0,
+      "good": 1,
+      "super": 2
+    }
+  },
+  "credit_readers": [
+    "credits-heading-reader",
+    "credits-name-reader"
+  ],
+  "learnsets": {
+    "level_up": {
+      "reader": "level-up-parser",
+      "entry_stride": 10,
+      "level_instruction": 38
+    },
+    "tmhm": {
+      "reader": "tm-bit-reader",
+      "moves": "tm-move-reader"
+    },
+    "tutor": {
+      "reader": "tutor-bit-reader",
+      "moves": "tutor-move-reader",
+      "move_guard": 0
+    },
+    "egg": {
+      "reader": "egg-move-reader",
+      "offset": 8,
+      "marker": 0,
+      "bound": 4
+    }
+  },
+  "growth": {
+    "summary": "growth-summary",
+    "level": "growth-level"
+  },
+  "type_effectiveness": {
+    "reader": "type-effectiveness"
+  },
+  "icons": {
+    "items": {
+      "reader": "item-icons"
+    },
+    "split": {
+      "reader": "split-icons"
+    },
+    "types": {
+      "sheet": {
+        "reader": "type-icon-sheet",
+        "offset": 28
+      },
+      "palette": {
+        "reader": "type-icon-palette",
+        "offset": 28
+      },
+      "table": {
+        "reader": "type-icon-sheet",
+        "offset": 18
+      }
+    }
+  },
+  "evolution": {
+    "reader": "evo-core",
+    "base_load": 6,
+    "species_scale": 0,
+    "slot_scale": 8,
+    "method": 22,
+    "parameter": 48,
+    "tile_method": 76,
+    "extra": 122,
+    "target": 144
+  },
+  "trainers": {
+    "pictures": {
+      "reader": "trainer-pictures",
+      "front_offset": 30,
+      "palette_offset": 98
+    },
+    "records": "trainer-records",
+    "record_load": 232,
+    "portrait_call": 256
+  },
+  "mining": {
+    "result": "mining-result",
+    "placement": "mining-placement",
+    "result_base": 8,
+    "result_stride": 0,
+    "result_item": 10,
+    "draw_base": 16,
+    "draw_add": 18,
+    "draw_count": 20
+  },
+  "commands": {
+    "gift": {
+      "reader": "gift-command",
+      "opcode": 121
+    },
+    "egg": {
+      "reader": "egg-command",
+      "opcode": 122
+    }
+  },
+  "trades": {
+    "reader": "trade-format",
+    "offset": 156,
+    "wanted": 162,
+    "species": 178,
+    "unreachable_reason": "The reader entry redirects before all declared table loads; retained records have no confirmed live reader.",
+    "evidence": "The fingerprint anchors the preceding sprite callback, which returns before the trade species reader at relative +144. The table, wanted and given loads at +156, +162 and +178 must be reachable from that reader entry. An entry literal-load/bx veneer redirects execution before those residual loads; their retained pointer and nine 60-byte records do not establish a live trade table."
+  },
+  "map_sections": {
+    "reader": "map-lookup",
+    "base_load": 44,
+    "scale": 46,
+    "first_add": 12,
+    "bound": 18
+  },
+  "specials": {
+    "reader": "specials-dispatch",
+    "read_call": 2,
+    "scale": 6,
+    "base_load": 10,
+    "bound_load": 14,
+    "bound_compare": 16,
+    "branch": 18,
+    "trade": {
+      "reader": "trade-special",
+      "callback_load": 8,
+      "task": "trade-task"
+    }
+  },
+  "maps": {
+    "tilesets": "map-tilesets",
+    "primary_tiles_move": 10,
+    "primary_tiles_shift": 12,
+    "secondary_tiles_move": 24,
+    "secondary_tiles_shift": 26,
+    "palettes": "map-palettes",
+    "primary_call": 8,
+    "secondary_call": 14,
+    "primary_dest_offset": 4,
+    "primary_size_offset": 6,
+    "secondary_dest_offset": 4,
+    "secondary_size_offset": 6,
+    "palette_bytes": 32,
+    "metatile_partition": "map-metatile-partition",
+    "metatile_bound_load": 18,
+    "metatile_bound_compare": 20,
+    "metatile_branch": 22
+  }
+}

@@ -1,0 +1,74 @@
+schema = "2.0.0"
+language = "ru"
+"keyboards" = [
+  { "name" = "а–я", "like" = 0 },
+  { "name" = "А–Я", "like" = 1 },
+  { "name" = "others", "like" = 2 },
+  { "name" = "A–Z", "like" = 1, "base" = true },
+  { "name" = "a–z", "like" = 0, "base" = true },
+]
+"pages" = [
+  { "name" = "others", "keyboard" = 2, "look" = 0 },
+  { "name" = "А–Я", "keyboard" = 1, "look" = 1 },
+  { "name" = "а–я", "keyboard" = 0, "look" = 2 },
+  { "name" = "A–Z", "keyboard" = 3, "look" = 1, "label" = "graphics/latin-upper.png" },
+  { "name" = "a–z", "keyboard" = 4, "look" = 2, "label" = "graphics/latin-lower.png" },
+]
+
+[rows]
+lower_keys_1 = "абвгдежз"
+lower_keys_2 = "ийклмноп"
+lower_keys_3 = "рстуфхцч"
+lower_keys_4 = "шщъыьэюя"
+upper_keys_1 = "АБВГДЕЖЗ"
+upper_keys_2 = "ИЙКЛМНОП"
+upper_keys_3 = "РСТУФХЦЧ"
+upper_keys_4 = "ШЩЪЫЬЭЮЯ"
+symbols_keys_1 = "01234ё  "
+symbols_keys_2 = "56789Ё  "
+symbols_keys_3 = "!?♂♀/-  "
+symbols_keys_4 = "…“”.’   "
+lower_display_1 = "{CLEAR 0B}а{CLEAR 06}б{CLEAR 06}в{CLEAR 1A}г{CLEAR 07}д{CLEAR 05}е{CLEAR 06}ж{CLEAR 19}з"
+lower_display_2 = "{CLEAR 0B}и{CLEAR 06}й{CLEAR 06}к{CLEAR 1B}л{CLEAR 05}м{CLEAR 05}н{CLEAR 07}о{CLEAR 19}п"
+lower_display_3 = "{CLEAR 0B}р{CLEAR 05}с{CLEAR 07}т{CLEAR 1A}у{CLEAR 06}ф{CLEAR 06}х{CLEAR 05}ц{CLEAR 1B}ч"
+lower_display_4 = "{CLEAR 0B}ш{CLEAR 06}щ{CLEAR 06}ъ{CLEAR 1A}ы{CLEAR 06}ь{CLEAR 07}э{CLEAR 06}ю{CLEAR 1A}я"
+upper_display_1 = "{CLEAR 0B}А{CLEAR 06}Б{CLEAR 06}В{CLEAR 1A}Г{CLEAR 06}Д{CLEAR 06}Е{CLEAR 06}Ж{CLEAR 19}З"
+upper_display_2 = "{CLEAR 0B}И{CLEAR 06}Й{CLEAR 06}К{CLEAR 1A}Л{CLEAR 06}М{CLEAR 06}Н{CLEAR 06}О{CLEAR 19}П"
+upper_display_3 = "{CLEAR 0B}Р{CLEAR 06}С{CLEAR 06}Т{CLEAR 1A}У{CLEAR 06}Ф{CLEAR 06}Х{CLEAR 06}Ц{CLEAR 1A}Ч"
+upper_display_4 = "{CLEAR 0B}Ш{CLEAR 06}Щ{CLEAR 06}Ъ{CLEAR 1A}Ы{CLEAR 06}Ь{CLEAR 06}Э{CLEAR 06}Ю{CLEAR 1A}Я"
+symbols_display_1 = "{CLEAR 0B}0{CLEAR 10}1{CLEAR 10}2{CLEAR 10}3{CLEAR 10}4{CLEAR 10}ё"
+symbols_display_2 = "{CLEAR 0B}5{CLEAR 10}6{CLEAR 10}7{CLEAR 10}8{CLEAR 10}9{CLEAR 10}Ё"
+symbols_display_3 = "{CLEAR 0B}!{CLEAR 10}?{CLEAR 10}♂{CLEAR 10}♀{CLEAR 10}/{CLEAR 10}-"
+symbols_display_4 = "{CLEAR 0B}…{CLEAR 10}“{CLEAR 10}”{CLEAR 11}.{CLEAR 11}’{CLEAR 12} "
+# Union Room chat keyboard: 10 rows, 5 keys per page.
+# pages: Cyrillic capitals, small letters, symbols.
+chat_upper_1 = "АБВГД"
+chat_upper_2 = "ЕЁЖЗИ"
+chat_upper_3 = "ЙКЛМН"
+chat_upper_4 = "ОПРСТ"
+chat_upper_5 = "УФХЦЧ"
+chat_upper_6 = "ШЩЪЫЬ"
+chat_upper_7 = "ЭЮЯ-/"
+chat_upper_8 = "01234"
+chat_upper_9 = "56789"
+chat_upper_10 = ".,!? "
+chat_lower_1 = "абвгд"
+chat_lower_2 = "еёжзи"
+chat_lower_3 = "йклмн"
+chat_lower_4 = "опрст"
+chat_lower_5 = "уфхцч"
+chat_lower_6 = "шщъыь"
+chat_lower_7 = "эюя()"
+chat_lower_8 = ":;“”+"
+chat_lower_9 = ".,!? "
+chat_lower_10 = "-/&… "
+chat_symbols_1 = "ABCDE"
+chat_symbols_2 = "FGHIJ"
+chat_symbols_3 = "KLMNO"
+chat_symbols_4 = "PQRST"
+chat_symbols_5 = "UVWXY"
+chat_symbols_6 = "Z{F9 F1}{F9 E0}{F9 E2}{F9 E3}"
+chat_symbols_7 = "{F9 F0}{F9 EF}{F9 E1}{F9 D6}{F9 D7}"
+chat_symbols_8 = "{F9 E4}{F9 E5}{F9 E6}{F9 E7}{F9 E8}"
+chat_symbols_9 = "{F9 E9}{F9 DC}{F9 DD}{F9 DE}{F9 D1}"
+chat_symbols_10 = "{F9 D2}{F9 D0};: "

@@ -1,0 +1,331 @@
+function	slot	name	where	width	box	lines	style	evidence	prompt_arrow_width	newline_scroll_after	instant_print	slot_context
+08b74b55253819b245e508dc20461b79dbfa85cbe87babc292a320de8a582a2a	call:52:r2	bag-inventory-message			dialogue			Inventory messages use bag, TM Case, Berry Pouch and item PC windows. The shared strings cover Mail, held-item restrictions and container capacity.				
+0c4f78fe8ea51e2b4a5780f89689ea53e357d96ef89a3fe145840aa1841bba6c	call:30:r2	options-header		200				Options header: 208 px window, font 2 from x 8.				
+0f8d94ba0a755b77e6214d3e5f90ca4eeebea50b8fa6281fd6ac1d5abc94575a	call:28:r0	battle-action-menu		96		2		Battle action menu: window 2, 12 tiles, x 0.\nThe check measures the CLEAR_TO column.\nWindow 2 is 4 tiles high, 2 lines.				
+112b9379c0e1814f2f475782da2f9cc97d061725e8a347a629dd720d2bea3bf3	call:70:r2	pokemon-jump-link-canceled		176		2		Pokemon Jump link messages: 22-tile window, font 2, 2 lines.				
+16b315570752ee5be0bdc7a488ed4513c57a6c70682cc9f78364b063c9972e16	call:70:r2	pokemon-jump-link-standby		128				Pokemon Jump link messages: 16-tile window, font 2.				
+26b50992a07bd8838a2bdd08db44a49fa722e5e85743d33b98c08e763f3b0cd9	call:58:r2	berry-powder-counter-label		64			unbound-small	Berry Powder: window 64 px, small font at x 0.\nsmall font (font 0 of the print call)				
+2b5bc147a133631ca6aae02269f8c34a0a0eb347e2dd3932e91e6103236d8abb	call:60:r2	bag-field-item-use-message			dialogue			Item-use messages can use the bag or field message box. The source group describes bag, shop and party message boxes as 208 px windows, four tiles high.\nShared item-use messages can appear in a bag or field box, including item-used, lingering Repel and Poke Flute text.\nbag or field box: Day Care check, Time Turner				
+4d85d108ec223e6a8495ac645cddc79bb8feb93ec1273a55eaf6bfb1eb46c79c	call:42:r0	battle-yes-no-menu		32		2		Battle Yes/No: window 14, 4 tiles; spacing 1 unmeasured.\nWindow 14 is 4 tiles high, 2 lines.				
+6145b802d4bcd38f8a1028589e6f05b4ccb8954355a5d51b85e677048ab399ff	call:78:r2	lift-floor-label		56				Lift floor window: 7 tiles wide, name right-aligned.				
+65eebeffa64ddcea3ec810ade2022a2cd8980ba2cd01ac272cd2ca9800672695	call:124:r2	dodrio-link-standby		152				Dodrio Berry Picking link messages: 152 px standby window, font 2.				
+66318a3f756f04a1bee5bbf7de480621c97bff81a92f6957a6fd983d7cc463df	call:132:r2	bag-field-item-use-message			dialogue			Item-use messages can use the bag or field message box. The source group describes bag, shop and party message boxes as 208 px windows, four tiles high.\nShared item-use messages can appear in a bag or field box, including item-used, lingering Repel and Poke Flute text.\nbag or field box: Day Care check, Time Turner				
+7167e4e20a6fac1050529d18bf312593cb889997fdc631c033f2b6b2fc320a2e	call:42:r0	battle-yes-no-menu		32		2		Battle Yes/No: window 14, 4 tiles; spacing 1 unmeasured.\nWindow 14 is 4 tiles high, 2 lines.				
+79c1d32ee805f5b09d3c1130ed00533347763f20afdfbf7b05731fe4da87509b	call:172:r2	dodrio-link-canceled		176		2		Dodrio Berry Picking link messages: 176 px window, font 2, 2 lines.				
+852a79a9f5d40217bb6749567d1f9a03f4d6086d0135d95dc71e9036f1a073b9	call:68:r2	bag-inventory-message			dialogue			Inventory messages use bag, TM Case, Berry Pouch and item PC windows. The shared strings cover Mail, held-item restrictions and container capacity.				
+872ce17df7a56c5853202d3f614aad97e8773909b25da2037fb5d810c91b20e9	call:250:r2	seagallop-destination-options		80				Seagallop menu: 11 tile window, items from x 8.				
+9fa5449f393804284ce0c46848ed63c3e5970ebfd7f563fc9a1a9587259315ab	call:276:r2	pc-selection-expanded-options		104				PC selection: labels start at x 8, font 2.\nPokedex/Hall flags select the 14-tile variant.				
+b04e8de22245d619a0c7d6ecbc2df918014635469c247ba707351c2219c3e048	call:58:r2	trainer-card-wallet-count-label		48				Money label: 64 px box, card row from x 20.\n₽ and 9 digits right-aligned at 134: 74 - 20 - 6.				
+b51930a6e8a6a2831cbc8692e0f3b948467482de0057d90041bf905bef47f01a	call:70:r2	bag-inventory-message			dialogue			Inventory messages use bag, TM Case, Berry Pouch and item PC windows. The shared strings cover Mail, held-item restrictions and container capacity.				
+b6c578a12d552ebe4402d10398fde3981a249db54aebdd777f084f8e70b214a2	call:424:r2	dodrio-results-points-unit		111			unbound-small	Dodrio Berry Picking results: ' points', small font right-aligned at 216.\nAfter a 42 px name and a 35 px score.\nsmall font (font 0 of the print call)				
+b9613c8a8993efbae69f79f213e68444b5d24d9c37585084eff82bd3f3ef7ad9	call:70:r2	pokemon-jump-replay-prompt		160				Pokemon Jump link messages: 20-tile window, font 2.				
+d6699da82e0de7ef084e50c382201ec175bd6951f8e70aca40f3e82010d9c9af	call:54:r2	bag-deposit-title		64			unbound-small	Bag deposit title: 64 px window, small font centred.\nsmall font (font 0 of the print call)				
+f88718fa6a1365375fe9e75edab4ddca93ed43affeaf390db8dc5aef4c1f69ae	call:96:r2	bag-inventory-message			dialogue			Inventory messages use bag, TM Case, Berry Pouch and item PC windows. The shared strings cover Mail, held-item restrictions and container capacity.				
+fb638ad7e5b44a9937507c7f07a8969ec2b2cb4d1bc0bb53d0a61f76ab8c8d5f	call:40:r0	battle-action-menu		96		2		Battle action menu: window 2, 12 tiles, x 0.\nThe check measures the CLEAR_TO column.\nWindow 2 is 4 tiles high, 2 lines.				
+060348d38b2c88cd3589b697ef33b2ec9a61a6aaae0a3594e8ebd8e4d3afc117	call:40:s2	link-error-restart-message		238		4		Link error screen: 240 px windows, font 3.\nLink error windows: 7 tiles, 14 px lines.				
+0a022767421d2758963d5cadba744e16ab4ed6a3d97c4456804439e885f759bb	call:16:r0	controls-top-button-bar		232			unbound-small	Top bars: right small.\nEach bar is 232 px and the pair shares it.\nsmall font (font 0 of the print call)				
+0bd3a38adaa72d304f085371b1a3505f2981208ef4bc4980ef79cb6699d9f751	call:62:s2	pokemon-jump-hud-units		48			unbound-small	Pokemon Jump\nHUD: 48 px windows, small font from x 0\nsmall font (font 0 of the print call)				
+0bd3a38adaa72d304f085371b1a3505f2981208ef4bc4980ef79cb6699d9f751	call:84:s2	pokemon-jump-hud-units		48			unbound-small	Pokemon Jump\nHUD: 48 px windows, small font from x 0\nsmall font (font 0 of the print call)				
+0ff14a8f979a5d90d2070a15db534816bb30d5014c3c4a2ade9ad6f40e292c33	call:110:r2	easy-chat-button-row		192				Easy chat button row: 24 tile window, font 1.\nThe check measures the columns.				
+1ee60338ea37a3f361de9bd901301b44c1e2718cefe72e6253954919966dc95f	call:28:r0:read:26	teachy-tv-lesson-message				2		Teachy TV lessons show two visible lines.				
+29d597c8af551ef9bf094886c10860b4dfdd63adbc084eb65420c1cbf029a534	call:144:s2	gender-menu-options		64				Gender menu: window 72 px, font 2 from x 8.				
+29d597c8af551ef9bf094886c10860b4dfdd63adbc084eb65420c1cbf029a534	call:188:s2	gender-menu-options		64				Gender menu: window 72 px, font 2 from x 8.				
+2db264136bfe121ff624f3d53f2243220ae053ca34f91d181d25f7e6b328f820	call:74:r0	controls-top-button-bar		232			unbound-small	Top bars: right small.\nEach bar is 232 px and the pair shares it.\nsmall font (font 0 of the print call)				
+2ec8a72942b17758b84dcf104a526c87467d9ead4f5085f2fb54868526ab758d	call:132:s2	berry-crush-result-second-unit		91				Berry Crush results: labels font 2 from x 2.\nUnits and values right-aligned at 190.\nTime: sec. at 190, value 32 px left of it.				
+2ec8a72942b17758b84dcf104a526c87467d9ead4f5085f2fb54868526ab758d	call:258:s2	berry-crush-result-minute-unit		103				Berry Crush results: labels font 2 from x 2.\nUnits and values right-aligned at 190.\nTime: sec. at 190, value 32 px left of it.				
+2ec8a72942b17758b84dcf104a526c87467d9ead4f5085f2fb54868526ab758d	call:350:s2	berry-crush-result-speed-label		115				Berry Crush results: labels font 2 from x 2, units and values right-aligned at 190.\nSpeed: 'Times/sec.' at 190, value 38 px left.				
+2ec8a72942b17758b84dcf104a526c87467d9ead4f5085f2fb54868526ab758d	call:396:s2	berry-crush-result-speed-unit		73				Berry Crush results: labels font 2 from x 2, units and values right-aligned at 190.\nSpeed: 'Times/sec.' at 190, value 38 px left.				
+2ec8a72942b17758b84dcf104a526c87467d9ead4f5085f2fb54868526ab758d	call:688:s2	berry-crush-result-silkiness-label		162				Berry Crush results: labels font 2 from x 2.\nSilkiness: '{STR_VAR_1}%' (26 px) at 190.				
+2ec8a72942b17758b84dcf104a526c87467d9ead4f5085f2fb54868526ab758d	call:88:s2	berry-crush-result-time-label		120				Berry Crush results: labels font 2 from x 2.\nUnits and values right-aligned at 190.\nTime: sec. at 190, value 32 px left of it.				
+370f5eb97ea12a3e0bc459068323e36697589c38c19d3a666ec99ae07dedf539	call:50:s2	options-button-bar		228			unbound-small	Options bar: small font at x = 228 - width.\nsmall font (font 0 of the print call)				
+3bf0c5466718f7daccb6806bc64a6f79604886f9f1f0b71d3505d828c77281f7	call:70:r2	tm-case-close-description		142		4		'Close' description: TM window, 142 px, 4 lines				
+3c1d6b83dde8e1ebc41bc4f3fa6854da7aa001899cb0e47eaad2f893c1610e88	call:436:r0	town-map-buttons		40			unbound-small	Town Map buttons: 40 px windows, small font.\nsmall font (font 0 of the print call)				
+575c1c3057db1059de11df69424269e2812d2cc5021608304664c5af5589a738	call:300:r0	town-map-buttons		40			unbound-small	Town Map buttons: 40 px windows, small font.\nsmall font (font 0 of the print call)				
+58a004f4d9080b74002ca2e0a16232358f7bde64d3b1f5d47228fed4cf3b70f7	call:84:s2	naming-screen-button-bar		236			unbound-small	Naming screen key help, window 1: small font at x = 236 - width.\nsmall font (font 0 of the print call)				
+72d2f59e8504214ed7796db14c603b12203bf76571c923d62ef59bfe311a95dd	call:36:r0	town-map-buttons		40			unbound-small	Town Map buttons: 40 px windows, small font.\nsmall font (font 0 of the print call)				
+72d2f59e8504214ed7796db14c603b12203bf76571c923d62ef59bfe311a95dd	call:42:r0	town-map-buttons		40			unbound-small	Town Map buttons: 40 px windows, small font.\nsmall font (font 0 of the print call)				
+84c9f97bc9c60ac5655ef710997fb04bb8b6fbdd2529faffd4c376d5c34d9d3b	call:108:r0:read:104	pokedex-contents-list-items		148				Pokedex table of contents: lists and templates, font 2.\nheader x 0, item x 12; window 160 px\nhabitat title: x 8, page number right-aligned at 232				
+84c9f97bc9c60ac5655ef710997fb04bb8b6fbdd2529faffd4c376d5c34d9d3b	call:140:r0:read:136	pokedex-contents-list-items		148				Pokedex table of contents: lists and templates, font 2.\nheader x 0, item x 12; window 160 px\nhabitat title: x 8, page number right-aligned at 232				
+886f683d8ad45d99dab653eddb93b829bdaace1c7160a7b28e90adc3c46e7c68	call:58:r0	controls-top-button-bar		232			unbound-small	Top bars: right small.\nEach bar is 232 px and the pair shares it.\nsmall font (font 0 of the print call)				
+909029122b682d60dee538facc1011be89080c5654b883586f6655035ffd68ee	call:26:r2	item-pc-withdraw-title		40		2	unbound-small	Item PC withdraw title: 40 px window, small font, 2 lines.\nsmall font (font 0 of the print call)				
+97024ad3f80e69c39fbdbf0e966295854d6360a3cdd88d1b559f8dbcd2f017dc	call:60:s2	main-menu-continue-labels		58				Continue window: values at x 62, 58 px room				
+9cf64148b8544c8b52ae72003b575d6f4f638ce23f382b0b032a1ed12dd1f3e3	call:170:r2	shop-buy-close-description		198				Shop buy-menu description: 200 px window, from x 2.				
+9cf64148b8544c8b52ae72003b575d6f4f638ce23f382b0b032a1ed12dd1f3e3	call:220:r2	shop-buy-close-description		198				Shop buy-menu description: 200 px window, from x 2.				
+9ec36d1829a2ee0df719a61f7c91d561da0543e701b8b695b7fbc500b9f50e1e	call:76:r2	berry-pouch-close-description		200		2		Berry Pouch: 200 px description window.				
+adeb62c373d6f3ccc5ad2623721976b5f1f8abcf805292788bc93fcfc2f7228e	call:102:s2	link-error-wireless-instructions		238		3		Link error screen: 240 px windows, font 3.\nLink error windows: 7 tiles, 14 px lines.				
+adeb62c373d6f3ccc5ad2623721976b5f1f8abcf805292788bc93fcfc2f7228e	call:82:s2	link-error-heading-and-actions		238				Link error screen: 240 px windows, font 3.				
+b0820082ccc4f3747259babff7beae1b0737ce197092a644e4b3e9a1dee56412	call:106:s2	legacy-trainer-card-pokedex-label		92				FireRed trainer card: labels from x 20.\nPokédex: count right-aligned at x 136, 3 digits				
+b0820082ccc4f3747259babff7beae1b0737ce197092a644e4b3e9a1dee56412	call:230:s2	legacy-trainer-card-pokedex-label		92				FireRed trainer card: labels from x 20.\nPokédex: count right-aligned at x 136, 3 digits				
+b59cd5a9d7fd6a8c79375f1dd900815a96654b44f18c5ccda17ba81718b2f36a	call:198:s2	trainer-card-wallet-count-label		48				Money label: 64 px box, card row from x 20.\n₽ and 9 digits right-aligned at 134: 74 - 20 - 6.				
+b59cd5a9d7fd6a8c79375f1dd900815a96654b44f18c5ccda17ba81718b2f36a	call:98:s2	trainer-card-wallet-count-label		48				Money label: 64 px box, card row from x 20.\n₽ and 9 digits right-aligned at 134: 74 - 20 - 6.				
+b6fba11c500354fc1e0ad64ca2b373bda51c9ab0a84cee5d88648ae855424a2c	call:26:s2	main-menu-continue-labels		58				Continue window: values at x 62, 58 px room				
+bfe925451c993db285881c5712cdc95029e9a45fb42310d4520eefd94c03c66e	call:42:s2	tm-case-title		72				TM Case title: font 1, centred in 72 px.				
+c50cc40af144df34e21d211263bc7622e81a6f95adf3e674fa13ecdae168b681	call:72:s2	main-menu-continue-labels		58				Continue window: values at x 62, 58 px room				
+c5a01e99367729f72c525f599cff2b6d49c8b9f611ff40a8ec41cc7ba717ef80	call:92:s4	party-menu-confirm-button		48			unbound-small	Party menu confirm button: 48 px, small font centred.\nsmall font (font 0 of the print call)				
+c5a9b4dc32bf953be716af3a2cff70fddca4e58a567c6131b9e7378366e67807	call:178:r2	item-pc-cancel-description		200				Item PC 'Cancel' description: window 1 (200 px).				
+d5ddf4c44692473c913a32049fdfbfd7eece459a04dbc42ebc30839607771dba	call:106:s2	link-error-heading-and-actions		238				Link error screen: 240 px windows, font 3.				
+d5ddf4c44692473c913a32049fdfbfd7eece459a04dbc42ebc30839607771dba	call:148:s2	link-error-heading-and-actions		238				Link error screen: 240 px windows, font 3.				
+d6a64e6dd2255973ea988548381bb4a2febbac2d3255413a4dcc6f1d60160d4e	call:98:s4	clear-save-progress		184		2		Clear-save screen: 184 px window, 2 lines, font 2.\nClear-save window: 2 lines.				
+e5d759f131f80e7840c507be6cad6b4ecaa1f5f2bcdd2ca13bd164b4a6ff4041	call:172:s2	berry-crush-record-title		192				Berry Crush records window 192 px, titles centred at 96.				
+e5d759f131f80e7840c507be6cad6b4ecaa1f5f2bcdd2ca13bd164b4a6ff4041	call:210:s2	berry-crush-record-title		192				Berry Crush records window 192 px, titles centred at 96.				
+ee8d27f561716370c4483f648db0bfb350b4fab3bd7288e2f32654d1edb83281	call:58:r0	town-map-buttons		40			unbound-small	Town Map buttons: 40 px windows, small font.\nsmall font (font 0 of the print call)				
+f50e9e553c9316ad7fc497884d201ca8e7bc0097e53ee1c6372e0d251ba7a3eb	call:18:r0	safari-health-ball-label		64			unbound-small	Safari health box: 8 x 2 tile window, small font (font 0).\nSafari Balls occupies the full 64 px width.				
+f5b9ac0aa59efb7df28b9d856d7072a11d3e329dacbe95926cf8e9f7c6fc1814	call:26:s2	main-menu-continue-labels		58				Continue window: values at x 62, 58 px room				
+0d5d3672d1fecc21961e62881c7d395197d8a0191a496311b1ac3e99b4e9dbbb	call:34:s2:read:10	party-entry-limit-message		224				Party window 6: 28 tiles, font 2 starts at x 0.				
+4504f51e475bc3131a1ee9eb2a3c23bf53541a419166487b175f78fef14425e7	call:40:r2	bag-message			dialogue			Bag message boxes: 208 px windows, four tiles high.\nUnbound message boxes, 2 lines each\nbag window 5				
+5b3ef8c04a98a922dbf447dc1b4b42d09c3e6e44b019040ec96016ae4c27028e	call:62:r1	boot-warning-message		224	dialogue			Boot warnings 224 px.\nBoot warning margins dim, but text shows.\nboot warnings, two lines per box (224 px\n  in [layout.window_width])				
+632a73286fa681a961c6edd804ed037491ca6fae519118589e7bdb4e4f9b586d	call:66:s2	sliding-puzzle-button-bar		120			unbound-small	Sliding puzzle button bars: window 2, x 8-128.\nicons draw 8 px, measured wider				
+81c06b0a95b3de7efe538cc43d1053cad28637fc59d5fdec2d078a9abaf2bd32	call:212:s2	save-info-labels		43			unbound-small	Save info: small font labels, values at x 60.\nhours 10-12 put values at x 47, else 52\nsmall font (font 0 of the print call)				
+b1009323bbfdce65953795f0fde20fd8fc10701a8a9a0080702afa22aca3d4c9	call:84:s2	trainer-card-time-label		93				Time: 999 hours, colon or blinking space, minutes: 36 px				
+c984b69cf1f9263655a5c87dd8c502019a1c308ee2e9b862697c6cc7cc128bdd	call:40:r0	battle-yes-no-menu		32		2		Battle Yes/No: window 14, 4 tiles; spacing 1 unmeasured.\nWindow 14 is 4 tiles high, 2 lines.				
+d834ec02650e15cf4094bfdd1d652fce681c380292502231752ef0ddfe3558d7	call:40:r1	boot-warning-message		224	dialogue			Boot warnings 224 px.\nBoot warning margins dim, but text shows.\nboot warnings, two lines per box (224 px\n  in [layout.window_width])				
+e549a5390064f460ac143895f64e720d91a661d5bb9496a76a249e58fb4c5304	call:178:s0:table	trade-menu-action-options		88				Trade menu Summary / Trade: 96 px window, font 3 from x 8.				
+23db351b8585c632ae0ef1504bfc22a6d59498106baf54e574337cee07b53a85	call:120:s2	options-description-override		223				Options screen descriptions replace the record descriptions: window 4 from x 1.				
+4d3af0236f58a0e9ad10399bcb08d392b1868c264fb26713d2d3f0b1bce4dca5	call:244:r2	dodrio-replay-prompt		152				Dodrio Berry Picking link messages: 152 px replay window, font 2.				
+64da7d3e17816dddbbad23113a93ee4421ca6dfc68142e11beff0268c47f2ac0	call:58:s2	stat-scanner-button-bar		212			unbound-small	Stat Scanner key bars: window 1, x 0-216, small font.\nprobe ruler: from x 4, cut from 216				
+81c06b0a95b3de7efe538cc43d1053cad28637fc59d5fdec2d078a9abaf2bd32	call:268:s2	save-info-labels		43			unbound-small	Save info: small font labels, values at x 60.\nhours 10-12 put values at x 47, else 52\nsmall font (font 0 of the print call)				
+81c06b0a95b3de7efe538cc43d1053cad28637fc59d5fdec2d078a9abaf2bd32	call:348:s2	save-info-labels		43			unbound-small	Save info: small font labels, values at x 60.\nhours 10-12 put values at x 47, else 52\nsmall font (font 0 of the print call)				
+81c06b0a95b3de7efe538cc43d1053cad28637fc59d5fdec2d078a9abaf2bd32	call:418:s2	save-info-labels		43			unbound-small	Save info: small font labels, values at x 60.\nhours 10-12 put values at x 47, else 52\nsmall font (font 0 of the print call)				
+9fa5449f393804284ce0c46848ed63c3e5970ebfd7f563fc9a1a9587259315ab	call:126:r2	pc-selection-expanded-options		104				PC selection: labels start at x 8, font 2.\nPokedex/Hall flags select the 14-tile variant.				
+9fa5449f393804284ce0c46848ed63c3e5970ebfd7f563fc9a1a9587259315ab	call:146:r2	pc-selection-expanded-options		104				PC selection: labels start at x 8, font 2.\nPokedex/Hall flags select the 14-tile variant.				
+c3d7d2c5a676a3e42e3af6728e6a8df944f31d676f6f81a2a6c97b0ed690109a	call:248:r2	pokedex-national-label		44			unbound-small	Pokédex labels, small font.\nNational: label at x 8, count at x 52\nsmall font (font 0 of the print call)				
+c3d7d2c5a676a3e42e3af6728e6a8df944f31d676f6f81a2a6c97b0ed690109a	call:354:r2	pokedex-national-label		44			unbound-small	Pokédex labels, small font.\nNational: label at x 8, count at x 52\nsmall font (font 0 of the print call)				
+e768eb35685972d2d667c70608e56bf8fe37742c4d88a5aef71ba8c310da1abd	call:22:r2	bag-message			dialogue			Bag message boxes: 208 px windows, four tiles high.\nUnbound message boxes, 2 lines each\nbag window 5				
+fd22613c9f8e74c4b006708f49e1565beb727a26933aa9418dc3ff40115fe48f	call:84:s2	options-page-headers		96				Unbound options screen, code strings.\npage headers: font 1 centred in a 96 px window				
+ffab6fe0d7196705695d70b8befde1e6036b63d642a0a7396068cae58de548cb	call:92:s4	fame-checker-button-bar		188			unbound-small	Fame Checker bars: small font at x = 188 - width.\nsmall font (font 0 of the print call)				
+0ab57fb4bca4ced6015c702bec026ca785b2c4340bfd61b44fbc7324d30176a7	call:104:r2	bag-sell-message			dialogue			Selling-item messages use the bag message window.				
+24a993f0f5c40c2fd8bc8e8dfdd47b1835c2fc73a80a52d172ad92aa630816ae	call:30:r0	stat-scanner-messages		220	dialogue			Stat Scanner messages: window 0, x 8-232, 2 lines.\nprobe ruler: from x 12, cut from 232\nStat Scanner messages, 2 lines per box.\nwindow 0, 4 tiles high, font 1, x 4\n\\p waits and clears, \\l scrolls; 220 px width				
+2669df681c8483701143cac5917174eb52f4f07aff6673475ad550c8ab70257b	call:174:s4	link-battle-record-total		204				Link battle records: window 216 px.\nThe total line holds code-filled numbers, measured at 60 px.\nthe total line, its numbers 4 characters\n  each ([[layout.code_fill]])				
+2a886fb667c54370ecf9e5850b490ca3a060e3327a43ccbdbd64c27b4b98e834	call:60:r2	cable-club-player-count		88				Cable Club '{STR_VAR_1}P LINK': window 88 px, font 2.\nThe digit is measured by a code fill.				
+46612d7c7f8c3a17fc86e3440720d90550c22eaad7cd891b283c6a329c8224db	call:36:r2	bag-inventory-message			dialogue			Inventory messages use bag, TM Case, Berry Pouch and item PC windows. The shared strings cover Mail, held-item restrictions and container capacity.				
+4792b6fd2783b963e3f232599b0dcfe6d5ace4ac80797bf036ffc7f6e00cef7a	call:32:r0	stat-scanner-messages		220	dialogue			Stat Scanner messages: window 0, x 8-232, 2 lines.\nprobe ruler: from x 12, cut from 232\nStat Scanner messages, 2 lines per box.\nwindow 0, 4 tiles high, font 1, x 4\n\\p waits and clears, \\l scrolls; 220 px width				
+4b5fe01faceecf9ee782887545aad019eb1a357d60aa2d851541c06c0bdeec54	call:124:s4	quest-log-scene-header		232				Quest log: 240 px windows, font 2 from x 2.\nheader: window 0, a scene digit appended				
+52e393fc8cd04df4d9d8e91a0f8656830505cc8ccd28b506809b8148418a45b8	call:60:r0	stat-scanner-scroll-tutorial		220	dialogue	2		Stat Scanner messages: window 0, x 8-232, 2 lines.\nprobe ruler: from x 12, cut from 232\nStat Scanner messages, 2 lines per box.\nwindow 0, 4 tiles high, font 1, x 4\n\\p waits and clears, \\l scrolls; 220 px width\nStat Scanner messages: 2 lines per box.\nEnglish boxes have 3 lines with \\l.				
+5b3ef8c04a98a922dbf447dc1b4b42d09c3e6e44b019040ec96016ae4c27028e	call:118:r1	boot-warning-message		224	dialogue			Boot warnings 224 px.\nBoot warning margins dim, but text shows.\nboot warnings, two lines per box (224 px\n  in [layout.window_width])				
+6f4a3266e06692f1737a094d93ee7e9bb49c20213acb5fca0b2966c2940ad522	call:94:r2	bag-sort-confirmation		120		2		Bag sort prompts: windows 7 and 9, font 2 from x 0.				
+824726d1f6cff6042bba89b072737d0602723b4d4764c48306424bb3b3e8cbcf	call:1090:r0	stat-scanner-messages		220	dialogue			Stat Scanner messages: window 0, x 8-232, 2 lines.\nprobe ruler: from x 12, cut from 232\nStat Scanner messages, 2 lines per box.\nwindow 0, 4 tiles high, font 1, x 4\n\\p waits and clears, \\l scrolls; 220 px width				
+824726d1f6cff6042bba89b072737d0602723b4d4764c48306424bb3b3e8cbcf	call:208:r0	stat-scanner-messages		220	dialogue			Stat Scanner messages: window 0, x 8-232, 2 lines.\nprobe ruler: from x 12, cut from 232\nStat Scanner messages, 2 lines per box.\nwindow 0, 4 tiles high, font 1, x 4\n\\p waits and clears, \\l scrolls; 220 px width				
+a3ee7f988db2b6dfb306f2dfeb622a5c91bacdfa8509f83cee759ca2a90e869a	call:90:r2	bag-sell-message			dialogue			Selling-item messages use the bag message window.				
+aea77aaf4636bf1e3babc4f83fe196898ba15b46df5374de4b87f714a5189013	call:34:r3	bag-field-item-use-message			dialogue			Item-use messages can use the bag or field message box. The source group describes bag, shop and party message boxes as 208 px windows, four tiles high.\nShared item-use messages can appear in a bag or field box, including item-used, lingering Repel and Poke Flute text.\nbag or field box: Day Care check, Time Turner				
+c5155e29152a47af06279ac68377152603b9426384322a24d5b5bba6f723a838	call:324:r0	stat-scanner-messages		220	dialogue			Stat Scanner messages: window 0, x 8-232, 2 lines.\nprobe ruler: from x 12, cut from 232\nStat Scanner messages, 2 lines per box.\nwindow 0, 4 tiles high, font 1, x 4\n\\p waits and clears, \\l scrolls; 220 px width				
+d17201a1bc30b14b2ac085a3692e6312b51afe1d1b0cbb56a8b749a491e2a6ad	call:18:r1	mystery-gift-transfer-message		224		2		Mystery Gift messages: 224 px window, 2 lines, font 2.\nMystery Gift messages and prompts, 2 lines				
+d506e0ba82ce3c683706d4d0c53b0f2ace72ab2bdc993c41d5ee32b75ef54d5c	call:122:r2	bag-sell-message			dialogue			Selling-item messages use the bag message window.				
+d506e0ba82ce3c683706d4d0c53b0f2ace72ab2bdc993c41d5ee32b75ef54d5c	call:210:r2	bag-sell-message			dialogue			Selling-item messages use the bag message window.				
+e5d759f131f80e7840c507be6cad6b4ecaa1f5f2bcdd2ca13bd164b4a6ff4041	call:264:s2	berry-crush-record-player-count		114				Berry Crush records.\n'{STR_VAR_1} PLAYERS' from x 4, one digit.\nspeed '999.99 ' plus unit right-aligned at 192\nthe digit is measured by a code fill				
+f433d1d5f528960754e8ded1d7c2a1398439709859e028d79b33548d7795b892	call:104:r2	bag-sort-result		184		2		Bag sort prompts: windows 7 and 9, font 2 from x 0.				
+fdcc5c04cde26563564caf658bdded3c154ea2f4c13a32fea30b7aa39856173c	call:124:r0	stat-scanner-messages		220	dialogue			Stat Scanner messages: window 0, x 8-232, 2 lines.\nprobe ruler: from x 12, cut from 232\nStat Scanner messages, 2 lines per box.\nwindow 0, 4 tiles high, font 1, x 4\n\\p waits and clears, \\l scrolls; 220 px width				
+fdcc5c04cde26563564caf658bdded3c154ea2f4c13a32fea30b7aa39856173c	call:266:r0	stat-scanner-messages		220	dialogue			Stat Scanner messages: window 0, x 8-232, 2 lines.\nprobe ruler: from x 12, cut from 232\nStat Scanner messages, 2 lines per box.\nwindow 0, 4 tiles high, font 1, x 4\n\\p waits and clears, \\l scrolls; 220 px width				
+ff9569a20f5c58aabfbe939dac27cfc457c00f9d463f9828b4fcd7510b720243	call:84:r2	shop-cube-count		104				Shop In Cube: 104 px window, font 2.				
+06ed6f5e04bf651b86c5f6abaa21a9b8e1b9c48bbb0a1e91c6b9d4eca8a702f1	call:180:r0	town-map-buttons		40			unbound-small	Town Map buttons: 40 px windows, small font.\nsmall font (font 0 of the print call)				
+06ed6f5e04bf651b86c5f6abaa21a9b8e1b9c48bbb0a1e91c6b9d4eca8a702f1	call:442:r0	town-map-buttons		40			unbound-small	Town Map buttons: 40 px windows, small font.\nsmall font (font 0 of the print call)				
+06ed6f5e04bf651b86c5f6abaa21a9b8e1b9c48bbb0a1e91c6b9d4eca8a702f1	call:492:r0	town-map-buttons		40			unbound-small	Town Map buttons: 40 px windows, small font.\nsmall font (font 0 of the print call)				
+06ed6f5e04bf651b86c5f6abaa21a9b8e1b9c48bbb0a1e91c6b9d4eca8a702f1	call:530:r0	town-map-buttons		40			unbound-small	Town Map buttons: 40 px windows, small font.\nsmall font (font 0 of the print call)				
+0cd034af92fe0e15363c27e4a7fedaadbe167f3933756ac2445dd1902110393d	call:132:r0	town-map-buttons		40			unbound-small	Town Map buttons: 40 px windows, small font.\nsmall font (font 0 of the print call)				
+0d87455538643394c09f079036c014f201db7447239d4099500742a5f943b9f9	call:170:s4	clear-save-confirmation		184				Clear-save screen: 184 px window, 2 lines, font 2.				
+3b85007294e039029b6c3d642c5acff2935aadd238d0d18e4dc60202cfe99db6	call:1606:r0	mystery-gift-transfer-message		224		2		Mystery Gift messages: 224 px window, 2 lines, font 2.\nMystery Gift messages and prompts, 2 lines				
+3b85007294e039029b6c3d642c5acff2935aadd238d0d18e4dc60202cfe99db6	call:1634:r0	mystery-gift-transfer-message		224		2		Mystery Gift messages: 224 px window, 2 lines, font 2.\nMystery Gift messages and prompts, 2 lines				
+3b85007294e039029b6c3d642c5acff2935aadd238d0d18e4dc60202cfe99db6	call:1778:r1	mystery-gift-short-message		224				Mystery Gift window 1: one-line texts keep the full 224 px.				
+3b85007294e039029b6c3d642c5acff2935aadd238d0d18e4dc60202cfe99db6	call:294:r1	mystery-gift-arrow-message		208		2		Mystery Gift window 1 is 224 px.\nthe down arrow at x 208 limits two-line texts\nMystery Gift messages and prompts, 2 lines.				
+3b85007294e039029b6c3d642c5acff2935aadd238d0d18e4dc60202cfe99db6	call:332:r0	mystery-gift-transfer-message		224		2		Mystery Gift messages: 224 px window, 2 lines, font 2.\nMystery Gift messages and prompts, 2 lines				
+3b85007294e039029b6c3d642c5acff2935aadd238d0d18e4dc60202cfe99db6	call:346:r0	mystery-gift-transfer-message		224		2		Mystery Gift messages: 224 px window, 2 lines, font 2.\nMystery Gift messages and prompts, 2 lines				
+3b85007294e039029b6c3d642c5acff2935aadd238d0d18e4dc60202cfe99db6	call:590:r0	mystery-gift-transfer-message		224		2		Mystery Gift messages: 224 px window, 2 lines, font 2.\nMystery Gift messages and prompts, 2 lines				
+3b85007294e039029b6c3d642c5acff2935aadd238d0d18e4dc60202cfe99db6	call:920:r1	mystery-gift-short-message		224				Mystery Gift window 1: one-line texts keep the full 224 px.				
+4e16a3b254a60756303c9167dba76901ce4e0d5e556a8b0b3f914495f4a28e31	call:728:r2	link-trainer-card-wait-message			dialogue			Link Trainer Card message window: 26 tiles, 208 px, two lines. Message windows in this group use fonts 2-4.				
+622d34b1924c86e27bbfa8294edba3437a75db9240640a71a3bd814837b4b48c	call:420:r0	town-map-buttons		40			unbound-small	Town Map buttons: 40 px windows, small font.\nsmall font (font 0 of the print call)				
+622d34b1924c86e27bbfa8294edba3437a75db9240640a71a3bd814837b4b48c	call:458:r0	town-map-buttons		40			unbound-small	Town Map buttons: 40 px windows, small font.\nsmall font (font 0 of the print call)				
+62439d5f63811cbbee4b3e037e6c30f251fc0eeccb22ceee1c1bb1d950a64868	call:370:r0	controls-top-button-bar		232			unbound-small	Top bars: right small.\nEach bar is 232 px and the pair shares it.\nsmall font (font 0 of the print call)				
+62439d5f63811cbbee4b3e037e6c30f251fc0eeccb22ceee1c1bb1d950a64868	call:402:r0	controls-top-button-bar		232			unbound-small	Top bars: right small.\nEach bar is 232 px and the pair shares it.\nsmall font (font 0 of the print call)				
+62992f5124b66292960db56ac82dcaf53885fdd79e286774bebffd23e165f8c4	call:46:r0	mystery-gift-transfer-message		224		2		Mystery Gift messages: 224 px window, 2 lines, font 2.\nMystery Gift messages and prompts, 2 lines				
+62992f5124b66292960db56ac82dcaf53885fdd79e286774bebffd23e165f8c4	call:66:r0	mystery-gift-transfer-message		224		2		Mystery Gift messages: 224 px window, 2 lines, font 2.\nMystery Gift messages and prompts, 2 lines				
+6ab8d9d7a57a5e6309c3907820eb11a4de1ce478d8a82222ec72352fbdb25a03	call:326:r0	summary-page-title		100				Summary page titles: 104 px window, font 2.				
+6ab8d9d7a57a5e6309c3907820eb11a4de1ce478d8a82222ec72352fbdb25a03	call:356:r0	summary-button-bar		84			unbound-small	Summary button bar: 88 px window, small font.\nsmall font (font 0 of the print call)				
+6ab8d9d7a57a5e6309c3907820eb11a4de1ce478d8a82222ec72352fbdb25a03	call:386:r0	summary-button-bar		84			unbound-small	Summary button bar: 88 px window, small font.\nsmall font (font 0 of the print call)				
+7f68bf4431e1c757f4541a35330f304f3660ef2eb4ab44a241cc80062c124fde	call:102:r0	summary-page-title		100				Summary page titles: 104 px window, font 2.				
+7f68bf4431e1c757f4541a35330f304f3660ef2eb4ab44a241cc80062c124fde	call:108:r0	summary-button-bar		84			unbound-small	Summary button bar: 88 px window, small font.\nsmall font (font 0 of the print call)				
+7f68bf4431e1c757f4541a35330f304f3660ef2eb4ab44a241cc80062c124fde	call:126:r0	summary-page-title		100				Summary page titles: 104 px window, font 2.				
+7f68bf4431e1c757f4541a35330f304f3660ef2eb4ab44a241cc80062c124fde	call:132:r0	summary-button-bar		84			unbound-small	Summary button bar: 88 px window, small font.\nsmall font (font 0 of the print call)				
+7f68bf4431e1c757f4541a35330f304f3660ef2eb4ab44a241cc80062c124fde	call:150:r0	summary-page-title		100				Summary page titles: 104 px window, font 2.				
+7f68bf4431e1c757f4541a35330f304f3660ef2eb4ab44a241cc80062c124fde	call:172:r0	summary-button-bar		84			unbound-small	Summary button bar: 88 px window, small font.\nsmall font (font 0 of the print call)				
+7f68bf4431e1c757f4541a35330f304f3660ef2eb4ab44a241cc80062c124fde	call:198:r0	summary-button-bar		84			unbound-small	Summary button bar: 88 px window, small font.\nsmall font (font 0 of the print call)				
+7f68bf4431e1c757f4541a35330f304f3660ef2eb4ab44a241cc80062c124fde	call:222:r0	summary-page-title		100				Summary page titles: 104 px window, font 2.				
+7f68bf4431e1c757f4541a35330f304f3660ef2eb4ab44a241cc80062c124fde	call:228:r0	summary-button-bar		84			unbound-small	Summary button bar: 88 px window, small font.\nsmall font (font 0 of the print call)				
+7f68bf4431e1c757f4541a35330f304f3660ef2eb4ab44a241cc80062c124fde	call:50:r0	summary-page-title		100				Summary page titles: 104 px window, font 2.				
+7f68bf4431e1c757f4541a35330f304f3660ef2eb4ab44a241cc80062c124fde	call:72:r0	summary-button-bar		84			unbound-small	Summary button bar: 88 px window, small font.\nsmall font (font 0 of the print call)				
+b89900183aba60c8af99b06d9e3229fdd31e7f2d5b4dc25898df5665763dc79d	call:370:r0	summary-page-title		100				Summary page titles: 104 px window, font 2.				
+b89900183aba60c8af99b06d9e3229fdd31e7f2d5b4dc25898df5665763dc79d	call:376:r0	summary-button-bar		84			unbound-small	Summary button bar: 88 px window, small font.\nsmall font (font 0 of the print call)				
+d535be24cd6d0018b3a07c0279e486a0fea58ff5c9295797945c307700882651	call:92:r0	battle-yes-no-menu		32		2		Battle Yes/No: window 14, 4 tiles; spacing 1 unmeasured.\nWindow 14 is 4 tiles high, 2 lines.				
+f8b564caed2edb8f62cdef62f759e8db40df77f1ab94bdddcc40561bc7e6e20a	call:234:r3	berry-crush-ranking-title		176				Berry Crush ranking page titles centred at 88.				
+f8b564caed2edb8f62cdef62f759e8db40df77f1ab94bdddcc40561bc7e6e20a	call:380:r3	berry-crush-result-title		192				Berry Crush result page title centred at 96.				
+5209590bf0fa04c11c34b62aed72c084233360e3ac62876802446dacdda34180	call:246:s2	town-map-preview-fallback-name		120				Town Map preview hooks: name 120 px.				
+5209590bf0fa04c11c34b62aed72c084233360e3ac62876802446dacdda34180	call:278:s2	town-map-preview-fallback-name		120				Town Map preview hooks: name 120 px.				
+4208969b760f3e1632c340a8687f7b9fb0c8c0717be42e34258588a9a40c192e	call:82:r2	bag-sell-message			dialogue			Selling-item messages use the bag message window.				
+7a6b4b053fe49010b4d7e9242ba2a2da759521d6cc806023b54a2a0ec75e000a	call:162:r2	bag-sell-message			dialogue			Selling-item messages use the bag message window.				
+7a6b4b053fe49010b4d7e9242ba2a2da759521d6cc806023b54a2a0ec75e000a	call:66:r2	bag-sell-message			dialogue			Selling-item messages use the bag message window.				
+880445c8a628a1d416778337e759e10a5dc50eb5952e170046e452ff85df3a20	call:82:r2	bag-sell-message			dialogue			Selling-item messages use the bag message window.				
+9706a6b4aff6850cc6e5f4dc45192311f7d8199019b33a904ef5b27151fe4362	call:96:r2	bag-sell-message			dialogue			Selling-item messages use the bag message window.				
+ca84759ebc17ed2a41577bf6886145c0d768f215079efc7b38ac9237474bc994	call:96:r2	bag-sell-message			dialogue			Selling-item messages use the bag message window.				
+d7312ee7a3535fd08f61a82a419b1612bf6ff54d8fbf64614bc66a34f98b4ea4	call:66:r2	bag-inventory-message			dialogue			Inventory messages use bag, TM Case, Berry Pouch and item PC windows. The shared strings cover Mail, held-item restrictions and container capacity.				
+0000d6ed64e6ab1802a0b4fe6d4accda58d5d8be75ee4fdae55dc7d0c673638e	call:368:r0	battle-action-menu-columns				2		The measured window is selected by this fingerprinted print slot.				
+0000d6ed64e6ab1802a0b4fe6d4accda58d5d8be75ee4fdae55dc7d0c673638e	call:458:r0	battle-action-menu-columns				2		The measured window is selected by this fingerprinted print slot.				
+04a4429b36e5733761076c3d90dc40d8224376258afeaaf4c5bb0e89061a606b	call:256:r2	trainer-tower-time-board-time		120				The measured window is selected by this fingerprinted print slot.				
+04a4429b36e5733761076c3d90dc40d8224376258afeaaf4c5bb0e89061a606b	call:56:r2	trainer-tower-time-board-title		142				The measured window is selected by this fingerprinted print slot.				
+05841d602c887fe3241ce70d038512111b1672526e04777ddec524f46edfb099	call:128:r3	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+063770a06eabfe1cba3988fba494ee587e048b83132c406548e1909d4e1c2b32	call:42:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+0a022767421d2758963d5cadba744e16ab4ed6a3d97c4456804439e885f759bb	call:52:r2	hall-of-fame-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+0a0780a51e25d8e2be5c0664f24a4a0157c49675a70b0351889c38a0faf9c254	call:58:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+0c12f1d521eb30d94410bddf9fc83ad36b1312a571b6939b4e1653c39ff81038	call:90:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+0daef97df1814d1d184ba9e7277464c3569d289969be161b9ac6208b9d65068e	call:90:r2	bag-item-result		184		2		The measured window is selected by this fingerprinted print slot.				
+1244dc3361c1983f38798cdc3f0a022e1f20442cc1a63532840ca438bced77ab	call:58:r2	item-pc-withdraw-quantity		128		2		The measured window is selected by this fingerprinted print slot.				
+1292e9c3c42c964f06f560779e18ea14a2967a70c66fd71b68db1ddf46f56934	call:36:r1	move-relearner-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+15a14ccbf20850297ce243cf8479c41a5b538239ad568f061147d90cccd87f50	call:90:s4	mystery-gift-selection-button-bar					unbound-small	The measured window is selected by this fingerprinted print slot.				
+15c820730eef9746b0fe29eedf74f70957d5cbb98ecd15f07b3ca2da41d89308	call:40:r1	party-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+1630415ae087f2d3412a776cb75ee25451386477bd9c1d26401d68aab58a463b	call:44:r1	bag-item-quantity-prompt		128		2		The measured window is selected by this fingerprinted print slot.				
+1a4a64a452f96a2ee11d34e0697aed62af10949a6591c6fa4e4b4b837b50ec08	call:114:r1	item-pc-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+201fc2692aa2443b1a004efe913fef88ae0eb505a977bae2be8a541dbab3b166	call:34:r3	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+212f8477b4d3d08fc08dacae39f886a987eaf3390a6c2f029801820faf6955c7	call:58:r2	tm-shop-purchased-label		48			unbound-small	The measured window is selected by this fingerprinted print slot.				
+2269ef4736f7aa9886c8b16eb68ab708c39cbf0d0c7b3977eb3ad3cfe02427a2	call:132:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+22a7352d3124167187bba18cb2360f5e7dc65ab31188bdd3146959d6f3249af5	call:126:s4	link-battle-record-column-labels		132				The measured window is selected by this fingerprinted print slot.				
+281a4c113883fe1af5f7f566c3ab70f21c0ce1336e978483d80054a2c485cf89	call:130:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+29373326bf67e78243b50799d615cdf13381ac2c621e8e5c05d481f88d814288	call:406:s2	hall-of-fame-welcome-message		208				The measured window is selected by this fingerprinted print slot.				
+2bb9cce204f1ff83d435ba9cb9d56b7d852435969d039570120cbbd65acb5b7a	call:302:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+2bdc1f309adae369883f9ee74256d0c86df8409f9cb290757a3eb738eb781f7f	call:42:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+2c8fac082563a016fca445c30f9fd50aadf1413613bea22b05ec9d5e354def98	call:14:r0	link-battle-outcome		64				The measured window is selected by this fingerprinted print slot.				
+2c8fac082563a016fca445c30f9fd50aadf1413613bea22b05ec9d5e354def98	call:186:r0	link-battle-outcome		64				The measured window is selected by this fingerprinted print slot.				
+2c8fac082563a016fca445c30f9fd50aadf1413613bea22b05ec9d5e354def98	call:194:r0	link-battle-outcome		64				The measured window is selected by this fingerprinted print slot.				
+2c8fac082563a016fca445c30f9fd50aadf1413613bea22b05ec9d5e354def98	call:244:r0	link-battle-outcome		64				The measured window is selected by this fingerprinted print slot.				
+2c8fac082563a016fca445c30f9fd50aadf1413613bea22b05ec9d5e354def98	call:252:r0	link-battle-outcome		64				The measured window is selected by this fingerprinted print slot.				
+2c8fac082563a016fca445c30f9fd50aadf1413613bea22b05ec9d5e354def98	call:280:r0	link-battle-outcome		64				The measured window is selected by this fingerprinted print slot.				
+2c8fac082563a016fca445c30f9fd50aadf1413613bea22b05ec9d5e354def98	call:288:r0	link-battle-outcome		64				The measured window is selected by this fingerprinted print slot.				
+30c18973d47a50a2b7729cbbd6e81dac06f8f106de101681ee34dd85d811b85c	call:306:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+313b33e7226190aa09f98bd8c42b1468bb03b10e5765221670e26037a6aa3330	call:76:r2	shared-saving-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+331a0d428559e5076597a624b50167f9e0d71a5b871529864174183b933a40ce	call:42:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+33a120f42d6b39f05c900c12499012e0ad0a06b9a3decb199a49bd732fa20eda	call:42:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+3a5c8f7259a8e74f4346a74bd3ff14066f43ba46d2eeb1d5cd4d1517641d2adb	call:116:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+3a5c8f7259a8e74f4346a74bd3ff14066f43ba46d2eeb1d5cd4d1517641d2adb	call:74:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+3fa2a3deba3638feac9c4158f4a8ea4d072b5b63228c268809b56143462c96a7	call:120:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+421b4043b56dfc2da52f8bbcb29316aafb5b909800ae7492015b3088033a9d8e	call:88:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+4296c97c24db4d52bf3d3be33c02fb85043567c42aac20691bc955a9df0385ed	call:102:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+4504f51e475bc3131a1ee9eb2a3c23bf53541a419166487b175f78fef14425e7	call:148:r2	bag-item-result		184		2		The measured window is selected by this fingerprinted print slot.				
+49c59a9b6b7d1f1864ea89cddad4be9ff5bdf3917d68470a58167ffac952737e	call:1370:r2	dodrio-results-title		224			unbound-small	The measured window is selected by this fingerprinted print slot.				
+49c59a9b6b7d1f1864ea89cddad4be9ff5bdf3917d68470a58167ffac952737e	call:306:r2	dodrio-results-title		224			unbound-small	The measured window is selected by this fingerprinted print slot.				
+49c59a9b6b7d1f1864ea89cddad4be9ff5bdf3917d68470a58167ffac952737e	call:936:r2	dodrio-results-title		224			unbound-small	The measured window is selected by this fingerprinted print slot.				
+4b4ccb83d72082efb20a1b5e43299520ef40b0365df32b69e875edb3f31653f2	call:116:r2	shared-saving-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+4b6651f1db8b091378d0489286b39f69850e41935e3419dc078eceedbc5130d8	call:28:r0	battle-action-menu-columns				2		The measured window is selected by this fingerprinted print slot.				
+4df51e83017d31ae8ae223515c4f6e45cad9c746790c6f64cc8f87fc6a9cfba2	call:126:r1	shop-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+5930e0b2364e1ec02d8c75c15914fb258b50658b611e685ea0afd1a5a479f2ab	call:42:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+5aa0297bf596ee98dc2b524deb29a1df7bd789d43cbdacc60a63acda88ef9c20	call:80:r0:table	dexnav-menu-items		48				The measured window is selected by this fingerprinted print slot.				
+5aa0297bf596ee98dc2b524deb29a1df7bd789d43cbdacc60a63acda88ef9c20	call:80:r0:table:case:4:ne:4294967293	dexnav-menu-items		48				The measured window is selected by this fingerprinted print slot.				
+5e3e7d80d4424de98f270335b3a692bd639fe73ca70a2622532694aeb2ceb8ed	call:104:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+62931ac86a76d6432a5112ba91752a59682781a5524b310d74a264d795d38e15	call:242:s2	trainer-tower-time-board-time		120				The measured window is selected by this fingerprinted print slot.				
+62931ac86a76d6432a5112ba91752a59682781a5524b310d74a264d795d38e15	call:64:s2	trainer-tower-time-board-title		142				The measured window is selected by this fingerprinted print slot.				
+6462506ee119d6df88a1183b63ac8878ddb67ff0761f84ad14522e8d381192f8	call:96:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+66318a3f756f04a1bee5bbf7de480621c97bff81a92f6957a6fd983d7cc463df	call:200:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+66eeeb9e71c8dc7cdc20a6dcf4c2e3c420ea709856d978c274835162b3b0ea47	call:78:r2	bag-item-toss-confirmation		120		2		The measured window is selected by this fingerprinted print slot.				
+6737f48ceee5bd56acba4f782da545bf0cad43521f8a197e71e8f19326befac3	call:112:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+6737f48ceee5bd56acba4f782da545bf0cad43521f8a197e71e8f19326befac3	call:154:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+6737f48ceee5bd56acba4f782da545bf0cad43521f8a197e71e8f19326befac3	call:68:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+6abfc4def3c8c44d5d553873bb14e41892a8fadd0d773ad13da8880c9f9dfa74	call:94:r0	options-save-question		220	dialogue			The measured window is selected by this fingerprinted print slot.				
+708315217ec2ba9918e7cfe1b2db61b1fba3b0c6dafcba7e0a4ef7f343001e9f	call:92:r1	bag-item-quantity-prompt		128		2		The measured window is selected by this fingerprinted print slot.				
+71c4ec73f02321396df96fea02a7a1a22466712c750a40b08b13ff10dac1cdc3	call:58:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+74b19dc42434f0683580593d5e0eebc35476f222dde698b6028e911d4d6aa007	call:102:r2	item-pc-withdraw-error		184		2		The measured window is selected by this fingerprinted print slot.				
+74b19dc42434f0683580593d5e0eebc35476f222dde698b6028e911d4d6aa007	call:194:r2	item-pc-withdraw-result		184		2		The measured window is selected by this fingerprinted print slot.				
+74d576e192574c7e411dd62835ca47123726cc11213f9b88057e5d776eec9c07	call:18:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+7580f069c649aaee3c86dbfbb979eb153122f7b40b8d7e93fe91e7a8f680f115	call:10:r0	mission-notification-banner		223			unbound-small	The measured window is selected by this fingerprinted print slot.				
+75835b0bec7ffa273e49c8fb89cdf0f6c5c770009e557630f97f7fd729fb5c99	call:34:r2	shop-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+768afa0dfa3b687ca307b805bb0d9cf4de8a72ae20f3687fe5f5858be770f1d5	call:76:r0	teachy-tv-greeting-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+775430152bdec0c394c476c0d92e699e27080c2a53e4585582d718735616e09a	call:128:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+7e5e9266dccca6fae2d83ddf11cafc364a7cd288c8076727e0be8875df06758e	call:26:r1	shop-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+81c06b0a95b3de7efe538cc43d1053cad28637fc59d5fdec2d078a9abaf2bd32	call:480:s2	save-info-old-label		43			unbound-small	The measured window is selected by this fingerprinted print slot.				
+81c06b0a95b3de7efe538cc43d1053cad28637fc59d5fdec2d078a9abaf2bd32	call:722:s2	save-info-never-value		92			unbound-small	The measured window is selected by this fingerprinted print slot.				
+8218e31f600c2cc1ac7c1e844ce96d5b2e09d3c413ff995fd220dffd59d364c7	call:12:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+845b4bb173550e90b9e8a17a064548fede8fcf1257d1c627732a7cb92f00549e	call:168:r1	shop-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+84c9f97bc9c60ac5655ef710997fb04bb8b6fbdd2529faffd4c376d5c34d9d3b	call:218:r0	pokedex-bottom-button-bar		236			unbound-small	The measured window is selected by this fingerprinted print slot.				
+857bc5b1f8bbd0bc4ac023802d690b09e0504479a0ffb28d604d8762991b027f	call:70:r2	minigame-saving-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+8b8a3c6c682924360b527afb9e3faea3e8298fa5d87c04614d75af6d88dec0ae	call:148:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+8b8a3c6c682924360b527afb9e3faea3e8298fa5d87c04614d75af6d88dec0ae	call:30:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+9562875ac0b792e27a7cbc5702c7ec2222650c5b3d801b134d2d12c93f01c1da	call:28:r0	battle-message			battle			The measured window is selected by this fingerprinted print slot.				
+95da4eb9e1479dca5b629dae6ff85cf9ab05f1826ed556218c7f98cc612cd21c	call:88:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+9696c4481fb1f30c1ce8f26dc4d7ed6f7f59b2ca58c80c9f6685a436d0047e71	call:102:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+9c049ea22b177432e5f32e43c746a6aab7a9ddb3f8f090c69cdda4a2282f9cee	call:166:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+9fa5449f393804284ce0c46848ed63c3e5970ebfd7f563fc9a1a9587259315ab	call:166:r2	pc-selection-common-options		96				The measured window is selected by this fingerprinted print slot.				
+9fa5449f393804284ce0c46848ed63c3e5970ebfd7f563fc9a1a9587259315ab	call:308:r2	pc-selection-common-options		96				The measured window is selected by this fingerprinted print slot.				
+9fa5449f393804284ce0c46848ed63c3e5970ebfd7f563fc9a1a9587259315ab	call:346:r2	pc-selection-common-options		96				The measured window is selected by this fingerprinted print slot.				
+9fa5449f393804284ce0c46848ed63c3e5970ebfd7f563fc9a1a9587259315ab	call:390:r2	pc-selection-common-options		96				The measured window is selected by this fingerprinted print slot.				
+9fa5449f393804284ce0c46848ed63c3e5970ebfd7f563fc9a1a9587259315ab	call:412:r1	pc-selection-common-options		96				The measured window is selected by this fingerprinted print slot.				
+a1704ac5b5e3d1658b3711f2d982a01be8f9564b646e114102848d6dd6bd1586	call:1056:r1	wireless-mystery-gift-error-message		208		2		The measured window is selected by this fingerprinted print slot.				
+a1704ac5b5e3d1658b3711f2d982a01be8f9564b646e114102848d6dd6bd1586	call:478:r1	wireless-mystery-gift-error-message		208		2		The measured window is selected by this fingerprinted print slot.				
+a1dbe98a4b2225ca2a9b59398caadbff8291a2b7409827d4cbf62121e7c70e5b	call:10:r0	mission-notification-banner		223			unbound-small	The measured window is selected by this fingerprinted print slot.				
+a249450de576b0ec293762882ec4ab340ab071938cd0136c0f5e6704f59d3e2b	call:72:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+a30960f39f41be9561798b70b616406a888d86af7150988b84d1af0fc0f9a646	call:124:s2	legacy-trainer-card-time-label		59				The measured window is selected by this fingerprinted print slot.				
+a30960f39f41be9561798b70b616406a888d86af7150988b84d1af0fc0f9a646	call:196:s2	legacy-trainer-card-time-label		59				The measured window is selected by this fingerprinted print slot.				
+a3499d2a0a0b799dbe395ee06432b63ff0bdc05a0fc15cfed66059e7e1559b0a	call:138:r0	mystery-gift-selection-button-bar					unbound-small	The measured window is selected by this fingerprinted print slot.				
+a3728e62c582491724431765c4a31edbf6eeeafd3b577c0a00b1be94273b2d77	call:210:r1	main-menu-message-box		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+a3728e62c582491724431765c4a31edbf6eeeafd3b577c0a00b1be94273b2d77	call:248:r1	main-menu-message-box		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+a42bc2c7253186c86eed5a156b120da6d73f3a46ffcf421d7229909f079fc137	call:14:r3	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+a57c426ca1e3b143a3406b609bb6709e4d52719522a53ca9c8d9a29301a50abf	call:108:r2	bag-item-result		184		2		The measured window is selected by this fingerprinted print slot.				
+a6e0c283b3d0c89c9e237249d06972fbdb809c4631f428c7ee5f1a391a6c7f02	call:440:s2	slot-machine-button-bar		236			unbound-small	The measured window is selected by this fingerprinted print slot.				
+aa76a2afee1fb2f273dfa1c3ffd7117db8017130fee8104349633fafe1725dc8	call:42:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+ab52111d4483c189615cac9cbfa17cc2e34187d36200bcdae4359d5f2d7e477d	call:76:r2	bag-item-toss-confirmation		120		2		The measured window is selected by this fingerprinted print slot.				
+ad4b61f34bdb46955ee54baf30aca3c190c852a4229ddb83a4cf086e2cb694ab	call:156:r2	shared-saving-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+b193943aff7fbe87391aef959b6d9b7e48426aabf638ccc244a3226b868345e6	call:46:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+b193943aff7fbe87391aef959b6d9b7e48426aabf638ccc244a3226b868345e6	call:72:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+b28785937847068be649a269099a16ddf435e6614f51303c6a1dd5af23d62394	call:120:r2	bag-placement-prompt		200		3		The measured window is selected by this fingerprinted print slot.				
+b461c116a65a6a6aeaf92e0f9aba35595eee62d613ec66c9d8521e6d0de28d28	call:32:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+b4a4d60e848c7bd32ddcb8afb8e3dc7627a3d92af239e1c44edb6ea072b68cce	call:116:r1	bag-item-quantity-prompt		128		2		The measured window is selected by this fingerprinted print slot.				
+b53c08260f19abfc9b8735b75e2a9e1a8746f475a4a3ba2a3678bb561869ab1e	call:156:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+b69c5562b877555b87da3d17aae2a438c7960554acb44252d0b4e0342bec62e9	call:38:r1	shop-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+b768f791c6c0708c3832ba212224f7452cc5b7a4971f9c14226ae958fa80d72e	call:146:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+b916c4dbebc9ac61133cca89fdcf9e19ab65757b16ba842c2985d33f4e75a5ce	call:90:s2	party-item-submenu-options		48				The measured window is selected by this fingerprinted print slot.				
+bb423cd77c961847bf8ff995fc65bb9cface1d206e680c769a4955fd870c71e2	call:148:r0	wireless-mystery-gift-wait-message		224		2		The measured window is selected by this fingerprinted print slot.				
+bb423cd77c961847bf8ff995fc65bb9cface1d206e680c769a4955fd870c71e2	call:494:r0	wireless-mystery-gift-wait-message		224		2		The measured window is selected by this fingerprinted print slot.				
+bb423cd77c961847bf8ff995fc65bb9cface1d206e680c769a4955fd870c71e2	call:628:r0	wireless-mystery-gift-wait-message		224		2		The measured window is selected by this fingerprinted print slot.				
+bb423cd77c961847bf8ff995fc65bb9cface1d206e680c769a4955fd870c71e2	call:742:r1	wireless-mystery-gift-error-message		208		2		The measured window is selected by this fingerprinted print slot.				
+bc513a14f6c1cd2ae26f565a7d2650ad4b0e752ed61cf45e3148020d676a2366	call:40:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+bd09b49cd0a44901054cee82ed22684bc038612a34cc3d18cce8cc9bd3cba752	call:34:r3	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+be25a404b032b0fc3bdc86f29e4426d8a85787ce12b0b090a27495fa09fef89c	call:300:r3	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+beb855e9e91decf6e10bed36989f045c33ef21dbacac4d14becae7bae346fe5f	call:166:r2	bag-item-selection		112		2		The measured window is selected by this fingerprinted print slot.				
+c3d7d2c5a676a3e42e3af6728e6a8df944f31d676f6f81a2a6c97b0ed690109a	call:144:r0:table:case:4:eq:4294967293	pokedex-contents-list-headers		160				Pokedex table of contents: 160 px window. Headers (item id -3) print from x 0.				
+c3d7d2c5a676a3e42e3af6728e6a8df944f31d676f6f81a2a6c97b0ed690109a	call:144:r0:table:case:4:ne:4294967293	pokedex-contents-list-items		148				Pokedex table of contents: lists and templates, font 2.\nheader x 0, item x 12; window 160 px\nhabitat title: x 8, page number right-aligned at 232				
+c3d7d2c5a676a3e42e3af6728e6a8df944f31d676f6f81a2a6c97b0ed690109a	call:442:r0:table:case:4:eq:4294967293	pokedex-contents-list-headers		160				Pokedex table of contents: 160 px window. Headers (item id -3) print from x 0.				
+c3d7d2c5a676a3e42e3af6728e6a8df944f31d676f6f81a2a6c97b0ed690109a	call:442:r0:table:case:4:ne:4294967293	pokedex-contents-list-items		148				Pokedex table of contents: lists and templates, font 2.\nheader x 0, item x 12; window 160 px\nhabitat title: x 8, page number right-aligned at 232				
+c3d7d2c5a676a3e42e3af6728e6a8df944f31d676f6f81a2a6c97b0ed690109a	call:572:r0	pokedex-bottom-button-bar		236			unbound-small	The measured window is selected by this fingerprinted print slot.				
+c562370cff3550222f48a58e749b68baab2bd390d441cf7788829719c068bd73	call:82:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+c5a01e99367729f72c525f599cff2b6d49c8b9f611ff40a8ec41cc7ba717ef80	call:224:s2	party-item-submenu-options		48				The measured window is selected by this fingerprinted print slot.				
+c662dd29d5ee62ade96342a4d82ab1ea6b6668268c35da7a12585eff02453c22	call:72:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+ccad3522d03ad107fa948d879dfb3c44c017f4d737a31d56df73be85b2080a87	call:256:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+ce0981024abf8689c02ebd43432466c026ef9a373746e42c7a30da20ce20f095	call:110:r0	move-relearner-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+ce0981024abf8689c02ebd43432466c026ef9a373746e42c7a30da20ce20f095	call:150:r0	move-relearner-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+ced9d9775d5f8a75593a208219fd1a27d195d4ae62c35424ab9672a1b91659cc	call:122:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+ced9d9775d5f8a75593a208219fd1a27d195d4ae62c35424ab9672a1b91659cc	call:68:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+d29fdbbfed5e5a26592756ec7d9d1870ff47a8309b7044619d351af50ebaf9b3	call:20:r1	party-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+d8ac458847c993ec883c8893f665848b4310bed6f794e42a5c19d075f7239faa	call:420:r1	union-room-battle-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+d8ac458847c993ec883c8893f665848b4310bed6f794e42a5c19d075f7239faa	call:768:r1	union-room-battle-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+d8ac458847c993ec883c8893f665848b4310bed6f794e42a5c19d075f7239faa	call:832:r1	union-room-battle-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+dd84b76e15b052ed47e1f19a663a987665df56eb6d02c717e75259516764acae	call:20:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+df5f634edcb58dac578feeca83070dfad8c2a8df830c7068fce69ecb6d7c5c6f	call:48:r2	fame-checker-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+e1f5574d420d935205165b20235c0a217bbcc89e5da0bb0f440c44e9dd150599	call:424:r2	pokedex-cry-button		228			unbound-small	The measured window is selected by this fingerprinted print slot.				
+e1f5574d420d935205165b20235c0a217bbcc89e5da0bb0f440c44e9dd150599	call:430:r0	pokedex-bottom-button-bar		236			unbound-small	The measured window is selected by this fingerprinted print slot.				
+e1f5574d420d935205165b20235c0a217bbcc89e5da0bb0f440c44e9dd150599	call:466:r0	pokedex-bottom-button-bar		236			unbound-small	The measured window is selected by this fingerprinted print slot.				
+e6fe6cb5072b235c6286e08570ac1b847a6e2da7eb5a7bc0b12d14c3de7a4e58	call:54:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+e706ee95fa4bfeb40ad3451d1e1fc7a2c0c3de361fa76995b105aefe7e7ad837	call:132:r2	hall-of-fame-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+e83251013a2867dd68c21c786c7f95a03d90acb5f104c028af04a5880ab6e36f	call:42:r3	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+e8cdfa48ca6c1aa310cc6640af5d73a985b9fccac542afb2bbe5fd16130e9298	call:90:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+e9a1d57896b16945df3d691d3d61ddd2958e82b9c09934fb48a2b57a79d617c8	call:102:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+ea999c97d4690f538738cb3bdf1c64ca2ce64a30b412142a3789b2ea2d2aa8de	call:82:r1	shop-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+ef4c139c4b4ae44bafb8ed78839d44f4e5a891acfb9e2d284d36685c76ed637e	call:42:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+f147d1d200eefe0aa7a653b86127e9319205cc1a74228b28e382bfca3734cd8d	call:80:r0	main-menu-message-box		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+f147d1d200eefe0aa7a653b86127e9319205cc1a74228b28e382bfca3734cd8d	call:94:r0	main-menu-message-box		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+f1609f39cdeb75018e00a9a0ee0916a88f250252e1526643302458c075d1ef18	call:36:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+f216fc841ae425ea9c537ca4701865fc652c239be7fff6596626d2555de6e67c	call:150:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+f216fc841ae425ea9c537ca4701865fc652c239be7fff6596626d2555de6e67c	call:74:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+f253273c577e60ce0942382cefc3dce44651c9da345ba1280bfa7d21568eb021	call:356:r2	bag-item-selection		112		2		The measured window is selected by this fingerprinted print slot.				
+f43fcf7d0d6b25c6bbdb7e40dc05f8c275b4abec0eb73768d8b2b07798a8089d	call:154:s2	hall-of-fame-player-id-label		82				The measured window is selected by this fingerprinted print slot.				
+f43fcf7d0d6b25c6bbdb7e40dc05f8c275b4abec0eb73768d8b2b07798a8089d	call:332:s2	hall-of-fame-player-time-label		84				The measured window is selected by this fingerprinted print slot.				
+f47e0ef3ae7b64f246386fdad8fc65bebcae6356ae434815be8fd9a7ce9a605e	call:120:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+f47e0ef3ae7b64f246386fdad8fc65bebcae6356ae434815be8fd9a7ce9a605e	call:78:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+f7043a81d460ba622a10e3bd29214ec7f90c6d76e8f9c54b1e535524eda08988	call:42:r0	party-action-message		224	dialogue			The measured window is selected by this fingerprinted print slot.				
+f7df2966f2581b16daa6eada24ac52ccdf4a390e0e6dc4c6d0aff9b47eafc399	call:114:r2	field-message			dialogue			The measured window is selected by this fingerprinted print slot.				
+f9568feb6f8f1e2b9aba192aa889b07f9b4a4ba53546c75b896e38aaebf82dc2	call:146:r0	wireless-mystery-gift-wait-message		224		2		The measured window is selected by this fingerprinted print slot.				
+f9568feb6f8f1e2b9aba192aa889b07f9b4a4ba53546c75b896e38aaebf82dc2	call:562:r0	wireless-group-response-message		208		2		The measured window is selected by this fingerprinted print slot.				
+f9568feb6f8f1e2b9aba192aa889b07f9b4a4ba53546c75b896e38aaebf82dc2	call:696:r0	wireless-group-response-message		208		2		The measured window is selected by this fingerprinted print slot.				
+f9568feb6f8f1e2b9aba192aa889b07f9b4a4ba53546c75b896e38aaebf82dc2	call:814:r0	wireless-mystery-gift-error-message		208		2		The measured window is selected by this fingerprinted print slot.				

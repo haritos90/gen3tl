@@ -1,0 +1,38 @@
+{
+  "index.html": {
+    "title": "gen3tl translations",
+    "description": "Translation patches for Game Boy Advance ROM hacks. Runs locally in your browser."
+  },
+  "patch.html": {
+    "title": "Patch your ROM",
+    "description": "Apply a site translation or your own UPS, IPS, BPS, xdelta, APS or PPF patch."
+  },
+  "editor.html": {
+    "title": "Translation editor",
+    "description": "Translate in the browser. Start a new language or improve one."
+  },
+  "save.html": {
+    "title": "Save converter",
+    "description": "Continuing a save from the original game? Its names stay in the original language on the translated ROM until you convert it. Works both ways."
+  },
+  "pokedex.html": {
+    "title": "Pokédex · gen3tl",
+    "description": "Pokedex is translated as translation submissions are merged. The original language is used for terms without a translation."
+  },
+  "guide.html": {
+    "title": "Contributor guide",
+    "description": "Learn how to edit translations and submit changes for review."
+  },
+  "save-guide.html": {
+    "title": "Save converter guide",
+    "description": "Learn how to prepare, convert, and use a save file when changing the game language."
+  },
+  "submit.html": {
+    "title": "Submit changes",
+    "description": "Review browser drafts and export a submission for the selected project."
+  },
+  "pick.html": {
+    "title": "Choose your game",
+    "description": "Choose a game to open in the selected site tool."
+  }
+}

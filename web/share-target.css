@@ -1,0 +1,8 @@
+body { margin:0; min-height:100vh; display:grid; place-items:center; background:var(--bg); color:var(--fg); font:16px/1.5 var(--font-body); }
+main { width:min(566px,calc(100% - 48px)); padding:32px; box-sizing:border-box; border:1px solid var(--line); border-radius:var(--radius-l); background:var(--panel); box-shadow:var(--shadow); }
+html[data-forwarding] main { visibility:hidden; }
+h1 { margin:0 0 8px; font-size:32px; overflow-wrap:anywhere; }
+p { margin:8px 0 20px; }
+a { display:inline-block; padding:10px 16px; border-radius:var(--radius); background:var(--accent); color:var(--on-accent); text-decoration:none; }
+a:hover { background:var(--accent-2); }
+img { display:block; width:min(100%,500px); height:auto; margin:24px auto 0; }

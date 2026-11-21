@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "family": "firered-cfru",
+  "readers": [
+    {
+      "name": "map_header_reader",
+      "category": "maps",
+      "length": 16,
+      "instructions": 8,
+      "sha256": "8dc5d2daa490ad8b1a2e528e3faa20cf71c1f243e5c2f0fc58e129123a403d77",
+      "prefix_sha256": "3b229dfc4c6bd793f4b6f13dd0c3cfc8dfd5f030c58482989ddca34996e2f9ae",
+      "prefix_count": 4,
+      "entry": [
+        "ldr",
+        2,
+        3,
+        15,
+        null,
+        null,
+        [],
+        4,
+        false,
+        null
+      ]
+    }
+  ]
+}

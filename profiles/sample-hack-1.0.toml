@@ -1,0 +1,23 @@
+# A made-up game: the catalog-stage test fixture.
+# No released ROM matches it; tests build its ROM.
+
+[rom]
+name = "Sample Hack 1.0"
+path = "rom/Sample Hack 1.0.gba"
+sha1 = "8bbf30c3f11e0a4371231cff8301e64e62bd4f31"
+sha256 = "d8e6dc60f8d2386922a13f0637c2922d70dc067b3cede90359f3d7fab8726368"
+size = 0x800
+
+[engine]
+family = "emerald"
+
+[support]
+stage = "catalog"
+evidence = "texts and references placed by the ROM builder of the tests"
+missing = ["fonts", "tables", "script-context", "screen-limits", "keyboard", "save-layout"]
+
+[probe.menu]
+offset = 0x300
+text = "NEW GAME"
+pointers = [0x140, 0x144]
+evidence = "placed by the ROM builder; two PC-relative loads read the pointers"

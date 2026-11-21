@@ -1,0 +1,41 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: sample-hack-1.0\n"
+"Language: ru\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-ROM-SHA1: 8bbf30c3f11e0a4371231cff8301e64e62bd4f31\n"
+"X-Catalog-Status: draft\n"
+
+#. category: data-table; mode: field
+#. source validation: reference pattern; use unverified
+#. source length: 13 bytes
+#. reachability, speaker, font and window: unknown
+#. references: 0x0000200 (table)
+#: 0x0000360
+#, fuzzy
+msgctxt "s0000360"
+msgid "Sample Berry"
+msgstr ""
+
+#. category: data-table; mode: field
+#. source validation: reference pattern; use unverified
+#. source length: 9 bytes
+#. reachability, speaker, font and window: unknown
+#. references: 0x0000204 (table)
+#: 0x0000370
+#, fuzzy
+msgctxt "s0000370"
+msgid "Test Orb"
+msgstr ""
+
+#. category: data-table; mode: field
+#. source validation: reference pattern; use unverified
+#. source length: 12 bytes
+#. reachability, speaker, font and window: unknown
+#. references: 0x0000208 (table)
+#: 0x0000380
+#, fuzzy
+msgctxt "s0000380"
+msgid "Draft Stone"
+msgstr ""

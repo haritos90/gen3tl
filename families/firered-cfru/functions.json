@@ -1,0 +1,253 @@
+{
+  "schema": 1,
+  "family": "firered-cfru",
+  "version": "1.0.0",
+  "reference_sha1": "b4776b82a4c7915d0fadeaa27e013523f99dfd94",
+  "sources": [
+    "https://github.com/pret/pokefirered/tree/ce6406d8c2eaf46d543c8a2606de0c3cb1951982",
+    "https://github.com/Skeli789/Complete-Fire-Red-Upgrade/tree/72bf78e736a22d2a2ec42c67f03b36939cc0c3b1"
+  ],
+  "normalization": "Semantic Thumb instructions; literal displacements, pool values and branch targets omitted.",
+  "functions": [
+    {
+      "name": "small-renderer",
+      "category": "renderer",
+      "length": 136,
+      "instructions": 54,
+      "sha256": "890f54727e9f92408559db9e6bdaf19f94052cea1373953324d7994af37439fb",
+      "prefix_sha256": "c65e97d56c36f4aa7c95ef19e42ff444b5732d0ac10f6f3112ecd13c292b215f",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ],
+      "format": "8x16"
+    },
+    {
+      "name": "normal-copy-renderer",
+      "category": "renderer",
+      "length": 168,
+      "instructions": 66,
+      "sha256": "8ea82fd63781965f552966ae5f0f2109dbe58fb5d78ea4c0796e979c5027432c",
+      "prefix_sha256": "c65e97d56c36f4aa7c95ef19e42ff444b5732d0ac10f6f3112ecd13c292b215f",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ],
+      "format": "16x16"
+    },
+    {
+      "name": "normal-renderer",
+      "category": "renderer",
+      "length": 320,
+      "instructions": 130,
+      "sha256": "f55e2907bb634bb97fb07c852654383de4d48e2e19ffe642ba66d4d8deda1774",
+      "prefix_sha256": "84aa0e58a14f9e49166b6bae02f0518b15a107caa1b84d12c9f62424bb93a93b",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          7,
+          14
+        ],
+        0,
+        false,
+        null
+      ],
+      "format": "16x16"
+    },
+    {
+      "name": "simple-width",
+      "category": "width",
+      "length": 32,
+      "instructions": 12,
+      "sha256": "1cbe27bf7ca6e1f528fee71855099a7511cd860340ee6660e95464faa2e512c5",
+      "prefix_sha256": "7de62e5950a7223c37ef9bfd1f92a8f00b78df358473058e32f6032b1bf39305",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "copy-width",
+      "category": "width",
+      "length": 32,
+      "instructions": 12,
+      "sha256": "155ef9596e91810e7daeffd9cd2f9421a4caa26fbcda31bacc19b419a00d945c",
+      "prefix_sha256": "7de62e5950a7223c37ef9bfd1f92a8f00b78df358473058e32f6032b1bf39305",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "normal-width",
+      "category": "width",
+      "length": 44,
+      "instructions": 16,
+      "sha256": "56d3ff71850ed016a100fd630e888bf93fe6821963898de5586bebbf5cef427a",
+      "prefix_sha256": "7de62e5950a7223c37ef9bfd1f92a8f00b78df358473058e32f6032b1bf39305",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "script-halfword",
+      "category": "script",
+      "length": 22,
+      "instructions": 11,
+      "sha256": "ac5e672f0ce32023d0829ef91b9c0caac77c4784cb9d17f41d12e1e1d9c01ba6",
+      "prefix_sha256": "a451050fca90fec4b92a21e89277d037ea568e93f0943874a02bad60788016f1",
+      "prefix_count": 4,
+      "entry": [
+        "add",
+        2,
+        3,
+        0,
+        null,
+        0,
+        [],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "script-word",
+      "category": "script",
+      "length": 48,
+      "instructions": 24,
+      "sha256": "b40ee7cb0eb92bb8b283f4097b4380494f0ca6ff34754bea410b5c5ec4821acb",
+      "prefix_sha256": "390537c23cdade16ae0934366018c0a5dd939f666f628723dbcf9bbb6b0c9df7",
+      "prefix_count": 4,
+      "entry": [
+        "push",
+        2,
+        null,
+        13,
+        null,
+        null,
+        [
+          4,
+          5,
+          6,
+          14
+        ],
+        0,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "naming-cycle",
+      "category": "naming",
+      "length": 20,
+      "instructions": 9,
+      "sha256": "18fb2db88c6e1b8d6ad6e37f5407a7cf2ca7740f2bf2fe667fd166cdbcff23c9",
+      "prefix_sha256": "39997f2089f7d8cecd2c02bd0a090c7143ea12e457820e15153231f16fe828a1",
+      "prefix_count": 4,
+      "entry": [
+        "ldrb",
+        2,
+        0,
+        1,
+        null,
+        0,
+        [],
+        1,
+        false,
+        null
+      ]
+    },
+    {
+      "name": "hidden-ability",
+      "category": "extension",
+      "length": 28,
+      "instructions": 11,
+      "sha256": "13ad81cafe7161eaa7739b3f6698703f4fd2f801b3ad8d432f001fc6b63313d6",
+      "prefix_sha256": "71330e4cebd4cc790071981cc7515b8ae94cceff3c0406635a6d0d17bfb66636",
+      "prefix_count": 4,
+      "entry": [
+        "lsl",
+        2,
+        1,
+        0,
+        null,
+        0,
+        [],
+        0,
+        false,
+        null
+      ]
+    }
+  ]
+}
