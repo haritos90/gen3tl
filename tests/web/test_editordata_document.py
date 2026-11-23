@@ -110,3 +110,57 @@ class NothingToTranslateTest(unittest.TestCase):
         ck = Checker()
         self.assertEqual(set(editordata.data_problems(doc, ck)), {"s0000100", "s0000500"})
         self.assertEqual(ck.seen, ["s0000100", "s0000500"])
+
+
+class ExplanationTest(unittest.TestCase):
+    """Inserted widths, slot words and reach studies are coded explanations."""
+
+    def test_inserted_widths_name_their_source_by_code(self):
+        from gen3tl.check.layout import Limit
+        from gen3tl.check.provenance import code
+        cm = load_styles("ru", PROF)["unbound"].charmap()
+        measure = Measure(lambda b: 6, {"PLAYER": 42, "STR_VAR_2": 60})
+        word = code("slot_word", id="s0000200", text="'Зелье'")
+        lim = Limit("single", 100, 1, placeholders={"STR_VAR_1": 30, "STR_VAR_3": 12},
+                    slot_sources={"STR_VAR_1": word})
+        rows = editordata.inserted("{STR_VAR_1} {STR_VAR_3} {PLAYER} {STR_VAR_2} {B_BUFF1}", lim, measure, cm,
+                                   frozenset({"STR_VAR_2"}))
+        self.assertEqual([(row["token"], row["source"]) for row in rows], [
+            ("{STR_VAR_1}", word), ("{STR_VAR_3}", code("slot_context")), ("{PLAYER}", code("slot_profile")),
+            ("{STR_VAR_2}", code("slot_profile_estimate")), ("{B_BUFF1}", code("slot_default"))])
+
+    def test_the_word_a_slot_source_names(self):
+        from gen3tl.check.provenance import code
+        word = code("slot_word", id="s0000200", text="'Зелье'")
+        for source, named in ((word, "s0000200"), (code("slot_untranslated", id="items:3"), "items:3"),
+                              (code("slot_empty", id="hash:0000abcd"), "hash:0000abcd"),
+                              (code("slot_record", kind="item", word=word), "s0000200"),
+                              (code("slot_table", table="items", word=word), "s0000200"),
+                              (code("slot_reasons", source=word, reasons=[code("slot_no_fill")]), "s0000200"),
+                              (code("slot_word", id="s0000200", text='"It\'s"'), None),
+                              (code("slot_record", kind="std_text", word=word), None),
+                              (code("slot_number", value=5), None), (code("slot_profile"), None),
+                              (code("slot_word", id="the bag", text="'x'"), None)):
+            with self.subTest(source=source):
+                self.assertEqual(editordata.slot_word(source), named)
+
+    def test_keys_replace_inventory_ids_in_every_text_of_an_explanation(self):
+        from gen3tl.catalog.keys import Aliases
+        from gen3tl.check.provenance import code
+        aliases = Aliases([("hash:00000001", 0x10, "s0000010"), ("table:items/3", None, "items:3")])
+        source = code("slot_reasons", source=code("slot_table", table="items", word=code(
+            "slot_word", id="items:3", text="'s0000010'")), reasons=[code("slot_unnamed", kinds=["s0000010"])])
+        self.assertEqual(editordata.rekeyed(source, aliases), code("slot_reasons", source=code(
+            "slot_table", table="items", word=code("slot_word", id="table:items/3", text="'hash:00000001'")),
+            reasons=[code("slot_unnamed", kinds=["hash:00000001"])]))
+        self.assertEqual(source["source"]["word"]["id"], "items:3")   # the source stays as it was
+
+    def test_a_reach_study_is_coded_with_its_root(self):
+        study = {"strings": {"s0000100": {"class": "reachable", "evidence": [{"kind": "pool", "at": "0x10"}]},
+                             "s0000200": {"class": "possibly reachable"}}}
+        self.assertEqual(editordata.reach_data("s0000100", [], study), {"class": "reachable", "source": "reach study",
+                         "evidence": {"code": "reach_study_root", "class": "reachable", "root": "pool 0x10"}})
+        self.assertEqual(editordata.reach_data("s0000200", [], study)["evidence"],
+                         {"code": "reach_study", "class": "possibly reachable"})
+        self.assertEqual(editordata.reach_data("s0000300", [], study),
+                         {"class": "reachable", "source": "not studied", "evidence": ""})

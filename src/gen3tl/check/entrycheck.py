@@ -11,6 +11,7 @@ from ..core.charmap import Charmap, CharmapError
 from .layout import (Limit, Measure, SpriteMeasure, arrow_overflows, box_lines, check, code_arg, dropped_breaks,
                      entry_measure, extra_lines, layout, line_width, shadow_overflow, short_line_ends, slot_rewraps,
                      split_names, wrapped_dash_lines)
+from .provenance import formatted
 
 BRACE = re.compile(r"\{[^}]*\}")
 # spacing codes: amounts follow the language's glyph widths;
@@ -182,7 +183,7 @@ def instant_print_problems(text: str, laid: str, lim: Limit) -> list[str]:
         return []
     return [f"scroll and page codes are not supported in {name}: "
             "this window prints instantly and drops the remaining text"
-            for name in dict.fromkeys(c["name"] for c in lim.consumers or [] if c.get("instant_print"))]
+            for name in dict.fromkeys(formatted(c["name"]) for c in lim.consumers or [] if c.get("instant_print"))]
 
 
 def entry_problems(english: str | Source, text: str, lim: Limit, measure: Measure, cm: Charmap,

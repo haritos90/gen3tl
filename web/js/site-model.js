@@ -7,11 +7,13 @@ import { PAGES, toolURL } from "./routes.js";
 export { languageName };
 export { gameHash, PAGES } from "./routes.js";
 
-export const EDITOR_SCHEMA = "8.0.0";
+export const EDITOR_SCHEMA = "9.0.0";
+// the page also reads explanations stored as text
+export const EDITOR_SCHEMAS = ["8.0.0", EDITOR_SCHEMA];
 
 /** Reject manifests before interpreting versioned game data. */
 export function verifyManifest(doc) {
-  if (!doc || ![undefined, 1, EDITOR_SCHEMA].includes(doc.schema)) {
+  if (!doc || ![undefined, 1, ...EDITOR_SCHEMAS].includes(doc.schema)) {
     throw uiError("This game's data format is not supported by this site.");
   }
 }

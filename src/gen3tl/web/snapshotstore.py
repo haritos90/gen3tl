@@ -157,7 +157,7 @@ def _inventory_defaults(sid: str, source: dict) -> dict:
 
 def _coded_source(value: list) -> dict:
     kind, rule, evidence, unverified = value
-    out = {"kind": kind, "rule": provenance.coded(rule)}
+    out = {"kind": kind, "rule": provenance.canonical(rule)}
     if evidence:
         out["evidence"] = evidence
     if unverified:
@@ -180,7 +180,7 @@ def expand(doc: dict, tables: dict) -> dict:
         return doc
     out = dict(doc)
     styles = out.pop("styles", [])
-    sources = [[s["kind"], provenance.formatted(s["rule"]), s.get("evidence", ""), s.get("unverified", False)]
+    sources = [[s["kind"], s["rule"], s.get("evidence", ""), s.get("unverified", False)]
                for s in tables["limit_sources"]]
     source = {sid: _expanded_row(row, styles, sources) if len(row) == 6 else row
               for sid, row in doc.get("source", {}).items()}

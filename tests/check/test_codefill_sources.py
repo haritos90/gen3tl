@@ -38,7 +38,8 @@ class SourceFillTest(unittest.TestCase):
         english = self.limits(english_slots=True)["s0000100"]
         self.assertEqual(selected.placeholders, {"STR_VAR_1": 12})
         self.assertEqual(english.placeholders, {"STR_VAR_1": 30})
-        self.assertIn("s0000400", selected.slot_sources["STR_VAR_1"])
+        self.assertEqual(selected.slot_sources["STR_VAR_1"],
+                         {"code": "slot_code_fill", "fill": {"code": "slot_widest_source", "id": "s0000400"}})
         self.assertIsNone(self.limits()["s0000200"].placeholders)
 
     def test_overlapping_rules_keep_both_language_maxima(self):

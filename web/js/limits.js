@@ -2,7 +2,7 @@
 // Each window limit has a kind and a rule.
 // Each rule shows in the site language.
 
-import { keepUnits, limitReferences, limitText, unitName } from "./checktext.js";
+import { keepUnits, limitReferences, limitText, sameExplanation, unitName } from "./checktext.js";
 import { N_, t } from "./ui.js";
 
 // keys: shown with t()
@@ -24,6 +24,15 @@ export function sourceOf(window, field) {
     label: unverified ? t("unverified estimate") : LABEL[s.kind] ? t(LABEL[s.kind]) : s.kind,
     evidence: s.evidence ?? "", unmeasured: s.kind === "source", unverified,
     ...(references.length ? { references } : {}) };
+}
+
+/** The consumer of a window by its name, as the check names it. */
+export const consumerOf = (window, name) => window?.consumers?.find((c) => sameExplanation(c.name, name));
+
+/** The source of a consumer where its rule is not the window width's. */
+export function consumerSource(window, consumer) {
+  return sameExplanation(consumer.source?.rule, window.sources?.width?.rule) ? null
+    : sourceOf({ sources: { width: consumer.source } }, "width");
 }
 
 /** Count of policy values that are estimates. */
@@ -87,7 +96,7 @@ export function barOf(line, window) {
     : shadow ? t("{value} / {limit} {unit}, fits: shadow clipped", vars)
       : arrow && line.room <= (window?.width ?? line.room)
         ? t("{value} / {limit} {unit}, arrow after it", vars) : t("{value} / {limit} {unit}", vars);
-  const consumer = arrow && line.room <= window.width ? window.consumers?.find((c) => c.name === line.consumer) ?? arrowConsumer(window)
+  const consumer = arrow && line.room <= window.width ? consumerOf(window, line.consumer) ?? arrowConsumer(window)
     : window?.consumers?.find((c) => c.width === window.width);
   const sources = Object.values(window?.sources ?? {});
   const name = consumer ? limitText(consumer.name, sources) : null;

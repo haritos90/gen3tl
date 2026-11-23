@@ -56,7 +56,7 @@ class NativeFillTest(unittest.TestCase):
         self.assertEqual(widths({"s0000B00": " ten chars"}).translated, 66)
         self.cat["s0000B00"][1].flags = ["empty"]
         self.assertEqual(widths().translated, 24)
-        self.assertIn("native table choices", widths().source)
+        self.assertEqual(widths().source, {"code": "slot_native", "table": "choices", "ids": ["s0000A00"]})
         del self.cat["s0000900"]
         self.assertEqual(widths().translated, 60)
         self.assertEqual(widths().details["state"], "recorded")

@@ -47,7 +47,7 @@ def default_status(translation: str) -> str:
 def _limit_source(source: dict) -> dict:
     if list(source)[:3] != ["kind", "rule", "evidence"] or set(source) - {"kind", "rule", "evidence", "unverified"}:
         raise ValueError(f"unexpected limit source fields: {sorted(source)}")
-    out = {"kind": source["kind"], "rule": provenance.coded(source["rule"])}
+    out = {"kind": source["kind"], "rule": provenance.canonical(source["rule"])}
     if source["evidence"] != "":
         out["evidence"] = source["evidence"]
     if "unverified" in source:
@@ -93,10 +93,6 @@ class Store:
         if list(value) != list(REACH):
             raise ValueError(f"unexpected reach fields: {list(value)}")
         out = without_defaults(value, REACH)
-        if value["source"] == "reach study" and value["evidence"]:
-            coded = provenance.coded(value["evidence"])
-            if coded["code"].startswith("reach_study") and coded["class"] == value["class"]:
-                out["evidence"] = coded
         return self.reach.index(out) if out else None
 
 

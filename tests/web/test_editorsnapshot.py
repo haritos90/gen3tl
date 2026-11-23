@@ -180,6 +180,8 @@ class SnapshotTest(unittest.TestCase):
             self.assertNotIn(phrase, text)
         self.assertFalse(any("source_sha256" in row for row in stored["data"]["inventory"]))   # the source rows hold them
         self.assertEqual(snapshot.load(path), json.loads(json.dumps(self.doc)))
+        loaded = [source[1] for row in snapshot.load(path)["source"].values() for source in row[5]["sources"].values()]
+        self.assertTrue(loaded and all(rule["code"] in provenance.MESSAGES for rule in loaded))   # read back as codes
 
     def test_shared_fact_edits_fail_the_existing_checksum(self):
         path = self.root / "aa.snapshot.json"

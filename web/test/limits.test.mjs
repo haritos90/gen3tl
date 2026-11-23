@@ -3,16 +3,16 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { UNMEASURED_ADVICE, UNVERIFIED_ADVICE, barOf, countLabel, countsOf, sourceOf, unverifiedCount }
-  from "../js/limits.js";
+import { UNMEASURED_ADVICE, UNVERIFIED_ADVICE, barOf, consumerOf, consumerSource, countLabel, countsOf, sourceOf,
+  unverifiedCount } from "../js/limits.js";
 import { setCatalog } from "../js/ui.js";
 
 const WINDOW = {
   kind: "multiline", width: 95, lines: 3, chars: 12, bytes: 15, source_lines: [2],
   sources: {
-    width: { kind: "source", rule: "the English: the widest line of translation/po/tables/items.po", evidence: "" },
-    lines: { kind: "measured", rule: "[layout.window_lines] s1: measured in game", evidence: "" },
-    chars: { kind: "measured", rule: "[[table]] items: a field of 13 bytes with the terminator", evidence: "rows" },
+    width: { kind: "source", rule: { code: "english_file_widest", file: "translation/po/tables/items.po" }, evidence: "" },
+    lines: { kind: "measured", rule: { code: "window_lines", entry: "s1" }, evidence: "" },
+    chars: { kind: "measured", rule: { code: "table_field", table: "items", bytes: 13 }, evidence: "rows" },
   },
 };
 
@@ -38,14 +38,15 @@ test("sources: the description of a limit in the site language, the profile's na
   assert.equal(sourceOf(WINDOW, "chars").text, "a field of 13 bytes with the terminator",
     "a description without a translation stays English");
   setCatalog({ "keyboard layout columns: the columns its pack keyboard reaches": "столбцы клавиатуры пакета" });
-  const keys = { kind: "measured", rule: "keyboard layout columns: the columns its pack keyboard reaches", evidence: "" };
+  const keys = { kind: "measured", rule: { code: "pack_keyboard_columns" }, evidence: "" };
   assert.equal(sourceOf({ kind: "naming", keys: 9, sources: { keys } }, "keys").text, "столбцы клавиатуры пакета");
 });
 
 test("sources: a policy estimate is unverified", () => {
-  const rule = "[language policy] window_width.s1: text budget";
+  const rule = { code: "policy_window_width", entry: "s0000001" };
   const w = { kind: "single", width: 83, lines: 1, sources: { width: { kind: "profile", rule, evidence: "", unverified: true } } };
-  assert.deepEqual(sourceOf(w, "width"), { text: "Translation text budget", kind: "profile", references: ["language policy window_width.s1"], label: "unverified estimate", evidence: "",
+  assert.deepEqual(sourceOf(w, "width"), { text: "Translation text budget", kind: "profile",
+    references: ["language policy window_width.s0000001", "s0000001"], label: "unverified estimate", evidence: "",
     unmeasured: false, unverified: true });
   w.sources.width.unverified = undefined;
   assert.equal(sourceOf(w, "width").label, "profile default");
@@ -95,7 +96,7 @@ test("counts: characters, bytes, lines and boxes with their limits", () => {
 
 test("page: the module and the classes it draws", () => {
   const app = readFileSync(new URL("../js/editor/entry.js", import.meta.url), "utf8");
-  assert.match(app, /import \{ countLabel, countsOf, extentsOf, meterOf, sourceOf, arrowConsumer, waitingWindows \} from "\.\.\/limits\.js";/);
+  assert.match(app, /import \{ countLabel, countsOf, extentsOf, meterOf, sourceOf, arrowConsumer, consumerOf, waitingWindows \} from "\.\.\/limits\.js";/);
   const css = readFileSync(new URL("../site.css", import.meta.url), "utf8");
   for (const c of [".lines .ln.shadow", ".lines .ln.over", ".lines .ln.other", ".count-item.over", ".kv .src.english",
     ".kv .src.unverified", ".unmeasured"]) {
@@ -168,7 +169,7 @@ test("runtime newlines count as scrolls without changing the draft", () => {
 });
 
 test("bars name only multiple consumers or a different binding window", () => {
-  const rule = "[[layout.window]] notice: Notice message window";
+  const rule = { code: "layout_window_where", name: "notice", where: "Notice message window" };
   const source = { kind: "measured", rule };
   const window = { width: 80, sources: { width: source },
     consumers: [{ name: "Notice message window", width: 80, arrow: 10, source }] };
@@ -179,4 +180,18 @@ test("bars name only multiple consumers or a different binding window", () => {
   assert.equal(bound.label, "60 / 60\u00a0px, arrow after it · window: Second message window");
   window.consumers = [window.consumers[1]];
   assert.equal(barOf({ width: 60, room: 60, consumer: "Second message window" }, window).label, bound.label);
+});
+
+test("a consumer the check names by a copy of its coded rule is the window's own", () => {
+  const width = { kind: "measured", rule: { code: "box_width", box: "dialogue" } };
+  const named = { kind: "measured", rule: { code: "table_window_where", name: "menu", where: "the bag" } };
+  const window = { width: 120, sources: { width },
+    consumers: [{ name: width.rule, width: 208, arrow: 10, source: width }, { name: named.rule, width: 120, arrow: 8, source: named }] };
+  const copy = JSON.parse(JSON.stringify({ where: "the bag", name: "menu", code: "table_window_where" }));
+  assert.equal(consumerOf(window, copy), window.consumers[1]);
+  assert.equal(consumerOf(window, { code: "table_window", name: "menu" }), undefined);
+  assert.equal(barOf({ width: 100, room: 112, consumer: copy }, window).label, "100 / 112 px, arrow after it · window: the bag");
+  // a consumer shows its own source where its rule is not the width's
+  assert.equal(consumerSource(window, { source: structuredClone(width) }), null);
+  assert.deepEqual(consumerSource(window, window.consumers[1]).references, ["layout.table_window menu"]);
 });

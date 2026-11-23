@@ -8,6 +8,7 @@ import re
 from dataclasses import dataclass
 
 from ..core.charmap import Charmap, CharmapError
+from .provenance import formatted
 
 TOKEN = re.compile(r"(\\[nlp]|\{[^}]*\})")
 COLOR_LIKE = re.compile(r"^\{(COLOR|HIGHLIGHT|SHADOW|COLOR_HIGHLIGHT_SHADOW|PALETTE|FONT|RESET_FONT|PAUSE|"
@@ -199,7 +200,7 @@ def slot_note(line: str, lim: Limit) -> str:
     for token, px in (lim.placeholders or {}).items():
         if "{" + token + "}" not in line:
             continue
-        source = (lim.slot_sources or {}).get(token, "profile width")
+        source = formatted((lim.slot_sources or {}).get(token, "profile width"))
         detail = (lim.slot_details or {}).get(token, {})
         if detail.get("unavailable"):
             source += "; recorded width; sources unavailable"
@@ -326,7 +327,7 @@ def arrow_overflows(laid: str, lim: Limit, m: Measure, cm: Charmap) -> list[str]
         for l, consumer in zip(lines_of(par), waiting):
             if not consumer or line_width(l, me, cm) <= consumer["width"] - consumer["arrow"]:
                 continue
-            where = f" in {consumer['name']}" if consumer.get("name") else ""
+            where = f" in {formatted(consumer['name'])}" if consumer.get("name") else ""
             out.append(f"line leaves no room for the prompt arrow: box {i}: {line_width(l, me, cm)} > "
                        f"{consumer['width'] - consumer['arrow']} px{where}: {l[:40]!r}")
     return out
@@ -731,7 +732,7 @@ def check(text: str, lim: Limit, m: Measure, cm: Charmap) -> list[str]:
             w = line_width(l, m, cm)
             if w > lim.width and not shadow_overflow(l, lim.width, m, cm):
                 consumer = min(lim.consumers, key=lambda c: c["width"]) if len(lim.consumers or []) > 1 else None
-                where = f"; window {consumer['name']}" if consumer else ""
+                where = f"; window {formatted(consumer['name'])}" if consumer else ""
                 problems.append(f"line too wide: {w} > {lim.width} px: {l[:40]!r}" + slot_note(l, lim) + where)
             # text past its CLEAR_TO column
             for x, n, seg in column_overflows(l, m, cm):

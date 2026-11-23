@@ -2,7 +2,7 @@ import { el, renderChildren, updateChildren, setText } from "../dom.js";
 import { t, languageName, N_, showText } from "../ui.js";
 import { statusLabel, loadIndex, verifyProjectIndex } from "../data.js";
 import { keepUnits, limitText, checkText } from "../checktext.js";
-import { countLabel, countsOf, extentsOf, meterOf, sourceOf, arrowConsumer, waitingWindows } from "../limits.js";
+import { countLabel, countsOf, extentsOf, meterOf, sourceOf, arrowConsumer, consumerOf, waitingWindows } from "../limits.js";
 import { isDraft, draftText } from "../draft.js";
 import { renderUnits } from "../field.js";
 import { parse } from "../text.js";
@@ -232,7 +232,7 @@ export function renderBars(entry, res) {
           target.style.left = `${(w.target / m.limit) * 100}%`;
           meter.append(target);
         }
-        const consumer = w?.consumers?.find((c) => c.name === l.consumer) ?? arrowConsumer(w);
+        const consumer = consumerOf(w, l.consumer) ?? arrowConsumer(w);
         const arrowNote = m.arrow ? keepUnits(t("The prompt arrow follows this line: {n} px of the {width} px window stay free for it.",
           { n: consumer?.arrow ?? w.arrow, width: consumer?.width ?? w.width })) : "";
         bars.append(el("div", {

@@ -106,4 +106,4 @@ class PointerFieldTest(unittest.TestCase):
         limits = compute_limits(profile, inventory, catalog, Measure(lambda _: 6, {}), CM)
         self.assertEqual(limits["names:0"].chars, 17)
         self.assertEqual(limits["names:1"].chars, 13)
-        self.assertIn("long-name pointer", limits["names:0"].sources["chars"]["rule"])
+        self.assertEqual(limits["names:0"].sources["chars"]["rule"], {"code": "table_long_name", "table": "names", "bytes": 18})

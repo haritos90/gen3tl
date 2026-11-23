@@ -1,6 +1,6 @@
 // The check's messages in the site language.
 // A message is its kind, then its separately translated notes.
-// Problems are stored in English.
+// Problems are stored in English; explanations as codes.
 
 import { N_, t, uiLanguage } from "./ui.js";
 
@@ -206,6 +206,36 @@ export const whereText = (where) => places[where]?.[uiLanguage()] || where;
 const fillKind = (kind) => FILL_KINDS[kind] ? t(FILL_KINDS[kind]) : kind;
 const fillKinds = (kinds) => kinds.split(", ").map(fillKind).join(", ");
 
+let messages = {}; // the data's explanation templates: code -> English
+
+/** The explanation templates of the shown data; null clears them. */
+export function setMessages(table) {
+  messages = table && typeof table === "object" ? table : {};
+}
+
+// arguments holding explanations; lists and their separators
+const NESTED = new Set(["rule", "via", "source", "word", "fill"]);
+const JOINED = { reasons: "; ", kinds: ", ", ids: " + " };
+
+/** Whether a value is an explanation: a code with its arguments. */
+export const isExplanation = (value) => typeof value?.code === "string";
+
+/** The English text of an explanation, from the message table; a text is its own. */
+export function explanationText(value) {
+  if (!isExplanation(value)) return value ?? "";
+  return messages[value.code].replace(/\{(\w+)\}/g, (_, name) => (name in JOINED
+    ? value[name].map(explanationText).join(JOINED[name])
+    : NESTED.has(name) ? explanationText(value[name]) : String(value[name])));
+}
+
+/** Whether two explanations or texts are the same, in any key order. */
+export function sameExplanation(a, b) {
+  if (a === b) return true;
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => sameExplanation(a[key], b[key]));
+}
+
 /** The descriptions of a window's limits. */
 export const LIMITS = [
   N_("the window of {host}, which inserts it: {rule}"),
@@ -318,8 +348,76 @@ const slotHead = (text) => {
 // the reasons a slot width is partly unknown
 const WHY = /^(.*) \(([^()]*)\)$/s;
 
+// a word's note covers its record kind
+const WORD_NOTES = { slot_untranslated: N_("{word} (untranslated)"), slot_empty: N_("{word} (translated as empty)") };
+const wordHead = (word) => (word.code === "slot_empty" ? `${word.id} ''` : word.id);
+
+// the code-fill descriptions: alone, then with the English width
+const FILLS = {
+  slot_widest_source: [N_("widest source {id}, {where}"), N_("widest source {id}, English {english} px, {where}")],
+  slot_digit: [N_("number of {n} digit, {where}"), N_("number of {n} digit, English {english} px, {where}")],
+  slot_digits: [N_("number of {n} digits, {where}"), N_("number of {n} digits, English {english} px, {where}")],
+  slot_width: [N_("{width} px, {where}"), N_("{width} px, English {english} px, {where}")],
+  slot_width_estimate: [N_("{width} px, unverified estimate, {where}"),
+    N_("{width} px, unverified estimate, English {english} px, {where}")],
+};
+
+/** A code-fill slot source in the site language; a profile label stays as written. */
+function fillText(source) {
+  let fill = source.fill;
+  const english = fill.code === "slot_english" ? fill.source_width : null;
+  if (english !== null) fill = fill.fill;
+  if (!FILLS[fill.code]) return explanationText(source);
+  const where = source.code === "slot_code_fill" ? t(CODE_FILL) : fillPlace(source.where);
+  return t(FILLS[fill.code][english === null ? 0 : 1],
+    { id: fill.id, n: fill.digits, width: fill.width, english, where });
+}
+
+/** A coded slot source in the site language, before its reasons. */
+function codedSlot(source) {
+  const head = (inner) => codedSlot(inner);
+  switch (source.code) {
+    case "slot_profile": return t("profile width");
+    case "slot_profile_estimate": return t("profile width, unverified estimate");
+    case "slot_default": return t("default width");
+    case "slot_context": return t("context records");
+    case "slot_profile_above":
+      return t("profile width, above the widest known {source} {width} px", { source: head(source.source), width: source.width });
+    case "slot_profile_estimate_above":
+      return t("profile width, unverified estimate, above the widest known {source} {width} px",
+        { source: head(source.source), width: source.width });
+    case "slot_table": return t("widest of table {table}: {word}", { table: source.table, word: head(source.word) });
+    case "slot_native": return t("native table {table}: {ids}", { table: source.table, ids: source.ids.join(" + ") });
+    case "slot_number_variable": return t("number of up to {n} digits (a variable)", { n: source.digits });
+    case "slot_number": return t("number {value}", { value: source.value });
+    case "slot_record_number": return t("number of {n} digits, the record's {value}", { n: source.digits, value: source.value });
+    case "slot_untranslated": case "slot_empty": return t(WORD_NOTES[source.code], { word: wordHead(source) });
+    case "slot_record": {
+      const word = source.word, kind = fillKind(source.kind);
+      return WORD_NOTES[word.code] ? t(WORD_NOTES[word.code], { word: `${kind} ${wordHead(word)}` }) : `${kind} ${head(word)}`;
+    }
+    case "slot_fill": case "slot_code_fill": return fillText(source);
+    default: return explanationText(source);
+  }
+}
+
+const whyText = (why) => {
+  switch (why.code) {
+    case "slot_no_fill": return t("no fill known");
+    case "slot_unfilled": return t("{n} of {uses} walked paths set no value", { n: why.unfilled, uses: why.uses });
+    case "slot_unnamed": return t("a value the scripts do not name: {kinds}", { kinds: why.kinds.map(fillKind).join(", ") });
+    case "slot_unwalked": return t("{n} script references not walked", { n: why.references });
+    case "slot_by_code": return t("shown by code");
+    default: return explanationText(why);
+  }
+};
+
 /** Translate descriptions while preserving inserted words and identifiers. */
 export function slotSource(text) {
+  if (isExplanation(text)) {
+    return keepUnits(text.code === "slot_reasons"
+      ? `${codedSlot(text.source)} (${text.reasons.map(whyText).join("; ")})` : codedSlot(text));
+  }
   const source = String(text);
   const m = WHY.exec(source);
   const whys = m ? m[2].split("; ") : [];
@@ -329,28 +427,123 @@ export function slotSource(text) {
   return keepUnits(slotHead(source));
 }
 
+// the profile row an explanation names: its section, the argument naming it, and a prefix
+const PROFILE_ROWS = {
+  record_window: ["layout.record_window", "name"], record_window_where: ["layout.record_window", "name"],
+  table_window: ["layout.table_window", "name"], table_window_where: ["layout.table_window", "name"],
+  policy_table_window: ["language policy", "name", "table_window."],
+  policy_table_window_where: ["language policy", "name", "table_window."],
+  layout_window: ["layout.window", "name"], layout_window_where: ["layout.window", "name"],
+  layout_default: ["layout", "key"], box_width: ["layout.box_width", "box"], box_width_via: ["layout.box_width", "box"],
+  window_box: ["layout.window_box", "entry"], window_width: ["layout.window_width", "entry"],
+  window_lines: ["layout.window_lines", "entry"], policy_window_width: ["language policy", "entry", "window_width."],
+  table_field_window: ["table", "table"], table_buffer: ["table", "table"], table_one_line: ["table", "table"],
+  table_field: ["table", "table"], table_field_unterminated: ["table", "table"], table_field_byte: ["table", "table"],
+  table_field_byte_unterminated: ["table", "table"], table_long_name: ["table", "table"],
+  keyboard_columns: ["keyboard", null, "columns"],
+  table_base: ["strings.table_base", "id"], interior: ["strings.interior", "pointer"],
+};
+const IDS = /\bs[0-9A-F]{7}\b|\b0x[0-9A-Fa-f]+\b|\b(?:hash|map|table|sym):[^\s,)]+/g;
+
+// the profile rows and identifiers of an explanation, in the order of its text
+function named(rule, rows, ids) {
+  const row = PROFILE_ROWS[rule.code];
+  if (row) rows.push(`${row[0]} ${row[2] ?? ""}${row[1] ? rule[row[1]] : ""}`);
+  for (const [name, value] of Object.entries(rule)) {
+    if (name === "code") continue;
+    if (NESTED.has(name)) named(value, rows, ids);
+    else ids.push(...[...String(value).matchAll(IDS)].map((match) => match[0]));
+  }
+}
+
 /** Keep profile identities behind the evidence disclosure. */
 export function limitReferences(rule) {
+  if (isExplanation(rule)) {
+    const rows = [], ids = [];
+    named(rule, rows, ids);
+    return [...new Set([...rows, ...ids.filter((id) => !rows.some((row) => row.endsWith(` ${id}`)))])];
+  }
   const source = String(rule);
   const rows = [...source.matchAll(/\[\[?([^\[\]]+)\]\]? ([^\s,)]+?)(?=:\s|[\s,)]|$)/g)]
     .map((match) => `${match[1]} ${match[2]}`);
   const keys = [...source.matchAll(/\[\[?([^\[\]]+)\]\]?/g)].map((match) => match[1]);
-  const ids = [...source.matchAll(/\bs[0-9A-F]{7}\b|\b0x[0-9A-Fa-f]+\b|\b(?:hash|map|table|sym):[^\s,)]+/g)]
-    .map((match) => match[0]);
+  const ids = [...source.matchAll(IDS)].map((match) => match[0]);
   return [...new Set([...rows, ...keys.filter((key) => !rows.some((row) => row.startsWith(`${key} `))),
     ...ids.filter((id) => !rows.some((row) => row.endsWith(` ${id}`)))])];
+}
+
+// the windows an explanation describes: profile section, name and description
+const WINDOWS = {
+  record_window: "layout.record_window", record_window_where: "layout.record_window",
+  table_window: "layout.table_window", table_window_where: "layout.table_window",
+  policy_table_window: "layout.table_window", policy_table_window_where: "layout.table_window",
+  layout_window: "layout.window", layout_window_where: "layout.window",
+};
+
+function windowOf(rule) {
+  if (WINDOWS[rule.code]) return { section: WINDOWS[rule.code], name: rule.name, where: rule.where };
+  if (rule.code === "table_field_window") return { section: "table", name: rule.table, where: rule.where, field: true };
+  if (rule.code === "table_buffer") return { section: "table", name: rule.table, where: rule.where };
+  return null;
+}
+
+// the limit codes shown as one text
+const RULE_TEXTS = {
+  window_width: N_("Text window width"), window_lines: N_("Visible lines in the text window"),
+  window_box: N_("Message window"), policy_window_width: N_("Translation text budget"),
+  keyboard_columns: N_("Keyboard key columns"), box_lines: N_("two lines per message box"),
+  box_lines_via: N_("two lines per message box"), table_one_line: N_("a one-line field"),
+  english_widest: N_("the English: its widest line"), english_one_line: N_("the English: one line"),
+  english_line_count: N_("the English: its line count"), english_box_lines: N_("the English: its box lines"),
+  english_run_widest: N_("the English: the widest line of its pointer-table run"),
+  pack_keyboard_columns: N_("keyboard layout columns: the columns its pack keyboard reaches"),
+  host_default: N_("its host"),
+};
+// the limit codes shown with their sizes
+const SIZES = {
+  table_field: N_("a field of {n} bytes with the terminator"), table_field_unterminated: N_("a field of {n} bytes"),
+  table_field_byte: N_("a field of {n} byte with the terminator"), table_field_byte_unterminated: N_("a field of {n} byte"),
+  table_long_name: N_("a long-name pointer of {n} bytes with the terminator"),
+  table_base: N_("in place in its {n}-byte field with the terminator"),
+};
+
+/** A coded limit in the site language; a window without a description takes another source's. */
+function ruleText(rule, sources) {
+  if (RULE_TEXTS[rule.code]) return t(RULE_TEXTS[rule.code]);
+  if (SIZES[rule.code]) return t(SIZES[rule.code], { n: rule.bytes });
+  switch (rule.code) {
+    case "host": return ruleText(rule.rule, sources);
+    case "centred": return t("{rule}, centred", { rule: ruleText(rule.rule, sources) });
+    case "box_width": case "box_width_via": return t(BOX_NAMES[rule.box] ?? "Text window");
+    case "layout_default": return t(DEFAULT_NAMES[rule.key] ?? "Text window");
+    case "english_file_widest": return t("the English: the widest line of {file}", { file: rule.file });
+    case "english_file_lines": return t("the English: the most lines of {file}", { file: rule.file });
+    case "in_place": return t("in place: its {n} bytes with the terminator, a reference the build cannot rewrite ({kinds})",
+      { n: rule.bytes, kinds: rule.references });
+    // the interior row's description stays as written
+    case "interior": return whereText(`read from byte ${rule.offset}, in place in its ${rule.bytes} bytes`);
+    default: break;
+  }
+  const window = windowOf(rule);
+  if (!window) return explanationText(rule);
+  if (window.where) return whereText(window.where);
+  const described = sources.map((s) => (isExplanation(s.rule) ? windowOf(s.rule) : null)).find((other) =>
+    other?.section === window.section && other.name === window.name && other.where
+    && (other.section !== "table" || other.field));
+  return described ? whereText(described.where) : t(WINDOW_KINDS[window.section]);
 }
 
 const windowRule = (rule) => String(rule).replace(POLICY_WINDOW, (_, name, where) =>
   `[[layout.table_window]] ${name}${where ? `: ${where}` : ""}`);
 
-/** Show descriptions without profile section notation. */
+/** Show descriptions without profile section notation; `sources` describe a coded window. */
 export function limitText(rule, sources = []) {
+  if (isExplanation(rule)) return ruleText(rule, sources);
   const source = windowRule(rule).replace(/^profile /, "");
   const host = /^the window of .+?, which inserts it: (.*)$/s.exec(source);
-  if (host) return limitText(host[1], sources);
+  if (host) return limitText(host[1]);
   const centred = /^(.*), centred against \S+$/s.exec(source);
-  if (centred) return t("{rule}, centred", { rule: limitText(centred[1], sources) });
+  if (centred) return t("{rule}, centred", { rule: limitText(centred[1]) });
   const box = /^\[layout.box_width\] ([^:]+):/.exec(source);
   if (box) return t(BOX_NAMES[box[1]] ?? "Text window");
   const layout = /^\[layout\] (\w+)$/.exec(source);
@@ -369,18 +562,13 @@ export function limitText(rule, sources = []) {
     if (row && Object.hasOwn(WINDOW_KINDS, row[1])) {
       if (row[4]?.trim()) return row[1] === "table" && !row[3]
         ? phrase(row[4], RULES) : whereText(row[4]);
-      const described = sources.map((s) => PROFILE_ROW.exec(windowRule(s.rule))).find((other) =>
-        other?.[1] === row[1] && other[2] === row[2] && other[4]?.trim()
-        && (other[1] !== "table" || other[3] === "window"));
-      if (described) return whereText(described[4]);
       return t(WINDOW_KINDS[row[1]]);
     }
     if (row && ["strings.table_base", "strings.interior"].includes(row[1]) && row[4]) {
       return phrase(row[4], RULES);
     }
   }
-  const nested = (text) => limitText(text, sources);
-  return phrase(whereText(t(source)), RULES, { rule: nested, via: nested, where: nested });
+  return phrase(whereText(t(source)), RULES, { rule: limitText, via: limitText, where: limitText });
 }
 
 let reasons = {}; // the policy's typography reasons: reason -> {code: text}

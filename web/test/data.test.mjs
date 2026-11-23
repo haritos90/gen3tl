@@ -127,7 +127,7 @@ test("decoded rows and entries take their defaults from the format", async () =>
 });
 
 test("old indexes, term files and chunks cannot mix with current data", async () => {
-  for (const schema of [undefined, 1, "1.0.0", "2.0.0", "2.1.0", "7.4.0"]) {
+  for (const schema of [undefined, 1, "1.0.0", "2.0.0", "2.1.0", "7.4.0", "8.1.0", "10.0.0"]) {
     assert.throws(() => verifyProjectIndex({ schema, profile: "fixture", language: "xx" }, "fixture", "xx"), /schema/);
     assert.throws(() => verifyEditorSchema({ schema, terms: [] }), /schema/);
     assert.throws(() => new Chunks("", { schema, chunks: [] }), /schema/);
@@ -143,7 +143,15 @@ test("old indexes, term files and chunks cannot mix with current data", async ()
     await assert.rejects(loadIndex(`${DATA}index.json`, fakeFetch({ ...files, [`${DATA}index.json`]:
       { ...files[`${DATA}index.json`], schema } })), /schema/);
   }
-  assert.doesNotThrow(() => verifyEditorSchema({ schema: EDITOR_SCHEMA, terms: [] }));
+  assert.equal(EDITOR_SCHEMA, "9.0.0");
+  // the data of the previous schema still loads
+  const previous = storedLanguage(`${DATA}index.json`, { language: "ru", list: [{ id: "s1", status: "approved" }] });
+  for (const doc of Object.values(previous)) if (doc.schema === EDITOR_SCHEMA) doc.schema = "8.0.0";
+  const index = await loadIndex(`${DATA}index.json`, fakeFetch(previous));
+  assert.equal(index.schema, "8.0.0");
+  assert.equal((await new Chunks(DATA, index, fakeFetch(previous)).get(0)).byId.get("s1").id, "s1");
+  for (const schema of ["8.0.0", "9.0.0"]) assert.doesNotThrow(() => verifyEditorSchema({ schema, terms: [] }));
+  assert.throws(() => verifyEditorSchema({ schema: "7.4.0", terms: [] }), /Catalog schema does not match 9\.0\.0/);
 });
 
 test("JSON and paths", async () => {

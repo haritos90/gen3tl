@@ -1,7 +1,7 @@
 import { el, renderChildren, updateChildren } from "../dom.js";
 import { t } from "../ui.js";
 import { statusLabel, shortFile } from "../data.js";
-import { keepUnits } from "../checktext.js";
+import { explanationText, keepUnits } from "../checktext.js";
 import { renderEntryNotes, renderNoteDrafts } from "../guidance.js";
 import { UNMEASURED_ADVICE, UNVERIFIED_ADVICE } from "../limits.js";
 import { translationState } from "../draft.js";
@@ -48,9 +48,10 @@ export function contextDisclosure(label, content, className = "") {
 
 /** Estimate wrapped lines before the panel is mounted. */
 export function renderReachEvidence(evidence) {
-  if (!evidence) return null;
-  const lines = evidence.split(/\r?\n/);
-  const text = el("div", { class: "muted reach-text", textContent: evidence });
+  const shown = explanationText(evidence);
+  if (!shown) return null;
+  const lines = shown.split(/\r?\n/);
+  const text = el("div", { class: "muted reach-text", textContent: shown });
   if (lines.reduce((count, line) => count + Math.max(1, Math.ceil(line.length / 60)), 0) <= 4) return text;
   const preview = lines[0].length > 80 ? `${lines[0].slice(0, 77).trimEnd()}…` : lines[0];
   return contextDisclosure([t("Evidence"), el("span", { class: "reach-preview", textContent: `: ${preview}` })],
@@ -64,7 +65,7 @@ export function renderReachEvidence(evidence) {
 export function renderNote(entry) {
   renderChildren($("note"), (box) => {
     box.append(renderEntryNotes(entry, state.index));
-    const evidence = entry.reach?.evidence;
+    const evidence = explanationText(entry.reach?.evidence);
     const comments = entry.context.comments.filter((comment) => !evidence
       || (comment !== evidence && comment !== `reach: ${entry.reach.class} (${evidence})`));
     if (comments.length) {

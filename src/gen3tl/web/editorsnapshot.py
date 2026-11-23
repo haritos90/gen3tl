@@ -22,7 +22,7 @@ from ..catalog.source import digest as text_digest
 from ..core.charmap import Charmap
 from ..core.notes import BoundProse
 
-SCHEMA = "6.1.0"
+SCHEMA = "7.0.0"
 CONFIG_KEYS = ("font", "font_style", "font_styles", "layout", "table", "keyboard",
                "context", "strings", "script", "maps", "reach", "language_rules",
                "code_replacement", "selected_code_replacements", "text_prefixes",
@@ -178,7 +178,7 @@ PARTICIPANT = {"in_source": str, "basis": str,
                "sources": ("list", {"source": str, "gender": str, "value": str, "evidence": str})}
 IDENTITY = {"schema": str, "speaker": PARTICIPANT, "addressee": PARTICIPANT}
 SOURCE = ("row", str, ("list", str), ("list", int), ("list", int), LIMIT,
-          {"chars": int, "sources": ("map", ("row", str, str, str, bool)),
+          {"chars": int, "sources": ("map", ("row", str, dict, str, bool)),
            "widths": ("map", ("row", int, int)), "terms": ("list", str), "names": ("list", str),
            "context": {"maps": ("list", str), "events": ("list", str), "boxes": ("list", str), "uses": int,
                        "speakers": ("list", {"name": (str, None), "gender": str, "source": str}),

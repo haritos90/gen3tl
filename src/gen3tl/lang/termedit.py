@@ -9,6 +9,7 @@ import json
 
 from ..core.charmap import CharmapError
 from ..check.layout import lines_of, paragraphs
+from ..check.provenance import code as coded
 from ..build.release import expand
 from .renamecheck import Rename, apply_renames, build_report, grammar, grammar_changes
 from .termbase import Senses, Term, TermMatcher
@@ -129,7 +130,7 @@ def preview(checker, old: dict, new: dict, items: list[dict], slots: dict | None
     g1 = grammar(r.forms, t1.gender, t0.declension)
     if not any(c["property"] != "declension" for c in grammar_changes(g0, g1)):
         changes = {k: c for k, c in changes.items() if c["after"] != c["before"]}
-    wide: dict[str, dict[str, tuple[int, str]]] = {}   # line -> slot -> (px, source)
+    wide: dict[str, dict[str, tuple[int, dict]]] = {}   # line -> slot -> (px, source)
     ph, default = checker.measure.ph, checker.measure.default_ph
     for sid, c in changes.items():
         px = word_width(checker, c["after"])
@@ -139,7 +140,7 @@ def preview(checker, old: dict, new: dict, items: list[dict], slots: dict | None
                 continue
             now = (w.get("placeholders") or {}).get(name, ph.get(name, default))
             if px > wide.get(host, {}).get(name, (now, ""))[0]:
-                wide.setdefault(host, {})[name] = (px, f"{sid} {c['after']!r}")   # qa.slot_widths form
+                wide.setdefault(host, {})[name] = (px, coded("slot_word", id=sid, text=repr(c["after"])))
     terms = getattr(checker, "terms", [])
     m0 = checker.matcher or TermMatcher([])
     m1 = TermMatcher([t1 if t.id == t1.id else t for t in terms])

@@ -1,11 +1,10 @@
-"""Provenance texts of limits and reach: one template per code, stored as the code with its arguments."""
+"""Explanations of limits, reach and inserted widths: one template per code, stored as the code with its arguments."""
 
 from __future__ import annotations
 
 import re
-from functools import lru_cache
 
-# {name}: an argument; via and rule nest provenance texts
+# {name}: an argument; nested names hold explanations
 MESSAGES = {
     "record_window": "[[layout.record_window]] {name}",
     "record_window_where": "[[layout.record_window]] {name}: {where}",
@@ -49,62 +48,68 @@ MESSAGES = {
     "host_default": "its host",
     "reach_study": "reach study: {class}",
     "reach_study_root": "reach study: {class} ({root})",
+    "slot_profile": "profile width",
+    "slot_profile_estimate": "profile width, unverified estimate",
+    "slot_default": "default width",
+    "slot_context": "context records",
+    "slot_profile_above": "profile width, above the widest known {source} {width} px",
+    "slot_profile_estimate_above": "profile width, unverified estimate, above the widest known {source} {width} px",
+    "slot_reasons": "{source} ({reasons})",
+    "slot_no_fill": "no fill known",
+    "slot_unfilled": "{unfilled} of {uses} walked paths set no value",
+    "slot_unnamed": "a value the scripts do not name: {kinds}",
+    "slot_unwalked": "{references} script references not walked",
+    "slot_by_code": "shown by code",
+    "slot_word": "{id} {text}",
+    "slot_untranslated": "{id} (untranslated)",
+    "slot_empty": "{id} '' (translated as empty)",
+    "slot_record": "{kind} {word}",
+    "slot_table": "widest of table {table}: {word}",
+    "slot_native": "native table {table}: {ids}",
+    "slot_number_variable": "number of up to {digits} digits (a variable)",
+    "slot_number": "number {value}",
+    "slot_record_number": "number of {digits} digits, the record's {value}",
+    "slot_label": "{label}",
+    "slot_widest_source": "widest source {id}",
+    "slot_digit": "number of {digits} digit",
+    "slot_digits": "number of {digits} digits",
+    "slot_width": "{width} px",
+    "slot_width_estimate": "{width} px, unverified estimate",
+    "slot_english": "{fill}, English {source_width} px",
+    "slot_fill": "{fill}, {where}",
+    "slot_code_fill": "{fill}, code fill",
 }
-NESTED = frozenset({"rule", "via"})
+NESTED = frozenset({"rule", "via", "source", "word", "fill"})
+# list arguments and their separators
+JOINED = {"reasons": "; ", "kinds": ", ", "ids": " + "}
 FIELD = re.compile(r"\{(\w+)\}")
 
 
-def text(code: str, **args) -> str:
-    """The text of `code` with its arguments."""
-    return MESSAGES[code].format(**args)
+def code(name: str, /, **args) -> dict:
+    """The explanation `name` with its arguments, in the order of its template."""
+    fields = list(dict.fromkeys(FIELD.findall(MESSAGES[name])))
+    if set(args) != set(fields):
+        raise ValueError(f"{name}: arguments {sorted(args)} differ from {fields}")
+    return {"code": name, **{field: args[field] for field in fields}}
+
+
+def canonical(coded: dict) -> dict:
+    """An explanation with every argument, nested ones too, in the order of its template."""
+    def value(name, item):
+        if name in JOINED:
+            return [canonical(part) if isinstance(part, dict) else part for part in item]
+        return canonical(item) if name in NESTED and isinstance(item, dict) else item
+    return code(coded["code"], **{name: value(name, item) for name, item in coded.items() if name != "code"})
 
 
 def formatted(coded) -> str:
-    """The text of a coded provenance; a plain string is its own text."""
+    """The English text of an explanation; a plain string is its own text."""
     if isinstance(coded, str):
         return coded
-    return FIELD.sub(lambda m: formatted(coded[m[1]]) if m[1] in NESTED else str(coded[m[1]]),
-                     MESSAGES[coded["code"]])
 
-
-@lru_cache(maxsize=None)
-def _patterns() -> list[tuple[str, re.Pattern]]:
-    def pattern(template):
-        parts = FIELD.split(template)
-        return re.compile("".join(re.escape(part) if n % 2 == 0 else f"(?P<{part}>.*?)"
-                                  for n, part in enumerate(parts)) + r"\Z", re.S)
-    # wrappers, then the most literal: an argument never swallows structure
-    order = sorted(MESSAGES, key=lambda code: (not NESTED & set(FIELD.findall(MESSAGES[code])),
-                                               -len(FIELD.sub("", MESSAGES[code]))))
-    return [(code, pattern(MESSAGES[code])) for code in order]
-
-
-def _value(value: str):
-    return int(value) if value.isascii() and value.isdigit() and str(int(value)) == value else value
-
-
-@lru_cache(maxsize=None)
-def _coded(value: str):
-    for code, pattern in _patterns():
-        m = pattern.match(value)
-        if m is None:
-            continue
-        args = {}
-        for name, arg in m.groupdict().items():
-            args[name] = _coded(arg) if name in NESTED else _value(arg)
-            if args[name] is None:
-                break
-        else:
-            out = {"code": code, **args}
-            if formatted(out) == value:
-                return out
-    return None
-
-
-def coded(value: str) -> dict:
-    """The code and arguments that reproduce a provenance text, else ValueError."""
-    out = _coded(value)
-    if out is None:
-        raise ValueError(f"provenance without a message code: {value!r}")
-    from copy import deepcopy
-    return deepcopy(out)
+    def value(name):
+        item = coded[name]
+        if name in JOINED:
+            return JOINED[name].join(formatted(part) for part in item)
+        return formatted(item) if name in NESTED else str(item)
+    return FIELD.sub(lambda m: value(m[1]), MESSAGES[coded["code"]])

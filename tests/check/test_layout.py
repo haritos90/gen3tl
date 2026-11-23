@@ -254,6 +254,28 @@ class PromptArrowTest(unittest.TestCase):
         probs = entry_problems("Hi\\nho\\pyo", "аа\\nааааа ббб\\pвв", self.LIM, M, CM)[1]
         self.assertIn("line leaves no room for the prompt arrow: box 1: 54 > 48 px: 'ааааа ббб'", probs)
 
+class CodedExplanationTest(unittest.TestCase):
+    """A coded slot source or window name reaches a check message as its English text."""
+
+    def test_slot_sources_and_window_names_read_as_their_text(self):
+        from gen3tl.check.entrycheck import instant_print_problems
+        from gen3tl.check.provenance import code
+        source = code("slot_reasons", source=code("slot_profile"), reasons=[code("slot_no_fill")])
+        menu = code("table_window", name="menu")
+        lim = Limit("single", 30, None, placeholders={"PLAYER": 42}, slot_sources={"PLAYER": source},
+                    consumers=[{"name": menu, "width": 30, "arrow": 0}, {"name": "wide window", "width": 100, "arrow": 0}])
+        self.assertEqual(check("а {PLAYER}", lim, M, CM), ["line too wide: 54 > 30 px: 'а {PLAYER}' with {PLAYER} = 42 px "
+                                                         "(profile width (no fill known)); window [[layout.table_window]] menu"])
+        waiting = Limit("dialogue", 60, 2, consumers=[{"name": menu, "width": 60, "arrow": 12}])
+        self.assertEqual(arrow_overflows("аа\\nааааа ббб\\pвв", waiting, M, CM),
+                         ["line leaves no room for the prompt arrow: box 1: 54 > 48 px in [[layout.table_window]] menu: "
+                          "'ааааа ббб'"])
+        instant = Limit("multiline", 100, 2, consumers=[{"name": menu, "width": 100, "arrow": 0, "instant_print": True}] * 2)
+        self.assertEqual(instant_print_problems("а\\pб", "а\\pб", instant),
+                         ["scroll and page codes are not supported in [[layout.table_window]] menu: "
+                          "this window prints instantly and drops the remaining text"])
+
+
 class RuntimeScrollTest(unittest.TestCase):
     def test_runtime_waits_keep_written_breaks_and_report_arrow_room(self):
         from gen3tl.check.layout import runtime_text, waiting_windows

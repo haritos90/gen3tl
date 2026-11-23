@@ -3,15 +3,16 @@
 // Every file decodes through editorstore.js.
 
 import { chunkPartUrl, decodeChunk, decodeIndex, decodeSource, decodeTerms, sourceUrl } from "./editorstore.js";
+import { explanationText } from "./checktext.js";
 import { searchable } from "./text.js";
-import { catalogCapabilities, EDITOR_SCHEMA, verifyManifest } from "./site-model.js";
+import { catalogCapabilities, EDITOR_SCHEMA, EDITOR_SCHEMAS, verifyManifest } from "./site-model.js";
 import { N_, t, uiError } from "./ui.js";
 
 export { EDITOR_SCHEMA };
 
 /** Reject incompatible cached documents before combining them. */
 export function verifyEditorSchema(doc) {
-  if (doc.schema !== EDITOR_SCHEMA) throw new Error(`Catalog schema does not match ${EDITOR_SCHEMA}`);
+  if (!EDITOR_SCHEMAS.includes(doc.schema)) throw new Error(`Catalog schema does not match ${EDITOR_SCHEMA}`);
 }
 
 /** JSON from a URL, revalidating cached responses. */
@@ -187,7 +188,7 @@ export function reachLabel(reach) {
   const r = reach ?? { class: "reachable", source: "not studied", evidence: "" };
   const name = REACH_LABEL[r.class] ? t(REACH_LABEL[r.class]) : r.class;
   const source = r.source.split(", ").map((part) => REACH_SOURCE[part] ? t(REACH_SOURCE[part]) : part).join(", ");
-  return { text: `${name} (${source})`, title: r.evidence || name, never: r.class === "never shown" };
+  return { text: `${name} (${source})`, title: explanationText(r.evidence) || name, never: r.class === "never shown" };
 }
 
 /** Indices of the rows the filters keep. */

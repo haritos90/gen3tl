@@ -3,7 +3,8 @@ import { Edits, GlyphEdits, KeyboardEdits, NoteEdits, PictureEdits, RuleEdits, T
 import { t, errorText, N_, showText, plainText, uiError } from "../ui.js";
 import { tableKey, getJson, loadIndex, verifyProjectIndex, dirOf, projectProfiles, placeOf, Chunks, groupsOf } from "../data.js";
 import { gameHash, siteRoute, pokedexRedirect, rememberGame } from "../registry.js";
-import { setPlaces, setReasons } from "../checktext.js";
+import { setMessages, setPlaces, setReasons } from "../checktext.js";
+import { messagesOf } from "../editorstore.js";
 import { isDraft } from "../draft.js";
 import { workspaceLanguage } from "../start.js";
 import { shipsEnglish } from "../gametext.js";
@@ -176,6 +177,7 @@ export async function loadLanguage(code, retained = null, locate = null) {
   state.index = index;
   setReasons(index.check_rules?.reasons);
   setPlaces(index.where_texts);
+  setMessages(messagesOf(index));
   showTitle();
   if (!state.check) setCheckStatus(state.pythonState === "loading" ? "loading" : "failed");
   $("project-empty").hidden = true;

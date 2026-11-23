@@ -7,22 +7,14 @@ const ENTRY = ["id", "file", "tokens", "translation", "flags", "status", "contex
   "approved", "note", "reach", "translator_notes", "rules", "source_sha256", "note_ids"];
 const LANGUAGE = new Set(["flags", "terms", "approved", "note", "translator_notes", "rules", "note_ids", "inserted", "words"]);
 const REACH = { class: "reachable", source: "not studied", evidence: "" };
-const NESTED = new Set(["rule", "via"]);
 const unstated = () => ({ in_source: "not-stated", basis: "", sources: [] });
 const STORED = new WeakMap(); // decoded index -> what decoding its chunks needs
-
-/** The text of a coded provenance, from the data's message table. */
-export function provenanceText(coded, messages) {
-  if (typeof coded === "string") return coded;
-  return messages[coded.code].replace(/\{(\w+)\}/g, (_, name) =>
-    (NESTED.has(name) ? provenanceText(coded[name], messages) : String(coded[name])));
-}
 
 /** The status a list row omits: approved with a translation. */
 export const defaultStatus = (translation) => (translation ? "approved" : "untranslated");
 
-function limitSource(row, messages) {
-  return { kind: row.kind, rule: provenanceText(row.rule, messages), evidence: row.evidence ?? "",
+function limitSource(row) {
+  return { kind: row.kind, rule: structuredClone(row.rule), evidence: row.evidence ?? "",
     ...(row.unverified ? { unverified: true } : {}) };
 }
 
@@ -30,19 +22,19 @@ function reachOf(n, game) {
   if (n === undefined) return { ...REACH };
   const row = game.reach[n];
   const out = { ...REACH, ...row };
-  return { class: out.class, source: out.source, evidence: provenanceText(out.evidence, game.messages) };
+  return { class: out.class, source: out.source, evidence: structuredClone(out.evidence) };
 }
 
-function windowOf(n, tables, messages) {
+function windowOf(n, tables) {
   const out = structuredClone(tables.windows[n]);
   if (out.sources) {
     out.sources = Object.fromEntries(Object.entries(out.sources)
-      .map(([field, k]) => [field, limitSource(tables.limit_sources[k], messages)]));
+      .map(([field, k]) => [field, limitSource(tables.limit_sources[k])]));
   }
   if (out.consumers) {
     out.consumers = out.consumers.map((k) => {
       const { name, source, ...rest } = structuredClone(tables.consumers[k]);
-      const decoded = limitSource(tables.limit_sources[source], messages);
+      const decoded = limitSource(tables.limit_sources[source]);
       return { name: name ?? decoded.rule, ...rest, source: decoded };
     });
   }
@@ -86,11 +78,16 @@ export function decodeIndex(stored, game, url) {
   return index;
 }
 
+/** The explanation templates of a decoded index, by code. */
+export function messagesOf(index) {
+  return STORED.get(index)?.game.messages ?? {};
+}
+
 /** A chunk {schema, file, entries} of its stored language part and game part. */
 export function decodeChunk(index, n, stored, part) {
   const s = STORED.get(index);
   if (!s) throw new Error("Catalog index was not decoded");
-  const descriptor = s.chunks[n], messages = s.game.messages;
+  const descriptor = s.chunks[n];
   if (stored.entries.length !== descriptor.entries || part.entries.length !== descriptor.entries) {
     throw new Error(`${descriptor.path}: entry count does not match the index`);
   }
@@ -107,7 +104,7 @@ export function decodeChunk(index, n, stored, part) {
         hosts: shared.hosts ?? [],
         identity: shared.identity ?? { schema: "2.0.0", speaker: unstated(), addressee: unstated() },
         maps: [...(listed.maps ?? [])] },
-      owner: row.owner, window: row.window === undefined ? null : windowOf(row.window, s.tables, messages),
+      owner: row.owner, window: row.window === undefined ? null : windowOf(row.window, s.tables),
       terms: own.terms ?? [], approved: own.approved ?? [], note: own.note === null ? undefined : own.note ?? "",
       reach: reachOf(listed.reach, s.game),
       translator_notes: own.translator_notes === null ? undefined : own.translator_notes ?? [],

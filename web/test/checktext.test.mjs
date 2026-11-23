@@ -2,8 +2,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ENCODING, MESSAGES, NOTES, checkText, extractionFailed, findingText, layoutFailed, limitReferences, limitText, parseFinding,
-  parseMessage, setPlaces, setReasons, slotSource } from "../js/checktext.js";
+import { ENCODING, MESSAGES, NOTES, checkText, explanationText, extractionFailed, findingText, layoutFailed, limitReferences,
+  limitText, parseFinding, parseMessage, sameExplanation, setMessages, setPlaces, setReasons, slotSource } from "../js/checktext.js";
 import { setCatalog, setUiLanguage, t } from "../js/ui.js";
 
 const RU = {
@@ -221,4 +221,184 @@ test("consumer diagnostics retain their binding window", (context) => {
   assert.equal(checkText(arrow), "Arrow: 170/166, trade window, 'Draft'");
   assert.equal(checkText(ordinary), "Width: 180/176, trade window, 'Draft'");
   assert.equal(parseMessage(arrow.replace("166", "-1")).vars.limit, "-1");
+});
+
+// the data's explanation templates (gen3tl.check.provenance.MESSAGES)
+const TEMPLATES = {
+  record_window: "[[layout.record_window]] {name}", record_window_where: "[[layout.record_window]] {name}: {where}",
+  table_window: "[[layout.table_window]] {name}", table_window_where: "[[layout.table_window]] {name}: {where}",
+  policy_table_window: "[language policy] table_window.{name}",
+  policy_table_window_where: "[language policy] table_window.{name}: {where}",
+  layout_window: "[[layout.window]] {name}", layout_window_where: "[[layout.window]] {name}: {where}",
+  layout_default: "[layout] {key}", box_width: "[layout.box_width] {box}: the message box, measured in game",
+  box_width_via: "[layout.box_width] {box}: the message box, measured in game ({via})",
+  box_lines: "two lines per message box", box_lines_via: "two lines per message box ({via})",
+  window_box: "[layout.window_box] {entry}", window_width: "[layout.window_width] {entry}: measured in game",
+  window_lines: "[layout.window_lines] {entry}: measured in game",
+  policy_window_width: "[language policy] window_width.{entry}: text budget",
+  english_widest: "the English: its widest line", english_file_widest: "the English: the widest line of {file}",
+  english_run_widest: "the English: the widest line of its pointer-table run",
+  english_one_line: "the English: one line", english_line_count: "the English: its line count",
+  english_box_lines: "the English: its box lines", english_file_lines: "the English: the most lines of {file}",
+  table_field_window: "[[table]] {table} window: {where}", table_buffer: "[[table]] {table} buffer: {where}",
+  table_one_line: "[[table]] {table}: a one-line field",
+  table_field: "[[table]] {table}: a field of {bytes} bytes with the terminator",
+  table_field_unterminated: "[[table]] {table}: a field of {bytes} bytes",
+  table_field_byte: "[[table]] {table}: a field of {bytes} byte with the terminator",
+  table_field_byte_unterminated: "[[table]] {table}: a field of {bytes} byte",
+  table_long_name: "[[table]] {table}: a long-name pointer of {bytes} bytes with the terminator",
+  keyboard_columns: "[keyboard] columns: the key cells of its keyboard",
+  pack_keyboard_columns: "keyboard layout columns: the columns its pack keyboard reaches",
+  in_place: "in place: its {bytes} bytes with the terminator, a reference the build cannot rewrite ({references})",
+  table_base: "[[strings.table_base]] {id}: in place in its {bytes}-byte field with the terminator",
+  interior: "[[strings.interior]] {pointer}: read from byte {offset}, in place in its {bytes} bytes",
+  centred: "{rule}, centred against {reference}", host: "the window of {host}, which inserts it: {rule}",
+  host_default: "its host", reach_study: "reach study: {class}", reach_study_root: "reach study: {class} ({root})",
+  slot_profile: "profile width", slot_profile_estimate: "profile width, unverified estimate",
+  slot_default: "default width", slot_context: "context records",
+  slot_profile_above: "profile width, above the widest known {source} {width} px",
+  slot_profile_estimate_above: "profile width, unverified estimate, above the widest known {source} {width} px",
+  slot_reasons: "{source} ({reasons})", slot_no_fill: "no fill known",
+  slot_unfilled: "{unfilled} of {uses} walked paths set no value",
+  slot_unnamed: "a value the scripts do not name: {kinds}",
+  slot_unwalked: "{references} script references not walked", slot_by_code: "shown by code", slot_word: "{id} {text}",
+  slot_untranslated: "{id} (untranslated)", slot_empty: "{id} '' (translated as empty)", slot_record: "{kind} {word}",
+  slot_table: "widest of table {table}: {word}", slot_native: "native table {table}: {ids}",
+  slot_number_variable: "number of up to {digits} digits (a variable)", slot_number: "number {value}",
+  slot_record_number: "number of {digits} digits, the record's {value}", slot_label: "{label}",
+  slot_widest_source: "widest source {id}", slot_digit: "number of {digits} digit",
+  slot_digits: "number of {digits} digits", slot_width: "{width} px",
+  slot_width_estimate: "{width} px, unverified estimate", slot_english: "{fill}, English {source_width} px",
+  slot_fill: "{fill}, {where}", slot_code_fill: "{fill}, code fill",
+};
+const word = { code: "slot_word", id: "table:species/499", text: "'Munchlax'" };
+const LIMIT_CODES = [
+  { code: "record_window", name: "journal" }, { code: "record_window_where", name: "journal", where: "the journal" },
+  { code: "table_window", name: "menu" }, { code: "table_window_where", name: "menu", where: "the bag, hash:0000abcd" },
+  { code: "policy_table_window", name: "menu" }, { code: "policy_table_window_where", name: "menu", where: "the bag" },
+  { code: "layout_window", name: "notice" }, { code: "layout_window_where", name: "notice", where: "Notice window" },
+  { code: "layout_default", key: "dialogue_width" }, { code: "layout_default", key: "label_min_width" },
+  { code: "box_width", box: "battle" }, { code: "box_width_via", box: "dialogue", via: { code: "window_box", entry: "s0000100" } },
+  { code: "box_lines" }, { code: "box_lines_via", via: { code: "table_window", name: "menu" } },
+  { code: "window_box", entry: "s0000100" }, { code: "window_width", entry: "s0000100" },
+  { code: "window_lines", entry: "s0000100" }, { code: "policy_window_width", entry: "s0000100" },
+  { code: "english_widest" }, { code: "english_file_widest", file: "po/tables/items.po" }, { code: "english_run_widest" },
+  { code: "english_one_line" }, { code: "english_line_count" }, { code: "english_box_lines" },
+  { code: "english_file_lines", file: "po/maps/town.po" },
+  { code: "table_field_window", table: "items", where: "held summary" }, { code: "table_buffer", table: "items", where: "the bag" },
+  { code: "table_one_line", table: "items" }, { code: "table_field", table: "items", bytes: 14 },
+  { code: "table_field_unterminated", table: "items", bytes: 12 }, { code: "table_field_byte", table: "keys", bytes: 1 },
+  { code: "table_field_byte_unterminated", table: "keys", bytes: 1 }, { code: "table_long_name", table: "names", bytes: 18 },
+  { code: "keyboard_columns" }, { code: "pack_keyboard_columns" },
+  { code: "in_place", bytes: 12, references: "script:vmessage, table-base" }, { code: "table_base", id: "berries", bytes: 8 },
+  { code: "interior", pointer: "0x1A2B", offset: 3, bytes: 12 },
+  { code: "centred", rule: { code: "table_window_where", name: "menu", where: "the bag" }, reference: "s0000200" },
+  { code: "host", host: "s0000300", rule: { code: "box_width", box: "dialogue" } }, { code: "host_default" },
+];
+const SLOT_CODES = [
+  { code: "slot_profile" }, { code: "slot_profile_estimate" }, { code: "slot_default" }, { code: "slot_context" },
+  { code: "slot_reasons", source: { code: "slot_profile_estimate" }, reasons: [{ code: "slot_no_fill" }, { code: "slot_by_code" }] },
+  { code: "slot_reasons", source: { code: "slot_profile_above", source: { code: "slot_record", kind: "species",
+    word: { code: "slot_untranslated", id: "table:species/499" } }, width: 47 },
+  reasons: [{ code: "slot_unfilled", unfilled: 1, uses: 1 }, { code: "slot_unwalked", references: 3 }] },
+  { code: "slot_reasons", source: { code: "slot_profile" }, reasons: [{ code: "slot_unnamed", kinds: ["nickname", "number"] }] },
+  { code: "slot_reasons", source: word, reasons: [{ code: "slot_no_fill" }] },
+  { code: "slot_profile_estimate_above", source: { code: "slot_number_variable", digits: 5 }, width: 30 },
+  word, { code: "slot_untranslated", id: "s0000200" }, { code: "slot_empty", id: "s0000200" },
+  { code: "slot_record", kind: "item", word }, { code: "slot_record", kind: "item", word: { code: "slot_empty", id: "items:3" } },
+  { code: "slot_record", kind: "std_text", word },
+  { code: "slot_table", table: "items", word: { code: "slot_untranslated", id: "hash:0000abcd" } },
+  { code: "slot_native", table: "choices", ids: ["hash:00000001", "hash:00000002"] },
+  { code: "slot_number_variable", digits: 5 }, { code: "slot_number", value: 10 }, { code: "slot_record_number", digits: 2, value: 10 },
+  { code: "slot_label", label: "Battle name with prefix" },
+  { code: "slot_fill", fill: { code: "slot_widest_source", id: "hash:0000abcd" }, where: "Pokemon summary, trainer memo" },
+  { code: "slot_fill", fill: { code: "slot_english", fill: { code: "slot_widest_source", id: "s0000200" }, source_width: 50 },
+    where: "the bag" },
+  { code: "slot_code_fill", fill: { code: "slot_digit", digits: 1 } },
+  { code: "slot_fill", fill: { code: "slot_digits", digits: 3 }, where: "evolution conditions, damage (never shown)" },
+  { code: "slot_fill", fill: { code: "slot_english", fill: { code: "slot_digits", digits: 3 }, source_width: 18 }, where: "the bag" },
+  { code: "slot_fill", fill: { code: "slot_width", width: 66 }, where: "battle text, name of the opposing trainer" },
+  { code: "slot_code_fill", fill: { code: "slot_width_estimate", width: 66 } },
+  { code: "slot_fill", fill: { code: "slot_english", fill: { code: "slot_width_estimate", width: 66 }, source_width: 67 },
+    where: "the bag" },
+  { code: "slot_fill", fill: { code: "slot_english", fill: { code: "slot_width", width: 66 }, source_width: 67 }, where: "the bag" },
+  { code: "slot_fill", fill: { code: "slot_label", label: "Item name" }, where: "the bag" },
+  { code: "slot_fill", fill: { code: "slot_english", fill: { code: "slot_label", label: "Trainer name" }, source_width: 60 },
+    where: "battle text" },
+];
+// every key shown through the catalog, marked
+const MARKED = new Proxy({}, { get: (_, key) => `ru:${String(key)}` });
+
+test("an explanation's English text comes from the data's message table", (ctx) => {
+  ctx.after(() => setMessages(null));
+  setMessages(TEMPLATES);
+  assert.equal(explanationText(LIMIT_CODES.at(-3)), "[[layout.table_window]] menu: the bag, centred against s0000200");
+  assert.equal(explanationText(SLOT_CODES[5]), "profile width, above the widest known species table:species/499 "
+    + "(untranslated) 47 px (1 of 1 walked paths set no value; 3 script references not walked)");
+  assert.equal(explanationText(SLOT_CODES.find((c) => c.code === "slot_native")), "native table choices: hash:00000001 + hash:00000002");
+  assert.equal(explanationText("review: by hand"), "review: by hand");
+  assert.equal(explanationText(undefined), "");
+  assert.ok(sameExplanation({ code: "table_window", name: "menu" }, { name: "menu", code: "table_window" }));
+  assert.ok(sameExplanation({ code: "slot_native", ids: ["a", "b"] }, { ids: ["a", "b"], code: "slot_native" }));
+  assert.ok(!sameExplanation({ code: "slot_native", ids: ["a", "b"] }, { code: "slot_native", ids: ["b", "a"] }));
+  assert.ok(sameExplanation("menu", "menu") && !sameExplanation("menu", { code: "menu" }) && !sameExplanation(null, {}));
+});
+
+test("a coded limit shows and names its references as its phrase did", (ctx) => {
+  ctx.after(() => { setMessages(null); setCatalog(null); setPlaces(null); setUiLanguage("en"); });
+  setMessages(TEMPLATES);
+  setPlaces({ "the bag": { ru: "сумка" }, "held summary": { ru: "сводка" } });
+  for (const [language, catalog] of [["en", null], ["ru", MARKED]]) {
+    setUiLanguage(language);
+    setCatalog(catalog);
+    for (const rule of LIMIT_CODES) {
+      const phrase = explanationText(rule);
+      assert.equal(limitText(rule), limitText(phrase), `${language}: ${phrase}`);
+      assert.deepEqual(limitReferences(rule), limitReferences(phrase), phrase);
+    }
+  }
+  assert.equal(limitText(LIMIT_CODES.at(-3)), "ru:{rule}, centred".replace("{rule}", "сумка"));
+  assert.equal(limitText({ code: "table_field", table: "items", bytes: 14 }), "ru:a field of 14 bytes with the terminator");
+  setCatalog(null);
+  setUiLanguage("en");
+  assert.deepEqual(limitReferences(LIMIT_CODES.at(-2)), ["layout.box_width dialogue", "s0000300"]);
+  assert.deepEqual(limitReferences({ code: "policy_window_width", entry: "s0000100" }),
+    ["language policy window_width.s0000100", "s0000100"]);
+});
+
+test("a coded window without a description takes another source's of the same window", (ctx) => {
+  ctx.after(() => { setPlaces(null); setUiLanguage("en"); });
+  const bare = { code: "policy_table_window", name: "menu" };
+  const sources = [{ rule: bare }, { rule: { code: "table_window_where", name: "menu", where: "the bag" } }];
+  assert.equal(limitText(bare, sources), "the bag");
+  assert.equal(limitText({ code: "centred", rule: bare, reference: "s0000200" }, sources), "the bag, centred");
+  assert.equal(limitText(bare, [{ rule: { code: "table_window_where", name: "list", where: "the bag" } }]), "Table text window");
+  assert.equal(limitText({ code: "record_window", name: "journal" }, [{ rule: "[[layout.record_window]] journal: old" }]),
+    "Record text window");
+  const table = [{ rule: { code: "table_buffer", table: "items", where: "the bag" } },
+    { rule: { code: "table_field_window", table: "items", where: "held summary" } }];
+  assert.equal(limitText({ code: "table_field_window", table: "items", where: "" }, table), "held summary");
+  setPlaces({ "the bag": { ru: "сумка" } });
+  setUiLanguage("ru");
+  assert.equal(limitText(bare, sources), "сумка");
+});
+
+test("a coded slot source shows as its phrase did, its words and identifiers kept", (ctx) => {
+  ctx.after(() => { setMessages(null); setCatalog(null); setPlaces(null); setUiLanguage("en"); });
+  setMessages(TEMPLATES);
+  setPlaces({ "the bag": { ru: "сумка" } });
+  for (const [language, catalog] of [["en", null], ["ru", MARKED]]) {
+    setUiLanguage(language);
+    setCatalog(catalog);
+    for (const source of SLOT_CODES) {
+      const phrase = explanationText(source);
+      assert.equal(slotSource(source), slotSource(phrase), `${language}: ${phrase}`);
+    }
+  }
+  setCatalog({ "{word} (translated as empty)": "{word} (пусто)", "item name": "предмет", "{width} px, {where}": "{width} px, {where}",
+    "code fill": "заполнение кодом", "number of {n} digits, English {english} px, {where}": "{n} цифры, английский {english} px, {where}" });
+  assert.equal(slotSource(SLOT_CODES.find((c) => c.word?.code === "slot_empty")), "предмет items:3 '' (пусто)");
+  assert.equal(slotSource({ code: "slot_code_fill", fill: { code: "slot_width", width: 66 } }), "66\u00a0px, заполнение кодом");
+  assert.equal(slotSource(SLOT_CODES.find((c) => c.fill?.fill?.code === "slot_digits")), "3 цифры, английский 18\u00a0px, сумка");
+  assert.equal(slotSource({ code: "slot_label", label: "Battle name with prefix" }), "Battle name with prefix");
 });

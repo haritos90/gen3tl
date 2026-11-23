@@ -56,6 +56,14 @@ class StoreTest(editordata_support.SplitTest, unittest.TestCase):
             self.assertFalse({"id", "file", "status", "translation", "window", "reach"} & own.keys())
             self.assertTrue(all(value not in ([], "") for value in own.values()))
 
+    def test_a_rule_read_back_in_another_key_order_is_one_stored_row(self):
+        store = editorstore.Store()
+        fresh = {"kind": "measured", "rule": {"code": "table_field", "table": "items", "bytes": 14}, "evidence": ""}
+        read = {"kind": "measured", "rule": {"bytes": 14, "code": "table_field", "table": "items"}, "evidence": ""}
+        self.assertEqual(store.source(read), store.source(fresh))
+        self.assertEqual(store.tables["limit_sources"].rows, [{"kind": "measured", "rule": fresh["rule"]}])
+        self.assertEqual(list(store.tables["limit_sources"].rows[0]["rule"]), ["code", "table", "bytes"])
+
     def test_parts_no_index_names_are_removed(self):
         self.write("ru")
         parts = set(self.parts())

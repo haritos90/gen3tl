@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { chunkPartUrl, decodeChunk, decodeIndex, decodeSource, decodeTerms, defaultStatus, provenanceText, sourceUrl }
+import { chunkPartUrl, decodeChunk, decodeIndex, decodeSource, decodeTerms, defaultStatus, messagesOf, sourceUrl }
   from "../js/editorstore.js";
 
-const SCHEMA = "8.0.0";
+const SCHEMA = "9.0.0";
 const URL_INDEX = "https://site.test/data/game/ru/index.json";
 const MESSAGES = {
   box_width: "[layout.box_width] {box}: the message box, measured in game",
@@ -46,16 +46,16 @@ const part = { schema: SCHEMA, part: "entries", entries: [
   { tokens: null },
 ] };
 const own = { schema: SCHEMA, entries: [
-  { terms: ["term:bag"], rules: [0, 0], note_ids: ["note:own"], inserted: [{ token: "{STR_VAR_1}", width: 40, source: "Bag" }] },
+  { terms: ["term:bag"], rules: [0, 0], note_ids: ["note:own"], inserted: [{ token: "{STR_VAR_1}", width: 40,
+    source: { code: "slot_word", id: "s2", text: "'Bag'" } }] },
   { note: null, translator_notes: null, source_text: "kept as written" },
 ] };
 
-test("provenance texts come from the data's message table with nested rules", () => {
-  assert.equal(provenanceText({ code: "table_field", table: "items", bytes: 14 }, MESSAGES),
-    "[[table]] items: a field of 14 bytes with the terminator");
-  assert.equal(provenanceText(stored.limit_sources[1].rule, MESSAGES),
-    "two lines per message box ([[layout.table_window]] menu), centred against s9");
-  assert.equal(provenanceText("plain text", MESSAGES), "plain text");
+test("the message table of explanations comes with the game part", () => {
+  const index = decodeIndex(structuredClone(stored), structuredClone(game), URL_INDEX);
+  assert.deepEqual(messagesOf(index), MESSAGES);
+  assert.ok(!("messages" in index));
+  assert.deepEqual(messagesOf({}), {});
   assert.equal(defaultStatus("Текст"), "approved");
   assert.equal(defaultStatus(""), "untranslated");
 });
@@ -86,12 +86,16 @@ test("entries join the list row, the game part and the language part in the gene
     "approved", "note", "reach", "translator_notes", "rules", "source_sha256", "note_ids"]);
   assert.deepEqual(Object.keys(first.context), ["comments", "events", "boxes", "uses", "speakers", "inserted", "words", "hosts",
     "identity", "maps"]);
-  assert.deepEqual(first.reach, { class: "reachable", source: "reach study", evidence: "reach study: reachable (pool 0x10)" });
-  assert.deepEqual(first.window.sources.width,
-    { kind: "measured", rule: "[layout.box_width] dialogue: the message box, measured in game", evidence: "" });
+  // explanations stay codes, each entry its own copy
+  assert.deepEqual(first.reach, { class: "reachable", source: "reach study",
+    evidence: { code: "reach_study_root", class: "reachable", root: "pool 0x10" } });
+  assert.deepEqual(first.window.sources.width, { kind: "measured", rule: { code: "box_width", box: "dialogue" }, evidence: "" });
+  assert.notEqual(first.window.sources.width.rule, stored.limit_sources[0].rule);
+  assert.deepEqual(first.window.sources.lines.rule, stored.limit_sources[1].rule);
   assert.equal(first.window.sources.lines.unverified, true);
-  assert.deepEqual(first.window.consumers.map((c) => c.name),
-    ["[layout.box_width] dialogue: the message box, measured in game", "battle menu"]);
+  assert.deepEqual(first.window.consumers.map((c) => c.name), [{ code: "box_width", box: "dialogue" }, "battle menu"]);
+  assert.equal(first.window.consumers[0].name, first.window.consumers[0].source.rule);
+  assert.deepEqual(first.context.inserted, own.entries[0].inserted);
   assert.deepEqual(Object.keys(first.window.consumers[0]), ["name", "width", "arrow", "arrow_source", "arrow_confirmed", "source"]);
   assert.deepEqual(first.window.slot_details, { STR_VAR_1: { width: 40, state: "computed", dependencies: ["s2"] } });
   assert.deepEqual(first.rules, [stored.rules[0], stored.rules[0]]);

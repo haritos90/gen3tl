@@ -19,8 +19,9 @@ from .editorgfx import graphics_data
 from .editorkeyboard import keyboard_data
 from .editorrules import SOURCE_TEXT_FIELDS, rules_data
 from ..check.layout import Limit, entry_measure
+from ..check.provenance import code as coded
 
-SCHEMA = "8.0.0"
+SCHEMA = "9.0.0"
 NEVER = "never shown"   # the reach class progress leaves out
 BLANK = text_digest("")   # an empty English
 BRACE = re.compile(r"\{[^}]*\}")
@@ -243,7 +244,7 @@ def partner_text(pair: dict | None, translated) -> dict | None:
 
 
 def inserted(english: str, lim: Limit | None, measure, cm, estimates=frozenset()) -> list[dict]:
-    """Each placeholder of the English at the width the check measures it with, and where that width comes from."""
+    """Each placeholder of the English at the width the check measures it with, and the coded source of that width."""
     m = entry_measure(measure, lim) if lim is not None else measure
     own = (lim.placeholders or {}) if lim is not None else {}
     out = []
@@ -255,13 +256,12 @@ def inserted(english: str, lim: Limit | None, measure, cm, estimates=frozenset()
             continue
         name = tok[1:-1].split()[0]
         if name in own:
-            src = (lim.slot_sources or {}).get(name, "context records")
+            src = (lim.slot_sources or {}).get(name, coded("slot_context"))
         elif tok[1:-1] in measure.ph or name in measure.ph:
-            src = "profile width"
-            if (tok[1:-1] if tok[1:-1] in measure.ph else name) in estimates:
-                src += ", unverified estimate"
+            estimate = (tok[1:-1] if tok[1:-1] in measure.ph else name) in estimates
+            src = coded("slot_profile_estimate" if estimate else "slot_profile")
         else:
-            src = "default width"
+            src = coded("slot_default")
         out.append({"token": tok, "width": m.token_width(tok, cm), "source": src})
     return out
 
@@ -340,8 +340,9 @@ def reach_data(sid: str, comments: list[str], study: dict | None) -> dict:
         return {"class": "reachable", "source": "not studied", "evidence": ""}
     root = r["evidence"][-1] if r.get("evidence") else {}
     how = " ".join(x for x in (root.get("kind"), root.get("at")) if x)
+    study = {"class": r["class"], **({"root": how} if how else {})}
     return {"class": r["class"], "source": "reach study",
-            "evidence": f"reach study: {r['class']}" + (f" ({how})" if how else "")}
+            "evidence": coded("reach_study_root" if how else "reach_study", **study)}
 
 
 def keyed_rules(rules: dict, aliases: keys.Aliases) -> dict:
@@ -383,10 +384,21 @@ def substitution_data(prof, inv, catalog, cm, key, facts=None):
             "values": {**native["values"], **legacy["values"], **values}}
 
 
+def rekeyed(value, aliases: keys.Aliases):
+    """An explanation whose texts name every aliased inventory id by its key."""
+    if isinstance(value, str):
+        return aliases.rekey_text(value)
+    if isinstance(value, list):
+        return [rekeyed(item, aliases) for item in value]
+    if isinstance(value, dict):
+        return {key: item if key == "code" else rekeyed(item, aliases) for key, item in value.items()}
+    return value
+
+
 def keyed_window(w: dict | None, aliases: keys.Aliases) -> dict | None:
     """A window whose slot sources name their words by key."""
     if w and w.get("slot_sources"):
-        w["slot_sources"] = {k: aliases.rekey_text(v) for k, v in w["slot_sources"].items()}
+        w["slot_sources"] = {k: rekeyed(v, aliases) for k, v in w["slot_sources"].items()}
     if w and w.get("slot_details"):
         from copy import deepcopy
         w["slot_details"] = deepcopy(w["slot_details"])
@@ -555,9 +567,19 @@ def attach_notes(doc: dict, prof, catalog: dict, terms=(), *, folder=None, wordi
     doc["research"] = research_data(folder / "research") if folder is not None else {}
 
 
-SLOT_WORD = re.compile(r"(?:widest of table [^:]+: |[a-z]+ )?(s[0-9A-F]{7}|[a-z_]+:\d+|"
-                       + keys.KEY.pattern + ") [(']")
+WORD_ID = re.compile(r"s[0-9A-F]{7}|[a-z_]+:\d+|" + keys.KEY.pattern)
 LETTER = re.compile(r"[^\W_]")
+
+
+def slot_word(source: dict) -> str | None:
+    """The id of the one word a slot source names, else None."""
+    if source["code"] == "slot_reasons":
+        source = source["source"]
+    if source["code"] == "slot_table" or (source["code"] == "slot_record" and re.fullmatch(r"[a-z]+", source["kind"])):
+        source = source["word"]
+    named = source["code"] in ("slot_untranslated", "slot_empty") or (
+        source["code"] == "slot_word" and source["text"].startswith("'"))
+    return source["id"] if named and WORD_ID.fullmatch(source["id"]) else None
 
 
 def terms_data(terms, doc: dict, catalog: dict, source: dict | None = None) -> dict:
@@ -581,8 +603,8 @@ def terms_data(terms, doc: dict, catalog: dict, source: dict | None = None) -> d
         for w in e["context"]["words"]:
             fill(e["id"], w["slot"].strip("{}"), [w["id"]])
         for name, src in ((e["window"] or {}).get("slot_sources") or {}).items():
-            if m := SLOT_WORD.match(src):
-                fill(e["id"], name, [m[1]])
+            if word := slot_word(src):
+                fill(e["id"], name, [word])
         for name, detail in ((e["window"] or {}).get("slot_details") or {}).items():
             fill(e["id"], name, list(detail.get("dependencies", [])))
     tr: dict[str, list[str]] = {}
@@ -1149,7 +1171,7 @@ def build(lang: str, prof, catalog: dict, limits: dict, measure, cm, packs: dict
             merge_identity(ctx, contexts.get("strings", {}).get(sid, {}))
         if links is not None:
             ctx.update(links.get(sid, {"words": [], "hosts": []}))
-        ctx["inserted"] = [{**x, "source": aliases.rekey_text(x["source"])}
+        ctx["inserted"] = [{**x, "source": rekeyed(x["source"], aliases)}
                            for x in inserted("".join(tokens), lim, measure, cm, estimates)]
         scoped_matcher = entry_matcher(e, matcher) if not e.keyed else None
         ids = list(dict.fromkeys(t.id for t in scoped_matcher.in_source(e.msgid))) if scoped_matcher else []

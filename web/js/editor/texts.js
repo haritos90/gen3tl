@@ -2,9 +2,9 @@ import { el, renderChildren, setText } from "../dom.js";
 import { t, errorText, formatNumber, N_, showText, plainText } from "../ui.js";
 import { tableKey, statusLabel, shortFile, getJson, dirOf, idParts, reachLabel, rulesOf, isOverflow, loadTerms } from "../data.js";
 import { gameHash } from "../registry.js";
-import { keepUnits, limitText, limitReferences, slotSource, checkFailed } from "../checktext.js";
+import { explanationText, keepUnits, limitText, limitReferences, slotSource, checkFailed } from "../checktext.js";
 import { renderNotes } from "../guidance.js";
-import { sourceOf, pairLabel } from "../limits.js";
+import { consumerSource, sourceOf, pairLabel } from "../limits.js";
 import { translationState, isDraft, draftCheck, sourceTokens } from "../draft.js";
 import { renderUnits, Field } from "../field.js";
 import { parse, flat } from "../text.js";
@@ -327,7 +327,7 @@ export function renderRules(entry) {
       const wording = r.text.replace(/\[\[?[^\[\]\n]+\]\]?/g, (key) => limitText(`profile ${key}`));
       const text = idParts(keepUnits(wording), (id) => state.byId.has(id)).map((p) => (p.id ? idLink(p.id) : p.text));
       const references = limitReferences(r.source);
-      const evidence = r.evidence && r.evidence !== entry.reach?.evidence ? r.evidence : "";
+      const evidence = r.evidence && r.evidence !== explanationText(entry.reach?.evidence) ? r.evidence : "";
       ul.append(el("li", {}, el("div", {}, ...text), el("div", { class: "source", textContent: limitText(r.source) }),
         references.length || evidence ? contextDisclosure(t("evidence"), el("div", {},
           ...references.map((reference) => el("div", { textContent: reference })),
@@ -388,7 +388,7 @@ export function renderWindow(entry) {
         { width: row.computed, reason: row.reason })) }) : null))) : null;
   const widthSource = sourceOf(w, "width");
   const consumerReason = (c) => {
-    const src = c.source?.rule !== w.sources?.width?.rule ? sourceOf({ sources: { width: c.source } }, "width") : null;
+    const src = consumerSource(w, c);
     const unknown = !c.instant_print && c.arrow_source === "default" && !c.arrow_confirmed;
     return src?.references?.length || src?.evidence || unknown
       ? contextDisclosure(t("evidence"), el("div", {},

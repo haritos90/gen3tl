@@ -35,7 +35,8 @@ class ItemWindowTest(unittest.TestCase):
         limits = qa.compute_limits(self.prof, self.inv, self.catalog, self.measure, self.cm)
         self.assertEqual({sid: (v.width, v.chars) for sid, v in limits.items()},
                          {"items:0": (92, 13), "s1": (92, 15), "s2": (104, 17), "s3": (71, 12)})
-        self.assertIn("held summary", limits["s1"].sources["chars"]["rule"])
+        self.assertEqual(limits["s1"].sources["chars"]["rule"],
+                         {"code": "table_buffer", "table": "items", "where": "held summary"})
 
     def test_pointer_aliases_take_the_narrowest_consumer(self):
         self.inv["entries"][1]["refs"].append({"at": 0x128, "kind": "table:items"})

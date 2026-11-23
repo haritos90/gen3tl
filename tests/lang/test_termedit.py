@@ -213,9 +213,10 @@ class TermsDataTest(unittest.TestCase):
         {"id": "s0000001", "terms": ["move:pound"], "context": {"words": []}, "window": None},
         {"id": "s0000002", "terms": ["move:pound"],
          "context": {"words": [{"slot": "{STR_VAR_1}", "id": "s0000004", "source_text": "Bag", "translation": "Сумка"}]},
-         "window": {"slot_sources": {"STR_VAR_1": "item items:26 'Сумка'"}}},
+         "window": {"slot_sources": {"STR_VAR_1": {"code": "slot_record", "kind": "item", "word": {
+             "code": "slot_word", "id": "items:26", "text": "'Сумка'"}}}}},
         {"id": "s0000003", "terms": ["move:pound"], "context": {"words": []},
-         "window": {"slot_sources": {"STR_VAR_1": "number of 2 digits, the record's 10"}}},
+         "window": {"slot_sources": {"STR_VAR_1": {"code": "slot_record_number", "digits": 2, "value": 10}}}},
     ]}
 
     def test_terms_and_uses(self):

@@ -24,7 +24,7 @@ from .layout import (Limit, Measure, arrow_overflows, check, dropped_breaks, ent
 from ..build.release import expand
 from ..core.rom import Rom
 from ..discover.scan import INPLACE_ONLY_KINDS, table_base_lengths
-from .provenance import text as rule_text
+from .provenance import code as coded, formatted
 
 
 DIALOGUE_REFS = {"script:loadpointer", "script:message", "script:trainerbattle", "script:autoscroll",
@@ -198,12 +198,17 @@ class SlotWidth:
     """Width of one placeholder slot of an entry."""
     translated: int          # Maximum inserted text width, including profile bounds.
     source_width: int          # px: widest English of the same insertions, else profile width
-    source: str      # where the width comes from
+    source: dict     # where the width comes from, coded
     known: str       # script | partly | profile | record | code
     details: dict | None = None
 
 
 NUMBER_DIGITS = 5   # a script variable holds 0-65535
+
+
+def with_reasons(source: dict, why: list[dict]) -> dict:
+    """A slot source with what leaves it partly unknown."""
+    return coded("slot_reasons", source=source, reasons=why) if why else source
 
 
 def slot_widths(prof, inv: dict, ctx: dict, catalog, measure: Measure, cm: Charmap,
@@ -242,47 +247,47 @@ def slot_widths(prof, inv: dict, ctx: dict, catalog, measure: Measure, cm: Charm
         return row_width(rows[sid], prof.get("font_style", {}).get("style")) \
             if sid in catalog and catalog[sid][1].keyed and sid in rows else px(en)
 
-    def word(sid: str) -> tuple[int, int, str]:
+    def word(sid: str) -> tuple[int, int, dict]:
         en = catalog[sid][1].msgid if sid in catalog else by_id[sid]["text"]
         en_px = english_px(sid, en)
         if sid not in overrides and sid in catalog and "empty" in catalog[sid][1].flags:
-            return 0, en_px, f"{sid} '' (translated as empty)"
+            return 0, en_px, coded("slot_empty", id=sid)
         translated = overrides.get(sid) or (catalog[sid][1].msgstr if sid in catalog else "")
         translated_px = px(translated) if translated else -1
         if translated_px < 0:
-            return en_px, en_px, f"{sid} (untranslated)"
-        return translated_px, en_px, f"{sid} {translated!r}"
+            return en_px, en_px, coded("slot_untranslated", id=sid)
+        return translated_px, en_px, coded("slot_word", id=sid, text=repr(translated))
 
     widest: dict[str, tuple] = {}
     table_names = {t for t, _ in entry_at}
 
-    def table(name: str) -> tuple[int, int, str]:
+    def table(name: str) -> tuple[int, int, dict]:
         if name not in widest:
             ids = [sid for (t, _), sid in entry_at.items() if t == name]
             ws = [(word(sid), sid) for sid in ids]
             (translated, _, desc), _ = max(ws, key=lambda x: x[0][0])
-            widest[name] = (translated, max(w[0][1] for w in ws), f"widest of table {name}: {desc}")
+            widest[name] = (translated, max(w[0][1] for w in ws), coded("slot_table", table=name, word=desc))
         return widest[name]
 
-    def resolve(kind: str, value, fallback) -> tuple[int, int, str] | None:
+    def resolve(kind: str, value, fallback) -> tuple[int, int, dict] | None:
         if kind == "native":
             result = native_evaluator.result("native/" + value, fallback=fallback)
             native_widths[value] = result
             ids = [part["id"] for part in result["contributors"]]
-            return result["width"], result["source_width"], f"native table {value}: {' + '.join(ids)}"
+            return result["width"], result["source_width"], coded("slot_native", table=value, ids=ids)
         if kind == "string":
             return word(value) if value in by_id else None
         if kind == "number":
             if value is None:
                 digits = max(px(d) for d in "0123456789") * NUMBER_DIGITS
-                return digits, digits, f"number of up to {NUMBER_DIGITS} digits (a variable)"
-            return px(str(value)), px(str(value)), f"number {value}"
+                return digits, digits, coded("slot_number_variable", digits=NUMBER_DIGITS)
+            return px(str(value)), px(str(value)), coded("slot_number", value=value)
         name = tables.get(kind)
         if name not in table_names:
             return None
         if value is not None and (name, value) in entry_at:
             translated, en, desc = word(entry_at[(name, value)])
-            return translated, en, f"{kind} {desc}"
+            return translated, en, coded("slot_record", kind=kind, word=desc)
         return table(name)
 
     out: dict[str, dict[str, SlotWidth]] = {}
@@ -304,25 +309,25 @@ def slot_widths(prof, inv: dict, ctx: dict, catalog, measure: Measure, cm: Charm
         refs = rec.get("slot_refs", {})
         for name in names:
             fallback = measure.ph.get(name, measure.default_ph)
-            profile = "profile width, unverified estimate" if name in estimates else "profile width"
+            estimate = name in estimates
             info = rec.get("slots", {}).get("{%s}" % name)
             fills = [(f, resolve(*f, fallback)) for f in (info or {}).get("fills", [])]
             known = [r for _, r in fills if r is not None]
             why = []   # what leaves the slot partly unknown
             if not info or not info["fills"]:
-                why.append("no fill known")
+                why.append(coded("slot_no_fill"))
             elif info["unfilled"]:
-                why.append(f"{info['unfilled']} of {info['uses']} walked paths set no value")
+                why.append(coded("slot_unfilled", unfilled=info["unfilled"], uses=info["uses"]))
             odd = sorted({f[0] for f, r in fills if r is None})
             if odd:
-                why.append("a value the scripts do not name: " + ", ".join(odd))
+                why.append(coded("slot_unnamed", kinds=odd))
             if refs.get("unwalked"):
-                why.append(f"{refs['unwalked']} script references not walked")
+                why.append(coded("slot_unwalked", references=refs["unwalked"]))
             if refs.get("code"):
-                why.append("shown by code")
+                why.append(coded("slot_by_code"))
             if not known:
-                out.setdefault(sid, {})[name] = SlotWidth(fallback, fallback, f"{profile} ({'; '.join(why)})",
-                                                          "profile")
+                profile = coded("slot_profile_estimate" if estimate else "slot_profile")
+                out.setdefault(sid, {})[name] = SlotWidth(fallback, fallback, with_reasons(profile, why), "profile")
                 continue
             details = [native_widths[value] for (kind, value), result in fills if kind == "native" and result]
             floor = max([fallback if why else 0] + [result[0] for (kind, _), result in fills
@@ -331,11 +336,11 @@ def slot_widths(prof, inv: dict, ctx: dict, catalog, measure: Measure, cm: Charm
             translated, _, desc = max(known, key=lambda r: r[0])
             en = max(r[1] for r in known)
             if why and fallback > translated:
-                out.setdefault(sid, {})[name] = SlotWidth(
-                    fallback, en, f"{profile}, above the widest known {desc} {translated} px ({'; '.join(why)})",
-                    "partly", detail)
+                above = coded("slot_profile_estimate_above" if estimate else "slot_profile_above", source=desc,
+                              width=translated)
+                out.setdefault(sid, {})[name] = SlotWidth(fallback, en, with_reasons(above, why), "partly", detail)
             else:
-                out.setdefault(sid, {})[name] = SlotWidth(translated, en, desc + (f" ({'; '.join(why)})" if why else ""),
+                out.setdefault(sid, {})[name] = SlotWidth(translated, en, with_reasons(desc, why),
                                                           "partly" if why else "script", detail)
     return out
 
@@ -519,7 +524,7 @@ def number_slots(english: str, inv_e: dict, number_at: dict[int, dict[str, int]]
             if "{%s}" % name in english:
                 largest[name] = max(n, largest.get(name, 0))
     return {name: SlotWidth(len(str(n)) * digit_px, len(str(n)) * digit_px,
-                            f"number of {len(str(n))} digits, the record's {n}", "record")
+                            coded("slot_record_number", digits=len(str(n)), value=n), "record")
             for name, n in largest.items()}
 
 
@@ -648,11 +653,11 @@ def source_fills(prof, catalog, measure, cm, originals, overrides=None, inv=None
             result = measured.result(source, fallback=recorded)
             sid = next((part["id"] for part in result["contributors"] if "id" in part), None)
             if sid:
-                desc = f"widest source {sid}"
+                desc = coded("slot_widest_source", id=sid)
             elif "digits" in slot:
-                desc = f"number of {slot['digits']} digit" + ("s" if slot["digits"] > 1 else "")
+                desc = coded("slot_digits" if slot["digits"] > 1 else "slot_digit", digits=slot["digits"])
             else:
-                desc = result["label"]
+                desc = coded("slot_label", label=result["label"])
             out[id(slot)] = (result["width"], result["source_width"], desc, result)
     if evaluator is not None:
         lay = prof.get("layout", {})
@@ -664,7 +669,8 @@ def source_fills(prof, catalog, measure, cm, originals, overrides=None, inv=None
                 result = evaluator.result(name, slot.get("width"),
                                           lay.get("code_slot_override", {}).get(rule["name"], {}).get(token),
                                           fallback=slot.get("source_width", measure.ph.get(token)))
-                out[id(slot)] = (result["width"], result["source_width"], result["label"], result)
+                out[id(slot)] = (result["width"], result["source_width"], coded("slot_label", label=result["label"]),
+                                 result)
     return out
 
 
@@ -684,17 +690,17 @@ def fill_slots(sid: str, english: str, inv_e: dict, fills: tuple[dict, dict], di
                 details = extra[0] if extra else None
             elif "digits" in s:
                 n = int(s["digits"])
-                px, desc = n * digit_px, f"number of {n} digit" + ("s" if n > 1 else "")
+                px, desc = n * digit_px, coded("slot_digits" if n > 1 else "slot_digit", digits=n)
             else:
-                px, desc = int(s["width"]), f"{s['width']} px"
-                if r.get("name") in estimates:
-                    desc += ", unverified estimate"
+                px = int(s["width"])
+                desc = coded("slot_width_estimate" if r.get("name") in estimates else "slot_width", width=s["width"])
             if id(s) not in (sources or {}):
                 en = int(s.get("source_width", px))   # the width of the English fills
             if "source_width" in s:
-                desc += f", English {s['source_width']} px"
+                desc = coded("slot_english", fill=desc, source_width=s["source_width"])
             previous = out.get(name)
-            description = f"{desc}, {r.get('where', 'code fill')}"
+            description = (coded("slot_fill", fill=desc, where=r["where"]) if "where" in r
+                           else coded("slot_code_fill", fill=desc))
             if previous is not None:
                 from .fillsources import merge_results
                 known = [item for item in (previous.details, details) if item]
@@ -782,7 +788,7 @@ def interior_heads(prof, inv: dict, cm: Charmap, rom: Rom | None = None) -> dict
 MEASURED, PROFILE, SOURCE = "measured", "profile", "source"
 
 
-def limit_source(kind: str, rule: str, evidence: str = "", unverified: bool = False) -> dict:
+def limit_source(kind: str, rule: dict, evidence: str = "", unverified: bool = False) -> dict:
     """A value of Limit.sources: kind MEASURED, PROFILE or SOURCE, the rule that sets it and its evidence."""
     source = {"kind": kind, "rule": rule, "evidence": evidence}
     if unverified:
@@ -800,12 +806,12 @@ def window_source(rule: dict, dimension: str = "width", estimates: frozenset = f
     where = {"where": rule["where"]} if rule.get("where") else {}
     suffix = "_where" if where else ""
     if "texts" in rule:
-        return limit_source(MEASURED, rule_text("record_window" + suffix, name=rule.get("name", hex(rule["table"])),
-                                                **where), rule.get("evidence", ""))
+        return limit_source(MEASURED, coded("record_window" + suffix, name=rule.get("name", hex(rule["table"])),
+                                            **where), rule.get("evidence", ""))
     if dimension == "width" and rule.get("policy_width"):
-        return limit_source(PROFILE, rule_text("policy_table_window" + suffix, name=rule["name"], **where),
+        return limit_source(PROFILE, coded("policy_table_window" + suffix, name=rule["name"], **where),
                             rule.get("evidence", ""), rule["name"] in estimates)
-    return limit_source(MEASURED, rule_text("table_window" + suffix, name=rule.get("name", hex(rule["base"])), **where),
+    return limit_source(MEASURED, coded("table_window" + suffix, name=rule.get("name", hex(rule["base"])), **where),
                         rule.get("evidence", ""))
 
 
@@ -928,8 +934,8 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
             continue
         result = evaluator.result(source_name, measure.ph.get(token),
                                   lay.get("slot_override", {}).get(token))
-        global_slots[token] = SlotWidth(result["width"], result["source_width"], result["label"],
-                                       result["state"], result)
+        global_slots[token] = SlotWidth(result["width"], result["source_width"],
+                                       coded("slot_label", label=result["label"]), result["state"], result)
     fill_sources = source_fills(prof, catalog, measure, cm, originals, overrides, inv, rows, evaluator,
                                 (facts or {}).get("fill_fragments"))
     key_rows = keyboard_rows(prof, inv, rom) if facts is None else facts["keys"]
@@ -983,8 +989,8 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
                 if source_name in source_graph["sources"]:
                     result = evaluator.result(source_name, detail.get("recorded"),
                                               lay.get("slot_override", {}).get(token), slot_context)
-                    sw[token] = SlotWidth(result["width"], result["source_width"], result["label"],
-                                          result["state"], result)
+                    sw[token] = SlotWidth(result["width"], result["source_width"],
+                                          coded("slot_label", label=result["label"]), result["state"], result)
         en_measure = measure.with_placeholders({k: v.source_width for k, v in sw.items()})
         # never stricter than the original shape of this string
         own = english_width(en, en_measure, cm)
@@ -994,14 +1000,14 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
             own_box, own_total = max(row[2], default=1), sum(row[2])
         kinds = {r["kind"] for r in inv_e["refs"]}
         # the sources of the width and lines below
-        en_w = limit_source(SOURCE, rule_text("english_widest"))
-        en_file = limit_source(SOURCE, rule_text("english_file_widest", file=catalog_name(p)))
-        en_one = limit_source(SOURCE, rule_text("english_one_line"))
-        source_lines = limit_source(SOURCE, rule_text("english_line_count"))
-        box_two = limit_source(MEASURED, rule_text("box_lines"))
-        box_lines = limit_source(SOURCE, rule_text("english_box_lines"))
-        prof_w = {k: limit_source(PROFILE, rule_text("layout_default", key=k)) for k in ("dialogue_width", "battle_width",
-                                                                                         "label_min_width")}
+        en_w = limit_source(SOURCE, coded("english_widest"))
+        en_file = limit_source(SOURCE, coded("english_file_widest", file=catalog_name(p)))
+        en_one = limit_source(SOURCE, coded("english_one_line"))
+        source_lines = limit_source(SOURCE, coded("english_line_count"))
+        box_two = limit_source(MEASURED, coded("box_lines"))
+        box_lines = limit_source(SOURCE, coded("english_box_lines"))
+        prof_w = {k: limit_source(PROFILE, coded("layout_default", key=k)) for k in ("dialogue_width", "battle_width",
+                                                                                     "label_min_width")}
         so: dict[str, dict] = {}
         if inv_e["kind"] == "fixed":
             t = tables[inv_e["table"]]
@@ -1017,17 +1023,17 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
                          key=lambda w: w.get("entries", {}).get(sid, w["width"]))
                 kind = PROFILE if tw.get("policy_width") else MEASURED
                 guess = kind == PROFILE and t["name"] in estimates["table_windows"]
-                so["width"] = binding([(measured, limit_source(kind, rule_text("table_field_window", table=t["name"],
-                                                                               where=tw["where"]),
+                so["width"] = binding([(measured, limit_source(kind, coded("table_field_window", table=t["name"],
+                                                                           where=tw["where"]),
                                                                tw.get("evidence", ""), guess)),
                                        (own, en_w)])
-            so["lines"] = limit_source(MEASURED, rule_text("table_one_line", table=t["name"]))
+            so["lines"] = limit_source(MEASURED, coded("table_one_line", table=t["name"]))
             field_rule = ("table_field" + ("_byte" if t["field_length"] <= 1 else "")
                           + ("" if t.get("terminated", True) else "_unterminated"))
-            so["chars"] = limit_source(MEASURED, rule_text(field_rule, table=t["name"], bytes=t["field_length"]),
+            so["chars"] = limit_source(MEASURED, coded(field_rule, table=t["name"], bytes=t["field_length"]),
                                        t.get("evidence", ""))
             if extended:
-                so["chars"] = limit_source(MEASURED, rule_text("table_long_name", table=t["name"], bytes=capacity),
+                so["chars"] = limit_source(MEASURED, coded("table_long_name", table=t["name"], bytes=capacity),
                                            extended["evidence"])
         # verified trainer speeches count as battle text
         elif inv_e["category"] == "battle-script" or trainer_battle_only(
@@ -1063,13 +1069,13 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
             lim = Limit("single", max(own, run_w, label_min if inv_e["category"] == "script" else 0), 1)
             so["width"] = binding([(label_min if inv_e["category"] == "script" else 0, prof_w["label_min_width"]),
                                    (own, en_w),
-                                   (run_w, limit_source(SOURCE, rule_text("english_run_widest")))])
+                                   (run_w, limit_source(SOURCE, coded("english_run_widest")))])
             so["lines"] = en_one
         elif shape[p]["multi"]:
             lim = Limit("multiline", max(own, shape[p]["width"]), max(own_total, shape[p]["lines"]))
             so["width"] = binding([(own, en_w), (shape[p]["width"], en_file)])
             so["lines"] = binding([(own_total, source_lines), (shape[p]["lines"], limit_source(
-                SOURCE, rule_text("english_file_lines", file=catalog_name(p))))])
+                SOURCE, coded("english_file_lines", file=catalog_name(p))))])
         else:
             lim = Limit("single", max(own, shape[p]["width"], label_min), 1)
             so["width"] = binding([(label_min, prof_w["label_min_width"]), (own, en_w), (shape[p]["width"], en_file)])
@@ -1085,7 +1091,7 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
             lim.width = cap
         if cap is not None and lim.width >= cap:   # the box binds
             name = box_binding(boxes, lim.kind, (ctx or {}).get("strings", {}).get(sid, {}).get("uses", []))[0]
-            so["width"] = limit_source(MEASURED, rule_text("box_width", box=name))
+            so["width"] = limit_source(MEASURED, coded("box_width", box=name))
         # Measured in game per table, whatever the string's group.
         # the narrowest window binds a string shared by tables
         table_w = [table_window_at[r["at"]] for r in inv_e["refs"] if r["at"] in table_window_at]
@@ -1104,13 +1110,13 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
             if not table_w:
                 lim.width = boxes.get(k, dlg_w if k == "dialogue" else bat_w)
             # the box and the rule that names it
-            via = [rule_text("table_window", name=box_rule_at[r["at"]].get("name")) for r in inv_e["refs"]
-                   if table_box_at.get(r["at"]) == k] + ([rule_text("window_box", entry=sid)]
+            via = [coded("table_window", name=box_rule_at[r["at"]].get("name")) for r in inv_e["refs"]
+                   if table_box_at.get(r["at"]) == k] + ([coded("window_box", entry=sid)]
                                                          if window_box.get(sid) == k else [])
-            so["lines"] = binding([(2, limit_source(MEASURED, rule_text("box_lines_via", via=via[0]))),
+            so["lines"] = binding([(2, limit_source(MEASURED, coded("box_lines_via", via=via[0]))),
                                    (own_box, box_lines)])
             if not table_w:
-                so["width"] = (limit_source(MEASURED, rule_text("box_width_via", box=k, via=via[0])) if k in boxes
+                so["width"] = (limit_source(MEASURED, coded("box_width_via", box=k, via=via[0])) if k in boxes
                                else prof_w["dialogue_width" if k == "dialogue" else "battle_width"])
         # centred by character count against a reference
         cen = [table_centre_at[r["at"]] for r in inv_e["refs"] if r["at"] in table_centre_at]
@@ -1119,7 +1125,7 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
             shift = step * (shown_chars(ref) - shown_chars(sid))
             lim.width = max(0, lim.width - shift) if shift >= 0 else 0
             if "width" in so:
-                so["width"] = {**so["width"], "rule": rule_text("centred", rule=so["width"]["rule"], reference=ref)}
+                so["width"] = {**so["width"], "rule": coded("centred", rule=so["width"]["rule"], reference=ref)}
         # a fixed window of so many lines
         table_l = [table_lines_at[r["at"]] for r in inv_e["refs"] if r["at"] in table_lines_at]
         if table_l:
@@ -1141,13 +1147,13 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
                          if shown(ref) is not None and chars(shown(ref)) == n] or None
         if sid in windows:
             lim.width = windows[sid]  # measured in game
-            so["width"] = limit_source(MEASURED, rule_text("window_width", entry=sid))
+            so["width"] = limit_source(MEASURED, coded("window_width", entry=sid))
             if sid in prof.get("policy_slots", {}).get("window_width", []):
-                so["width"] = limit_source(PROFILE, rule_text("policy_window_width", entry=sid),
+                so["width"] = limit_source(PROFILE, coded("policy_window_width", entry=sid),
                                            unverified=sid in estimates["window_width"])
         if sid in window_lines:
             lim.lines = window_lines[sid]  # lines of a fixed window, measured in game
-            so["lines"] = limit_source(MEASURED, rule_text("window_lines", entry=sid))
+            so["lines"] = limit_source(MEASURED, coded("window_lines", entry=sid))
         if sid in window_style:
             lim.style = window_style[sid]   # measured in that font
         consumer_windows = table_windows.rules(sid)
@@ -1158,21 +1164,21 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
             lim.width = min([width] + table_w + ([windows[sid]] if sid in windows else []))
             lim.lines = 1
             if lim.width == width:
-                so["width"] = limit_source(MEASURED, rule_text("table_field_window", table=bound["table"],
-                                                               where=bound["where"]), bound.get("evidence", ""))
+                so["width"] = limit_source(MEASURED, coded("table_field_window", table=bound["table"],
+                                                           where=bound["where"]), bound.get("evidence", ""))
         capacities = [w for w in consumer_windows if "chars" in w]
         if capacities:
             bound = min(capacities, key=lambda w: w["chars"])
             if lim.chars is None or bound["chars"] < lim.chars:
                 lim.chars = bound["chars"]
-                so["chars"] = limit_source(MEASURED, rule_text("table_buffer", table=bound["table"], where=bound["where"]),
+                so["chars"] = limit_source(MEASURED, coded("table_buffer", table=bound["table"], where=bound["where"]),
                                            bound.get("evidence", ""))
         if sid in key_rows:   # the key grid binds
             lim.keys = key_rows[sid]
-            so["keys"] = limit_source(MEASURED, rule_text("keyboard_columns"))
+            so["keys"] = limit_source(MEASURED, coded("keyboard_columns"))
             if pack_keys.get(sid, lim.keys) < lim.keys:
                 lim.keys = pack_keys[sid]
-                so["keys"] = limit_source(MEASURED, rule_text("pack_keyboard_columns"))
+                so["keys"] = limit_source(MEASURED, coded("pack_keyboard_columns"))
         if lim.kind in ("dialogue", "battle"):
             lim.target, lim.sentence_break = target, sbreak
         consumers = []
@@ -1183,7 +1189,7 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
                     centre = rule["centre"]
                     shift = centre["step"] * (shown_chars(centre["reference"]) - shown_chars(sid))
                     width = max(0, width - shift) if shift >= 0 else 0
-                    source = {**source, "rule": rule_text("centred", rule=source["rule"], reference=centre["reference"])}
+                    source = {**source, "rule": coded("centred", rule=source["rule"], reference=centre["reference"])}
                 consumer = window_consumer(width, source, arrow, rule, rule.get("box") in ("dialogue", "battle"))
                 if consumer not in consumers:
                     consumers.append(consumer)
@@ -1198,9 +1204,9 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
             source = so.get("width", en_w)
             if rule.get("name"):
                 if rule.get("where"):
-                    basis = rule_text("layout_window_where", name=rule["name"], where=rule["where"])
+                    basis = coded("layout_window_where", name=rule["name"], where=rule["where"])
                 else:
-                    basis = rule["where"] = rule_text("layout_window", name=rule["name"])
+                    basis = rule["where"] = coded("layout_window", name=rule["name"])
                 if "width" in rule:
                     source = limit_source(MEASURED, basis, rule.get("evidence", ""))
             consumers.append(window_consumer(lim.width, source, arrow, rule,
@@ -1221,18 +1227,18 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
             lim.bytes = inv_e["length"] - 1
             # the references that keep it in place
             fixed_refs = sorted({r["kind"] for r in inv_e["refs"]} & INPLACE_ONLY_KINDS)
-            so["bytes"] = limit_source(MEASURED, rule_text("in_place", bytes=inv_e["length"],
-                                                           references=", ".join(fixed_refs)))
+            so["bytes"] = limit_source(MEASURED, coded("in_place", bytes=inv_e["length"],
+                                                       references=", ".join(fixed_refs)))
             if sid in tb_fields:   # the declared field binds
                 tb, n = tb_fields[sid]
                 lim.bytes = n - 1
-                so["bytes"] = limit_source(MEASURED, rule_text("table_base", id=tb["id"], bytes=n),
+                so["bytes"] = limit_source(MEASURED, coded("table_base", id=tb["id"], bytes=n),
                                            tb.get("length_evidence", ""))
         if sid in heads:   # read from inside, in place
             lim.head, lim.bytes = heads[sid], inv_e["length"] - 1
             d = next(x for x in prof.get("strings", {}).get("interior", []) if x["id"] == sid)
-            so["bytes"] = limit_source(MEASURED, rule_text("interior", pointer=f"0x{d['pointer']:X}", offset=d["offset"],
-                                                           bytes=inv_e["length"]), d.get("evidence", ""))
+            so["bytes"] = limit_source(MEASURED, coded("interior", pointer=f"0x{d['pointer']:X}", offset=d["offset"],
+                                                       bytes=inv_e["length"]), d.get("evidence", ""))
         lim.slot_context = slot_context
         if sw:
             lim.placeholders = {k: v.source_width if english_slots else v.translated for k, v in sw.items()}
@@ -1258,8 +1264,8 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
             lim.consumers = [window_consumer(lim.width, limits[lim.host].sources["width"], arrow,
                                              confirmed=confirmed)]
             # the host's width source
-            h = (limits[lim.host].sources or {}).get("width") or limit_source(PROFILE, rule_text("host_default"))
-            lim.sources = {**(lim.sources or {}), "width": {**h, "rule": rule_text("host", host=lim.host, rule=h["rule"])}}
+            h = (limits[lim.host].sources or {}).get("width") or limit_source(PROFILE, coded("host_default"))
+            lim.sources = {**(lim.sources or {}), "width": {**h, "rule": coded("host", host=lim.host, rule=h["rule"])}}
     return limits
 
 
@@ -1531,7 +1537,7 @@ def inserted_width_report(prof, inv: dict, catalog, ctx: dict, measure: Measure,
     lines += ["", "## Slot widths", "", "| Entry | Slot | Translation px | Source px | Source |", "|---|---|---|---|---|"]
     for sid in sorted(slots):
         for name, v in sorted(slots[sid].items()):
-            lines.append(f"| {sid} | {{{name}}} | {v.translated} | {v.source_width} | {cell(v.source)} |")
+            lines.append(f"| {sid} | {{{name}}} | {v.translated} | {v.source_width} | {cell(formatted(v.source))} |")
     return "\n".join(lines) + "\n", len(entries)
 
 
@@ -1564,5 +1570,5 @@ def unmeasured_report(catalog, limits: dict[str, Limit]) -> tuple[str, int]:
         for sid, lim, src, e in groups[g]:
             en = e.msgid if len(e.msgid) <= 60 else e.msgid[:57] + "..."
             out.append(f"| {sid} | {lim.kind} | {lim.width} | {lim.lines if lim.lines is not None else ''} | "
-                       f"{cell(src['rule'])} | {cell(en)} |")
+                       f"{cell(formatted(src['rule']))} | {cell(en)} |")
     return "\n".join(out) + "\n", n
