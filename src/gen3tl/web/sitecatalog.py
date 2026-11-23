@@ -210,9 +210,21 @@ def merged(entries: list[PoEntry], keys: dict[str, list[str]], notes: dict[str, 
     return out
 
 
+def catalog_keys(directory: Path | None = None, web: Path | None = None) -> dict[str, list[str]]:
+    """The keys every catalog of `directory` holds: those of the pages under `web` and of the registry.
+
+    Without an active registry, the catalogs' registry entries stand for its keys.
+    """
+    web = Path(web or WEB)
+    registry = registry_keys() if web.resolve() == WEB.resolve() else set()
+    if not registry:   # only a game project knows its registry
+        registry = {e.msgid for path in catalogs(directory).values() for e in load(path) if REGISTERED in places(e)}
+    return page_keys(web, registry)
+
+
 def sync(directory: Path | None = None, web: Path | None = None) -> list[Synced]:
-    """Bring every catalog of `directory` to the keys of the pages under `web`."""
-    keys = page_keys(web)
+    """Bring every catalog of `directory` to the keys of the pages under `web` and of the registry."""
+    keys = catalog_keys(directory, web)
     out = []
     for path in catalogs(directory).values():
         entries = load(path)
@@ -226,17 +238,10 @@ def sync(directory: Path | None = None, web: Path | None = None) -> list[Synced]
 
 
 def compare(directory: Path | None = None, web: Path | None = None) -> tuple[dict[str, list[str]], list[Compared]]:
-    """Compare every catalog of `directory` with the keys of the pages under `web`: the keys, each catalog's problems.
-
-    Without an active registry, the catalogs' registry entries stand for its keys.
-    """
+    """Compare every catalog of `directory` with the keys it holds (catalog_keys): the keys, each catalog's problems."""
     from tempfile import TemporaryDirectory
-    web = Path(web or WEB)
+    keys = catalog_keys(directory, web)
     loaded = {path: load(path) for path in catalogs(directory).values()}
-    registry = registry_keys() if web.resolve() == WEB.resolve() else set()
-    if not registry:   # only a game project knows its registry
-        registry = {e.msgid for entries in loaded.values() for e in entries if REGISTERED in places(e)}
-    keys = page_keys(web, registry)
     out = []
     for path, entries in loaded.items():
         header = read(path)[0]
@@ -265,7 +270,7 @@ def seed(code: str, directory: Path | None = None, web: Path | None = None) -> P
     if path.exists():
         return None
     header = {"Project-Id-Version": SITE, "Language": code, **HEADER}
-    write_po(path, merged([], page_keys(web), preview_notes(web)), header, obsolete=[])
+    write_po(path, merged([], catalog_keys(directory, web), preview_notes(web)), header, obsolete=[])
     return path
 
 

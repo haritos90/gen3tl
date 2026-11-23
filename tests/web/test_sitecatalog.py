@@ -294,6 +294,42 @@ class SyncTest(unittest.TestCase):
             self.assertEqual(entries["A fixed engine ending."].extracted, ["registry"])
 
 
+    def test_sync_and_seed_without_a_registry_keep_registry_entries(self):
+        directory = self.web / "i18n"
+        catalog("xx", [PoEntry("site:Home", "Home", "Дом", extracted=["index.html, registry"]),
+                       PoEntry("site:Declared review", "Declared review", "Обзор", extracted=["registry"]),
+                       PoEntry("site:Gone", "Gone", "Нет", extracted=["js/gone.js"])], directory)
+        [synced] = sitecatalog.sync(directory, self.web)
+        self.assertEqual(synced.dropped, ["Gone"])
+        entries = {e.msgid: e for e in sitecatalog.load(directory / "xx.po")}
+        declared = entries["Declared review"]
+        self.assertEqual((declared.msgstr, declared.extracted), ("Обзор", ["registry"]))
+        self.assertEqual((entries["Home"].msgstr, entries["Home"].extracted), ("Дом", ["index.html, registry"]))
+        seeded = {e.msgid: e for e in sitecatalog.load(sitecatalog.seed("yy", directory, self.web))}
+        self.assertEqual((seeded["Declared review"].msgstr, seeded["Declared review"].extracted), ("", ["registry"]))
+        self.assertEqual([p for c in sitecatalog.compare(directory, self.web)[1] for p in c.problems], [])
+
+    def test_sync_in_a_registry_drops_a_key_it_no_longer_declares(self):
+        from unittest.mock import patch
+
+        from gen3tl.project import registry_scope
+
+        root = Path(self.tmp.name)
+        profile = workspace_project(root, "xx")
+        profile.write_text(profile.read_text() + '\n[landing]\nreview = "Declared review"\n', encoding="utf-8")
+        directory = self.web / "i18n"
+        catalog("xx", [PoEntry("site:Declared review", "Declared review", "Обзор", extracted=["registry"]),
+                       PoEntry("site:Removed review", "Removed review", "Убрано", extracted=["registry"])],
+                directory)
+        with registry_scope(root), patch("gen3tl.profile.profile.profile_paths", return_value=[profile]), \
+                patch.object(sitecatalog, "WEB", self.web), patch.object(sitecatalog, "CATALOGS", directory):
+            [synced] = sitecatalog.sync()
+        self.assertEqual(synced.dropped, ["Removed review"])
+        entries = {e.msgid: e for e in sitecatalog.load(directory / "xx.po")}
+        self.assertNotIn("Removed review", entries)
+        declared = entries["Declared review"]
+        self.assertEqual((declared.msgstr, declared.extracted), ("Обзор", ["registry"]))
+
     def test_the_command_syncs_before_it_writes(self):
         import contextlib
         import io
@@ -453,6 +489,19 @@ class CompletenessTest(unittest.TestCase):
         self.assertEqual([c.path.name for c in compared], [path.name for path in sitecatalog.catalogs().values()])
         self.assertGreater(len(keys), 400)
         self.assertEqual([problem for c in compared for problem in c.problems], [])
+
+    def test_a_sync_in_the_toolkit_checkout_keeps_the_catalogs(self):
+        import shutil
+        from gen3tl import TOOLKIT_ROOT
+        from gen3tl.project import registry_scope
+        with tempfile.TemporaryDirectory() as tmp, registry_scope(TOOLKIT_ROOT):
+            copies = Path(tmp)
+            for path in sitecatalog.catalogs().values():
+                shutil.copyfile(path, copies / path.name)
+            sitecatalog.sync(copies)
+            for path in sitecatalog.catalogs().values():
+                self.assertEqual((copies / path.name).read_bytes(), path.read_bytes(), path.name)
+            self.assertEqual([problem for c in sitecatalog.compare(copies)[1] for problem in c.problems], [])
 
     def test_translations_keep_the_holes_of_their_keys(self):
         hole = re.compile(r"\{\w+\}")
