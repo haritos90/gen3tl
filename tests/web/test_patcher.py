@@ -8,6 +8,7 @@ from unittest import mock
 import zlib
 
 from gen3tl.web import patcher
+from gen3tl.build.release import release_names
 from gen3tl.core import ups
 from gen3tl.profile.profile import Profile
 
@@ -149,8 +150,9 @@ class PatcherDataTest(ReleaseFixture, unittest.TestCase):
         named = patcher.prepare(self.profile, "ru", self.base, self.built, self.patch, self.out,
                                 output_of=lambda version: f"Example Game [Translated {version}].gba")
         self.assertEqual(named["output"], "Example Game [Translated 0.1.17].gba")
-        self.assertEqual({k: v for k, v in row.items() if k != "output"},
-                         {k: v for k, v in named.items() if k != "output"})
+        self.assertEqual(named["release_asset"], "Example.Game.Translated.0.1.17.ups")
+        self.assertEqual({k: v for k, v in row.items() if k not in {"output", "release_asset"}},
+                         {k: v for k, v in named.items() if k not in {"output", "release_asset"}})
         self.assertEqual((patcher.patch_store(self.out) / row["patch"]).read_bytes(), patch)
         self.assertEqual(self.prepare()["output"], named["output"])
         for name in ("../Other.gba", "dir/Other.gba", "dir\\Other.gba", "https://host/Other.gba",
@@ -412,9 +414,46 @@ class CopyReleasesTest(ReleaseFixture, unittest.TestCase):
         self.assertEqual(copied, patcher.browser_row(row))
         self.assertFalse(patcher.PUBLICATION_FIELDS.intersection(copied))
 
+class ReleaseAssetTest(ReleaseFixture, unittest.TestCase):
+    """The patch asset of a release keeps its output name in the form GitHub stores."""
+
+    def test_the_asset_is_the_output_name_as_github_keeps_it(self):
+        for output, asset in (("Pokemon Unbound 2.1.1.1 [RU by gen3tl].gba",
+                               "Pokemon.Unbound.2.1.1.1.RU.by.gen3tl.ups"),
+                              ("Pokemon Unbound 2.1.1.1 [DE v0.1.0 by gen3tl].gba",
+                               "Pokemon.Unbound.2.1.1.1.DE.v0.1.0.by.gen3tl.ups"),
+                              ("example-ru-0.1.17.gba", "example-ru-0.1.17.ups"),
+                              ("Game_2+@x-1.gba", "Game_2+@x-1.ups"),
+                              ("(Pokémon) Ünbound .. 1.0 .gba", "Pok.mon.nbound.1.0.ups")):
+            with self.subTest(output=output):
+                row = {"language": "ru", "version": "1.0.7", "output": output}
+                self.assertEqual(patcher.publication(row), {"release_tag": "ru-v1.0.7", "release_asset": asset})
+
+    def test_the_github_form_is_stable(self):
+        for name in ("Pokemon Unbound 2.1.1.1 [RU by gen3tl].ups", " [x] .ups", "..a..b..", "a.b-c.ups", "]"):
+            with self.subTest(name=name):
+                once = patcher.github_asset_name(name)
+                self.assertEqual(patcher.github_asset_name(once), once)
+                self.assertNotRegex(once, r"^\.|\.$|\.\.|[^A-Za-z0-9@_+.-]")
+
+    def test_a_release_records_its_derived_asset_and_refuses_another(self):
+        for version, asset in (("0.1.17", "Example.Game.RU.v0.1.17.by.gen3tl.ups"),
+                               ("1.0.0", "Example.Game.RU.by.gen3tl.ups")):
+            with self.subTest(version=version):
+                self.write_release(version)
+                row = patcher.prepare(self.profile, "ru", self.base, self.built, self.patch, self.out,
+                                      output_of=lambda v: release_names("Example Game", "ru", v).output + ".gba")
+                self.assertEqual((row["release_tag"], row["release_asset"]), (f"ru-v{version}", asset))
+                self.assertEqual(patcher.validate({"schema": 1, "releases": [row]}), [row])
+                for other in (f"example-ru-{version}.ups", f"{row['output'][:-4]}.ups"):
+                    with self.assertRaisesRegex(ValueError, "publication"):
+                        patcher.validate({"schema": 1, "releases": [dict(row, release_asset=other)]})
+
+
 class FetchPatchesTest(ReleaseFixture, unittest.TestCase):
     def test_downloads_exact_manifest_assets_and_reuses_verified_store(self):
-        row = self.prepare()
+        row = patcher.prepare(self.profile, "ru", self.base, self.built, self.patch, self.out,
+                              output_of=lambda version: f"Example Game [RU v{version} by gen3tl].gba")
         path = patcher.patch_path(self.out, row)
         data = path.read_bytes()
         path.unlink()
@@ -423,7 +462,7 @@ class FetchPatchesTest(ReleaseFixture, unittest.TestCase):
         with mock.patch("urllib.request.urlopen", return_value=response) as download:
             self.assertEqual(patcher.fetch_patches(self.out, "owner/project"), 1)
             download.assert_called_once_with(
-                "https://github.com/owner/project/releases/download/ru-v0.1.17/example-ru-0.1.17.ups",
+                "https://github.com/owner/project/releases/download/ru-v0.1.17/Example.Game.RU.v0.1.17.by.gen3tl.ups",
                 timeout=60)
             response.__enter__.return_value.read.assert_called_once_with(row["patch_size"] + 1)
             self.assertEqual(path.read_bytes(), data)

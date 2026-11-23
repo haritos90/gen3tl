@@ -456,8 +456,8 @@ class ReleaseProject:
                "source_sha1": "0" * 40, "source_size": 1, "result_sha1": "0" * 40, "result_size": 1,
                "patch": f"game/ru/{self.VERSION}.ups", "patch_sha256": hashlib.sha256(patch_data).hexdigest(),
                "patch_size": len(patch_data),
-               "output": f"game-ru-{self.VERSION}.gba",
-               "release_tag": f"ru-v{self.VERSION}", "release_asset": f"game-ru-{self.VERSION}.ups"}
+               "output": f"Game [RU v{self.VERSION} by gen3tl].gba",
+               "release_tag": f"ru-v{self.VERSION}", "release_asset": f"Game.RU.v{self.VERSION}.by.gen3tl.ups"}
         self.notes = self.root / "releases" / f"game/ru/{self.VERSION}.notes.json"
         self.notes.parent.mkdir(parents=True)
         self.write_notes(self.LABEL, self.VERSION)
@@ -526,6 +526,18 @@ class BuildTagTest(ReleaseProject, unittest.TestCase):
                 self.assertTrue(any(line.startswith("error") and line.endswith(
                     f"release.toml: remove {key}; the release names follow from the game, the language "
                     "and the version") for line in lines), lines)
+
+    def test_an_asset_named_otherwise_than_the_output_is_refused(self):
+        manifest = self.root / "releases/releases.json"
+        document = json.loads(manifest.read_text(encoding="utf-8"))
+        for asset in (f"game-ru-{self.VERSION}.ups", f"Game [RU v{self.VERSION} by gen3tl].ups"):
+            with self.subTest(asset=asset):
+                document["releases"][0]["release_asset"] = asset
+                manifest.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
+                subprocess.run(["git", "-C", str(self.root), "commit", "-qam", "asset"], check=True)
+                code, lines = self.tag()
+                self.assertEqual(code, 1)
+                self.assertTrue(any(line.startswith("error") and "publication" in line for line in lines), lines)
 
     def test_missing_release_file_is_refused(self):
         (self.root / "build/patches/game/ru" / f"{self.VERSION}.ups").unlink()

@@ -19,6 +19,7 @@ FIELDS = {"profile", "profile_name", "language", "version", "source_sha1", "sour
 NAME_FIELDS = {"names", "names_sha256"}   # the save page's name tables
 NOTE_FIELDS = {"notes", "notes_sha256"}   # public release notes
 PUBLICATION_FIELDS = {"release_tag", "release_asset"}
+ASSET_RUN = re.compile(r"[^A-Za-z0-9@_+-]+")   # characters GitHub replaces in asset names
 SUPPORTED_STAGES = {"translation"}   # the only stage that may publish a release
 
 
@@ -82,9 +83,14 @@ def validate(document: dict) -> list[dict]:
 
 
 def publication(row: dict) -> dict:
-    """The tag and unique asset name within the project repository."""
+    """The release tag and the asset name of its patch: the output name with .ups, as GitHub keeps it."""
     return {"release_tag": f"{row['language']}-v{row['version']}",
-            "release_asset": f"{row['profile']}-{row['language']}-{row['version']}.ups"}
+            "release_asset": github_asset_name(row["output"].removesuffix(".gba") + ".ups")}
+
+
+def github_asset_name(name: str) -> str:
+    """The name GitHub keeps for an uploaded file: each run of other characters becomes one period, none at an end."""
+    return ASSET_RUN.sub(".", name).strip(".")
 
 
 def browser_row(row: dict) -> dict:
