@@ -542,12 +542,15 @@ function wireMenu(root, fetcher, storage) {
 
 let generation = 0;
 
+/** No catalog file, by the index or else the page's list. */
+const missingCatalog = (code, known, root) => (known?.interface ?? root?.siteStartup?.hasCatalog?.(code)) === false;
+
 /** Commit ready catalogs together, preserving the reading position. */
 export async function useSiteLanguage(code, { fetcher = fetch, root = globalThis.document, storage = deviceStorage() } = {}) {
   const mine = ++generation;
   const known = offered?.find((l) => l.code === code);
   const [strings, commits] = await Promise.all([
-    known?.interface === false ? null : loadCatalog(code, fetcher, root?.baseURI, storage),
+    missingCatalog(code, known, root) ? null : loadCatalog(code, fetcher, root?.baseURI, storage),
     Promise.all([...preparers].map((prepare) => prepare(code))),
   ]);
   if (mine !== generation) return current;
@@ -684,7 +687,7 @@ export async function startSite({ fetcher = fetch, storage = deviceStorage(), ro
   wireMenu(root, fetcher, storage);
   watchTools(root);
   const languages = loadSiteLanguages(fetcher, root?.baseURI, (doc) => onRegistry(doc, storage));
-  const firstCatalog = loadCatalog(initial, fetcher, root?.baseURI, storage);
+  const firstCatalog = missingCatalog(initial, null, root) ? null : loadCatalog(initial, fetcher, root?.baseURI, storage);
   const fallback = { code: initial, strings: cached, commits: [], languages: null };
   const loading = (async () => {
     const listed = await languages;
@@ -692,7 +695,8 @@ export async function startSite({ fetcher = fetch, storage = deviceStorage(), ro
     const code = preferredLanguage(codes, stored, browser);
     const known = listed?.find((l) => l.code === code);
     const [strings, commits] = await Promise.all([
-      known?.interface === false ? null : code === initial ? firstCatalog : loadCatalog(code, fetcher, root?.baseURI, storage),
+      missingCatalog(code, known, root) ? null
+        : (code === initial && firstCatalog) || loadCatalog(code, fetcher, root?.baseURI, storage),
       Promise.all([...preparers].map((prepare) => prepare(code))),
     ]);
     return { code, strings, commits, languages: listed };

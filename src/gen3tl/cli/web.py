@@ -296,7 +296,7 @@ def site_assemble(args):
     from ..web.editorserve import WEB
     from ..web.siteassets import asset_plan, carry_versions, rewrite_pages, write_build, write_manifest
     from ..web.sitepreview import generate as site_previews
-    from ..web import siteshell
+    from ..web import sitecatalog, siteshell
     registry_file, previous = getattr(args, "registry_file", None), getattr(args, "previous", None)
     data = None if registry_file else Path(args.data).resolve()
     out, web = Path(args.out or "site").resolve(), WEB.resolve()
@@ -377,7 +377,6 @@ def site_assemble(args):
         shutil.copyfile(path, destination)
         size += destination.stat().st_size
     if registry is not None:
-        from ..web import sitecatalog
         sitecatalog.write_interface(out / "data")
         (out / "data/registry.json").write_text(json.dumps(registry, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     if (web / "fragments").is_dir():
@@ -403,6 +402,7 @@ def site_assemble(args):
     try:
         site_previews(web, out, getattr(args, "public_base", None),
                       image_dir=f"assets/{__version__}/previews" if registry is not None else "share/assets")
+        sitecatalog.list_catalogs(out)
         rewrite_pages(out, targets)
         write_manifest(out, __version__)
         kept, skipped = carry_versions(str(previous), out, __version__) if previous else ([], [])

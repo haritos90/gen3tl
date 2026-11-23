@@ -46,16 +46,21 @@
   const language = valid(stored) ? stored : browser.find(valid) || "en";
   const configured = Number(document.querySelector('meta[name="site-startup-deadline"]')?.content);
   const wait = Number.isFinite(configured) && configured > 0 ? configured : 1500;
+  // Built pages list the site's catalogs.
+  const listed = document.querySelector('meta[name="site-catalogs"]')?.content;
+  const catalogs = typeof listed === "string" ? listed.split(/\s+/).filter(valid) : null;
   let timer;
   const startup = document.siteStartup = {
     language, deadline: Date.now() + wait, expired: false,
+    /** Whether a catalog file exists; null on an unlisted page. */
+    hasCatalog: (code) => (catalogs ? catalogs.includes(code) : null),
     reveal() {
       clearTimeout(timer);
       root.removeAttribute("data-ui-pending");
     },
   };
   if (language !== "en" || configured > 0) {
-    if (language !== "en") {
+    if (language !== "en" && startup.hasCatalog(language) !== false) {
       const url = new URL(`data/site/${language}.json`, document.baseURI).href;
       startup.catalog = {
         url,

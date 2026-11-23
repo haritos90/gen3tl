@@ -12,12 +12,26 @@ const langKey = "gen3tl-site-lang", cacheKey = "gen3tl-site-catalog";
 const language = "ru";
 const reply = (doc) => ({ ok: true, json: async () => doc });
 const settle = async () => { for (let n = 0; n < 30; n++) await Promise.resolve(); };
+const siteData = (url) => /\/data\/site\/(?!catalogs\.json$)[^/]+\.json$/.test(url);
+// A built page head with its catalog list.
+const listing = (content, query = () => null) => (selector) => (selector === 'meta[name="site-catalogs"]'
+  ? { content } : query(selector));
 let serial = 0;
 
+/** The startup of a page listing catalogs, without a stored choice. */
+function bootstrap(listed) {
+  const document = { baseURI: "https://site.test/", documentElement: { setAttribute() {}, removeAttribute() {} },
+    addEventListener() {}, querySelector: listed === null ? () => null : listing(listed) };
+  runInNewContext(theme, { document, navigator: { languages: ["en"] }, localStorage: { getItem: () => null },
+    Date, URL, setTimeout, clearTimeout, fetch: () => assert.fail("English starts no catalog request") });
+  return document.siteStartup;
+}
+
 async function fixture(context, page = "index.html", { stored = language, browser = ["en"], cached = false,
-  broken = false, early = false } = {}) {
+  broken = false, early = false, listed = null } = {}) {
   context.mock.timers.enable({ apis: ["setTimeout", "Date"], now: 1000 });
   const { storage } = stubPage(context, page.slice(0, -5));
+  if (listed !== null) document.querySelector = listing(listed, document.querySelector);
   const root = document.documentElement;
   const labels = document.querySelectorAll("[data-ui]");
   for (const node of labels) node.textContent = node.dataset.ui;
@@ -133,6 +147,71 @@ test("the source language starts no catalog request", async (context) => {
   });
   assert.equal(shown, "en");
   assert.deepEqual(urls.filter((url) => /\/data\/site\/(?!catalogs\.json$)[^/]+\.json$/.test(url)), []);
+});
+
+test("a page's catalog list tells which catalog files exist", () => {
+  const cases = [
+    ["ru", "ru", true], ["ru", "de", false], ["ru uk", "uk", true], [" ru\n\tuk ", "uk", true], ["ru", "en", false],
+    ["", "ru", false], ["ru ../de", "../de", false], ["ru", "ru-RU", false], [null, "ru", null], [null, "de", null],
+  ];
+  for (const [listed, code, expected] of cases) {
+    assert.equal(bootstrap(listed).hasCatalog(code), expected, `${JSON.stringify(listed)} ${code}`);
+  }
+});
+
+test("a listed page asks for no missing catalog of a stored game language", async (context) => {
+  const f = await fixture(context, "index.html", { stored: "de", listed: language, early: true });
+  assert.deepEqual(f.earlyCalls, []);
+  const urls = [];
+  const shown = await f.start(async (url) => {
+    urls.push(url);
+    if (url.endsWith("catalogs.json")) return reply({ schema: 1, catalogs: [{ code: language }] });
+    return url.endsWith("languages.json") ? reply({ languages: [{ code: "de" }] }) : reply(null);
+  });
+  assert.equal(shown, "en");
+  assert.equal(f.ui.chosenLanguage(), "de");
+  assert.deepEqual(urls.filter(siteData), []);
+  assert.deepEqual(f.reveals, [f.original()]);
+});
+
+test("a listed page asks for no missing catalog while the index is unavailable", async (context) => {
+  const f = await fixture(context, "index.html", { stored: "de", listed: language });
+  const urls = [];
+  const fetcher = async (url) => {
+    urls.push(url);
+    throw new Error("Offline");
+  };
+  assert.equal(await f.start(fetcher), "en");
+  assert.equal(await f.ui.useSiteLanguage("de", { fetcher, root: document, storage: f.storage }), "en");
+  assert.deepEqual(f.earlyCalls, []);
+  assert.deepEqual(urls.filter(siteData), []);
+});
+
+test("a listed catalog keeps the bootstrap request and its first paint", async (context) => {
+  const f = await fixture(context, "index.html", { listed: `uk ${language}`, early: true });
+  assert.deepEqual(f.earlyCalls.map((call) => call.url), ["https://site.test/data/site/ru.json"]);
+  let moduleRequests = 0;
+  const shown = await f.start(f.fetcher(async () => {
+    moduleRequests += 1;
+    return reply(f.catalog);
+  }));
+  assert.equal(shown, language);
+  assert.equal(moduleRequests, 0);
+  assert.deepEqual(f.reveals, [f.translated()]);
+});
+
+test("a catalog the index adds after the page list is still applied", async (context) => {
+  const f = await fixture(context, "index.html", { listed: "", early: true });
+  assert.deepEqual(f.earlyCalls, []);
+  const urls = [];
+  const shown = await f.start(async (url) => {
+    urls.push(url);
+    return url.endsWith(`/site/${language}.json`) ? reply(f.catalog) : reply(url.endsWith("catalogs.json")
+      ? { schema: 1, catalogs: [{ code: language }] } : null);
+  });
+  assert.equal(shown, language);
+  assert.deepEqual(urls.filter(siteData), ["https://site.test/data/site/ru.json"]);
+  assert.deepEqual(f.reveals, [f.translated()]);
 });
 
 test("a fresh catalog is applied before reveal and stored for refresh", async (context) => {

@@ -79,6 +79,16 @@ class ApplicationTest(unittest.TestCase):
         self.assertFalse((out / "share").exists())
         self.assertFalse(list(out.rglob("*.zip")))
 
+    def test_application_pages_list_the_interface_catalogs_before_their_startup(self):
+        out = self.assemble()
+        meta = f'<meta name="site-catalogs" content="{" ".join(sitecatalog.catalogs())}">'
+        pages = sorted(out.glob("*.html"))
+        self.assertGreater(len(pages), 10)
+        for page in pages:
+            document = page.read_text(encoding="utf-8")
+            self.assertEqual(document.count('name="site-catalogs"'), 1, page.name)
+            self.assertLess(document.index(meta), document.index("js/theme.js"), page.name)
+
     def test_application_manifest_lists_the_preview_picture_with_the_scripts(self):
         folder = self.assemble() / "assets" / __version__
         files = {path.relative_to(folder).as_posix() for path in folder.rglob("*") if path.is_file()} - {"files.json"}

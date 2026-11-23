@@ -462,3 +462,23 @@ def write_interface(root: Path) -> None:
     manifest = {"schema": EDITOR_SCHEMA, "toolkit": toolkit_version(), "languages": languages,
                 "profiles": [profile_entry()]}
     (root / "languages.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+
+
+def list_catalogs(site: Path) -> list[str] | None:
+    """Name the catalogs of the site's data/site/catalogs.json in its root pages, which then ask for no other."""
+    try:
+        index = json.loads((Path(site) / "data" / SITE / "catalogs.json").read_text(encoding="utf-8"))
+        codes = [row["code"] for row in index["catalogs"]] if index["schema"] == SCHEMA else None
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    # An unreadable index leaves the pages unlisted.
+    if codes is None or not all(isinstance(code, str) and CODE.fullmatch(code) for code in codes):
+        return None
+    meta = f'<meta name="site-catalogs" content="{" ".join(codes)}">'
+    for page in sorted(Path(site).glob("*.html")):
+        document = page.read_text(encoding="utf-8")
+        listed, count = re.subn(r"<head\b[^>]*>", lambda match: match[0] + "\n" + meta, document, count=1,
+                                flags=re.IGNORECASE)
+        if count:
+            page.write_text(listed, encoding="utf-8")
+    return codes

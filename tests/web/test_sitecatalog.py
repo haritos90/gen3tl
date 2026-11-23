@@ -87,6 +87,38 @@ class ReaderTest(unittest.TestCase):
         self.assertEqual(sitecatalog.write(root, self.dir / "none"), [])
         self.assertEqual(json.loads((root / "site" / "catalogs.json").read_text(encoding="utf-8"))["catalogs"], [])
 
+    def test_root_pages_list_the_catalogs_of_the_index(self):
+        site = self.dir / "site"
+        pages = {"index.html": "<!doctype html>\n<html><head>\n<title>Home</title></head></html>",
+                 "guide.html": '<html><HEAD lang="en"><meta charset="utf-8"></HEAD></html>',
+                 "fragment.html": "<p>No head</p>", "share/game/index.html": "<html><head></head></html>"}
+        for name, text in pages.items():
+            (site / name).parent.mkdir(parents=True, exist_ok=True)
+            (site / name).write_text(text, encoding="utf-8")
+        index = site / "data" / "site" / "catalogs.json"
+        index.parent.mkdir(parents=True)
+        for doc in (None, "{", {"schema": 2, "catalogs": [{"code": "xx"}]}, {"schema": 1, "catalogs": [{"code": "../x"}]},
+                    {"schema": 1, "catalogs": ["xx"]}, {"schema": 1}):
+            with self.subTest(doc=doc):
+                if doc is not None:
+                    index.write_text(doc if isinstance(doc, str) else json.dumps(doc), encoding="utf-8")
+                self.assertIsNone(sitecatalog.list_catalogs(site))
+                self.assertEqual({name: (site / name).read_text(encoding="utf-8") for name in pages}, pages)
+        index.write_text(json.dumps({"schema": 1, "catalogs": [{"code": "xx"}, {"code": "yy-Z1"}], "guides": []}),
+                         encoding="utf-8")
+        self.assertEqual(sitecatalog.list_catalogs(site), ["xx", "yy-Z1"])
+        meta = '<meta name="site-catalogs" content="xx yy-Z1">'
+        self.assertEqual((site / "index.html").read_text(encoding="utf-8"),
+                         f"<!doctype html>\n<html><head>\n{meta}\n<title>Home</title></head></html>")
+        self.assertEqual((site / "guide.html").read_text(encoding="utf-8"),
+                         f'<html><HEAD lang="en">\n{meta}<meta charset="utf-8"></HEAD></html>')
+        for name in ("fragment.html", "share/game/index.html"):
+            self.assertEqual((site / name).read_text(encoding="utf-8"), pages[name], name)
+        index.write_text(json.dumps({"schema": 1, "catalogs": []}), encoding="utf-8")
+        (site / "index.html").write_text(pages["index.html"], encoding="utf-8")
+        self.assertEqual(sitecatalog.list_catalogs(site), [])
+        self.assertIn('<meta name="site-catalogs" content="">', (site / "index.html").read_text(encoding="utf-8"))
+
 class ManifestTest(unittest.TestCase):
     def test_the_editor_lists_the_site_project_and_the_registry_does_not(self):
         with tempfile.TemporaryDirectory() as tmp:
