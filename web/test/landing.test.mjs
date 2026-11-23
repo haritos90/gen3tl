@@ -121,6 +121,18 @@ test("landing placeholders follow registry structure and cannot match the picker
   assert.doesNotMatch(css.slice(start, end), /min-height|data-reserve/);
 });
 
+test("landing placeholders show the stage description in the interface language", (context) => {
+  context.after(() => setCatalog(null));
+  const { $ } = stubPage(context, "index");
+  const registry = readRegistry({ schema: 1, games: [{ id: "sample", name: "Sample", stage: "translation",
+    languages: ["xx"], data: "./" }] }, BASE);
+  setCatalog({ [STAGE_DETAILS.translation.description]: "Stage text, translated" });
+  renderLoading(registry, $);
+  const texts = $("games-placeholders").firstChild.querySelectorAll(".muted").map((node) => node.textContent);
+  assert.ok(texts.includes("Stage text, translated"), JSON.stringify(texts));
+  assert.ok(!texts.includes(STAGE_DETAILS.translation.description));
+});
+
 test("picker loading rules stay scoped away from the landing page", () => {
   const html = readFileSync(new URL("../pick.html", import.meta.url), "utf8");
   assert.match(html, /<body class="picker-page">/);

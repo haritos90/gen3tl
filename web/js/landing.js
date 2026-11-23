@@ -120,7 +120,7 @@ function placeholderCard(game) {
       game.engine ? el("p", { class: "eyebrow", textContent: game.engine }) : null,
       el("h3", { class: "title", textContent: game.name }),
       el("span", { class: "chip plain skeleton", textContent: "\u00a0" }),
-      el("p", { class: "small muted", textContent: STAGE_DETAILS[game.stage].description }),
+      el("p", { class: "small muted", textContent: t(STAGE_DETAILS[game.stage].description) }),
       facts, el("div", { class: "acts" }, ...actions)),
     el("div", { class: "langs" }, ...game.languages.map(placeholderLanguage)),
     el("p", { class: "game-language-request small muted", textContent: "\u00a0" }));
