@@ -313,6 +313,58 @@ class SyncTest(unittest.TestCase):
                          ["Home", "Kept & used", "Loading {game}…"])
         self.assertEqual(json.loads((data / "site" / "xx.json").read_text(encoding="utf-8"))["strings"], {})
 
+class CompareTest(unittest.TestCase):
+    """The pull-request comparison; without a registry the catalogs' registry entries stand for it."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.web = site(Path(self.tmp.name))
+        self.i18n = self.web / "i18n"
+
+    def page_entries(self):
+        return [PoEntry("site:Home", "Home", "Дом", extracted=["index.html"]),
+                PoEntry("site:Kept & used", "Kept & used", "Оставлено", extracted=["index.html, js/page.js"]),
+                PoEntry("site:Loading {game}…", "Loading {game}…", "Загрузка {game}…", extracted=["js/page.js"])]
+
+    def problems(self):
+        keys, compared = sitecatalog.compare(self.i18n, self.web)
+        return keys, [problem for c in compared for problem in c.problems]
+
+    def test_registry_entries_stand_without_a_registry(self):
+        entries = self.page_entries()
+        entries[0].extracted = ["index.html, registry"]
+        catalog("xx", entries + [PoEntry("site:Declared review", "Declared review", "Обзор", extracted=["registry"])],
+                self.i18n)
+        keys, problems = self.problems()
+        self.assertEqual(problems, [])
+        self.assertEqual(keys["Declared review"], ["registry"])
+        self.assertEqual(keys["Home"], ["index.html", "registry"])
+
+    def test_a_stale_page_entry_is_still_reported(self):
+        path = catalog("xx", self.page_entries() + [PoEntry("site:Gone", "Gone", "Нет", extracted=["js/gone.js"])],
+                       self.i18n)
+        self.assertEqual(self.problems()[1], [f"stale key  {path}: Gone"])
+
+    def test_an_active_registry_decides_the_registry_entries(self):
+        from unittest.mock import patch
+        path = catalog("xx", self.page_entries() + [PoEntry("site:Declared review", "Declared review", "Обзор",
+                                                            extracted=["registry"])], self.i18n)
+        with patch.object(sitecatalog, "WEB", self.web), \
+                patch.object(sitecatalog, "registry_keys", return_value={"Declared ending"}):
+            self.assertEqual(self.problems()[1], [f"missing key  {path}: Declared ending",
+                                                  f"stale key  {path}: Declared review"])
+
+    def test_holes_and_unsynced_locations_are_reported(self):
+        entries = self.page_entries()
+        entries[2].msgstr = "Загрузка…"
+        holed = catalog("xx", entries, self.i18n)
+        entries = self.page_entries()
+        entries[0].extracted = ["pick.html"]
+        unsynced = catalog("yy", entries, self.i18n)
+        self.assertEqual(self.problems()[1], [f"dropped hole  {holed}: Loading {{game}}…",
+                                              f"out of sync  {unsynced}: web site-catalog --sync would change it"])
+
 class ApprovalTest(unittest.TestCase):
     """An import writes new site texts translated and keeps approved ones; the command reports and approves."""
 
@@ -393,6 +445,14 @@ class ApprovalTest(unittest.TestCase):
 class CompletenessTest(unittest.TestCase):
     """Every key the pages show has a translation in every site catalog; no catalog keeps a stale key."""
 
+    def test_the_toolkit_catalogs_pass_the_pull_request_comparison(self):
+        from gen3tl import TOOLKIT_ROOT
+        from gen3tl.project import registry_scope
+        with registry_scope(TOOLKIT_ROOT):   # the check runs in a toolkit checkout
+            keys, compared = sitecatalog.compare()
+        self.assertEqual([c.path.name for c in compared], [path.name for path in sitecatalog.catalogs().values()])
+        self.assertGreater(len(keys), 400)
+        self.assertEqual([problem for c in compared for problem in c.problems], [])
 
     def test_translations_keep_the_holes_of_their_keys(self):
         hole = re.compile(r"\{\w+\}")

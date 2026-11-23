@@ -41,6 +41,7 @@ LITERAL = r'"((?:[^"\\]|\\.)*)"'
 CALLS = re.compile(r"\b(?:t|N_|uiError)\(\s*" + LITERAL)   # a page label source may answer first
 SITE_CALLS = [re.compile(r"\bsiteText\(\s*" + LITERAL), re.compile(r"\bshowText\((?:[^,()]|\([^()]*\))*,\s*" + LITERAL)]
 LOCATIONS = re.compile(r"[\w.-]+\.html|js/[\w./-]+\.js|fragments/[\w.-]+\.json|registry")
+REGISTERED = "registry"   # the location of keys the registry declares
 HOLE = re.compile(r"\{\w+\}")   # a value the page fills
 
 
@@ -68,6 +69,13 @@ class Applied:
 class Approved:
     path: Path
     cleared: int
+
+
+@dataclass(frozen=True)
+class Compared:
+    path: Path
+    translated: int   # translated entries awaiting approval
+    problems: list[str]
 
 
 def load(path: Path) -> list[PoEntry]:
@@ -113,8 +121,11 @@ def registry_keys(root: Path | None = None) -> set[str]:
     return keys
 
 
-def page_keys(web: Path | None = None) -> dict[str, list[str]]:
-    """Every key the site's pages and modules show through the site catalog: key -> where."""
+def page_keys(web: Path | None = None, registry: set[str] | None = None) -> dict[str, list[str]]:
+    """Every key the site's pages and modules show through the site catalog: key -> where.
+
+    `registry`: the keys the registry declares; None reads the active registry for the installed pages.
+    """
     web = Path(web or WEB)
     keys: dict[str, list[str]] = {}
 
@@ -150,9 +161,10 @@ def page_keys(web: Path | None = None) -> dict[str, list[str]]:
         for pattern in SITE_CALLS:
             for match in pattern.finditer(source):
                 add(json.loads(f'"{match.group(1)}"'), where)
-    if web.resolve() == WEB.resolve():
-        for key in sorted(registry_keys()):
-            add(key, "registry")
+    if registry is None and web.resolve() == WEB.resolve():
+        registry = registry_keys()
+    for key in sorted(registry or ()):
+        add(key, REGISTERED)
     for row in preview_texts(web).values():
         for key in row.values():
             add(key, "fragments/page-previews.json")
@@ -174,6 +186,11 @@ def location(where: list[str]) -> str:
 def is_location(comment: str) -> bool:
     """Whether an extracted comment is a location comment."""
     return all(LOCATIONS.fullmatch(item) for item in comment.split(", "))
+
+
+def places(entry: PoEntry) -> list[str]:
+    """The files an entry's location comment names."""
+    return [item for comment in entry.extracted if is_location(comment) for item in comment.split(", ")]
 
 
 def merged(entries: list[PoEntry], keys: dict[str, list[str]], notes: dict[str, str] | None = None) -> list[PoEntry]:
@@ -206,6 +223,38 @@ def sync(directory: Path | None = None, web: Path | None = None) -> list[Synced]
         out.append(Synced(path, [k for k in keys if k not in old], [e.msgid for e in entries if e.msgid not in keys],
                           len(kept)))
     return out
+
+
+def compare(directory: Path | None = None, web: Path | None = None) -> tuple[dict[str, list[str]], list[Compared]]:
+    """Compare every catalog of `directory` with the keys of the pages under `web`: the keys, each catalog's problems.
+
+    Without an active registry, the catalogs' registry entries stand for its keys.
+    """
+    from tempfile import TemporaryDirectory
+    web = Path(web or WEB)
+    loaded = {path: load(path) for path in catalogs(directory).values()}
+    registry = registry_keys() if web.resolve() == WEB.resolve() else set()
+    if not registry:   # only a game project knows its registry
+        registry = {e.msgid for entries in loaded.values() for e in entries if REGISTERED in places(e)}
+    keys = page_keys(web, registry)
+    out = []
+    for path, entries in loaded.items():
+        header = read(path)[0]
+        have = {e.msgid for e in entries}
+        added = [key for key in keys if key not in have]
+        dropped = [e.msgid for e in entries if e.msgid not in keys]
+        problems = [f"missing key  {path}: {key}" for key in added] + [f"stale key  {path}: {key}" for key in dropped]
+        problems += [f"dropped hole  {path}: {e.msgid}" for e in entries
+                     if e.msgstr and sorted(HOLE.findall(e.msgstr)) != sorted(HOLE.findall(e.msgid))]
+        translated = sum(1 for e in entries if e.msgstr and e.fuzzy)
+        if not added and not dropped:
+            with TemporaryDirectory() as tmp:
+                synced = Path(tmp) / path.name
+                write_po(synced, merged(entries, keys), header)
+                if synced.read_bytes() != path.read_bytes():
+                    problems.append(f"out of sync  {path}: web site-catalog --sync would change it")
+        out.append(Compared(path, translated, problems))
+    return keys, out
 
 
 def seed(code: str, directory: Path | None = None, web: Path | None = None) -> Path | None:

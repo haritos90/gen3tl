@@ -6,6 +6,7 @@ on:
       - 'web/i18n/**'
       - 'web/**/*.html'
       - 'web/js/**'
+      - 'src/gen3tl/web/sitecatalog.py'
       - 'src/gen3tl/web/siteshell.py'
       - 'src/gen3tl/cli/**'
       - '.github/workflows/site-catalog-check.yml'
@@ -29,42 +30,19 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          from tempfile import TemporaryDirectory
-          from gen3tl.catalog.po import read, write
           from gen3tl.web import sitecatalog
 
           web = Path("web")
-          i18n = web / "i18n"
-          keys = sitecatalog.page_keys(web)
-          problems = []
-          translated = 0
-          for path in sitecatalog.catalogs(i18n).values():
-              entries = sitecatalog.load(path)
-              header, _ = read(path)
-              here = sum(1 for e in entries if e.msgstr and e.fuzzy)
-              translated += here
-              print(f"translated  {path.stem}  {here} entries")
-              have = {e.msgid for e in entries}
-              added = [key for key in keys if key not in have]
-              dropped = [e.msgid for e in entries if e.msgid not in keys]
-              for key in added:
-                  problems.append(f"missing key  {path}: {key}")
-              for key in dropped:
-                  problems.append(f"stale key  {path}: {key}")
-              for entry in entries:
-                  if entry.msgstr and sorted(sitecatalog.HOLE.findall(entry.msgstr)) != sorted(sitecatalog.HOLE.findall(entry.msgid)):
-                      problems.append(f"dropped hole  {path}: {entry.msgid}")
-              with TemporaryDirectory() as tmp:
-                  out = Path(tmp) / path.name
-                  write(out, sitecatalog.merged(entries, keys), header)
-                  if out.read_bytes() != path.read_bytes() and not added and not dropped:
-                      problems.append(f"out of sync  {path}: web site-catalog --sync would change it")
+          keys, compared = sitecatalog.compare(web / "i18n", web)
+          for catalog in compared:
+              print(f"translated  {catalog.path.stem}  {catalog.translated} entries")
+          problems = [problem for catalog in compared for problem in catalog.problems]
           if problems:
               for problem in problems:
                   print(problem)
               raise SystemExit(1)
-          print(f"site catalogs  {len(sitecatalog.catalogs(i18n))} catalogs, {len(keys)} keys, "
-                f"translated {translated} entries, holes kept")
+          print(f"site catalogs  {len(compared)} catalogs, {len(keys)} keys, "
+                f"translated {sum(catalog.translated for catalog in compared)} entries, holes kept")
           PY
       - name: Check shared page markup
         run: python -m gen3tl web site-shell --web web
