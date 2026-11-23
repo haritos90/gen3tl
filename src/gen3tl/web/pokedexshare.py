@@ -361,6 +361,8 @@ class ShareGenerator:
         self.texts["en"] = self.texts[first]
         self.pages["en"] = self.pages[first]
         self.site["en"] = {}
+        # key-only data built without the ROM holds no English
+        self.english = any(pair and pair[0] for pair in self.texts["en"].values())
         self.font = read_json(FONT_PATH)
         self.advances = glyph_advances(self.font)
         self.tiers, self.tier_ink = tier_colours(SITE_CSS.read_text(encoding="utf-8"))
@@ -495,6 +497,8 @@ class ShareGenerator:
                 types.append(type_id)
         rows = [{"id": type_id, "name": self.entry(language, f"types:{type_id}"), "colour": self.types[type_id]["colour"]}
                 for type_id in types]
+        if not self.english and (not self.entry(language, record["name"]) or any(not row["name"] for row in rows)):
+            return None   # no English to fall back on
         if any(not row["name"] for row in rows):
             raise ValueError(f"Missing type name at slot {record['slot']}")
         name = self.display_name(language, record)
@@ -574,6 +578,8 @@ class ShareGenerator:
             source_language = source if language == "en" else language
             slots = []
             for species, english in zip(species_rows, species_by_language["en"]):
+                if species is None:
+                    continue
                 if (language != "en" and species == english
                         and self.ui(language, "Open the Pokédex") == self.ui(source, "Open the Pokédex")):
                     continue

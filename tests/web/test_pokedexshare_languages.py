@@ -99,6 +99,28 @@ class ShareLanguagesTest(unittest.TestCase):
         generator.texts["xx"]["moves:1"] = ["Move", "Translated move"]
         self.assertEqual(generator.generate()["share_pages"], {"en": "all", "ru": "all", "xx": []})
 
+    def test_texts_without_english_have_pages_only_where_a_translation_names_the_species(self):
+        for code in ("ru", "xx"):
+            path = self.data / SAMPLE / code / "texts.json"
+            document = json.loads(path.read_text(encoding="utf-8"))
+            document["texts"] = {key: ["", pair[1]] for key, pair in document["texts"].items()}
+            if code == "ru":
+                document["texts"]["species:2"][1] = ""
+            path.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+        generator = self.generator()
+        result = generator.generate()
+        self.assertEqual(result["share_pages"], {"en": [], "ru": [1], "xx": []})
+        self.assertEqual(result["page_count"], 1)
+        self.assertEqual([path.relative_to(generator.out / "share" / SAMPLE).as_posix()
+                          for path in (generator.out / "share" / SAMPLE).rglob("index.html")],
+                         ["ru/species/1/index.html"])
+
+    def test_a_missing_name_beside_english_texts_fails(self):
+        generator = self.generator()
+        generator.texts["ru"]["types:1"] = ["", ""]
+        with self.assertRaisesRegex(ValueError, "Missing type name at slot 1"):
+            generator.generate()
+
     def test_one_translated_species_keeps_only_its_page(self):
         generator = self.generator()
         generator.texts["xx"]["species:2"][1] = "Translated"

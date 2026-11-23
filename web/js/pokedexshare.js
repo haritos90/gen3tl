@@ -49,7 +49,9 @@ function initialize() {
     status.textContent = "";
     button.disabled = true;
     try {
-      const url = speciesShareURL(state.game.data, state.profile.id, state.code, record.slot, state.profile.share_pages);
+      // a species without a preview page shares its card
+      const url = speciesShareURL(state.game.data, state.profile.id, state.code, record.slot, state.profile.share_pages)
+        ?? location.href;
       if (navigator.share) {
         try { await navigator.share({ title: view.speciesName(record), url }); return; }
         catch (error) { if (error?.name === "AbortError") return; }

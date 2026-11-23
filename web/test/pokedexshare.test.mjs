@@ -61,6 +61,18 @@ test("languages with pages retain their existing share URLs", () => {
   }
 });
 
+test("species without their own or an English page keep the card address", () => {
+  const base = "https://site.test/sub/";
+  const data = new URL("data/", base).href;
+  const pages = { en: [], ru: "all", xx: [2] };
+  for (const code of ["en", "xx"]) assert.equal(speciesShareURL(data, "game", code, 1, pages), null);
+  assert.equal(speciesShareURL(data, "game", "ru", 1, pages), `${base}share/game/ru/species/1/`);
+  assert.equal(speciesShareURL(data, "game", "xx", 2, pages), `${base}share/game/xx/species/2/`);
+  const hash = "#game/xx/species/1";
+  assert.equal(pokedexRouteURL(base, `${base}share/game/ru/species/1/?keep=yes`, hash,
+    { data, game: "game", language: "xx", slot: 1, pages }), `${base}pokedex?keep=yes${hash}`);
+});
+
 test("partial languages route and forward each species in the selected language", () => {
   const base = "https://site.test/sub/";
   const pages = { en: "all", xx: [2] };

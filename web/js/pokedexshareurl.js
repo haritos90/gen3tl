@@ -10,8 +10,9 @@ function parts(game, language, slot) {
 
 export function speciesShareURL(data, game, language, slot, pages = null) {
   const [profile, lang, kind, id] = parts(game, language, slot);
-  const available = pages?.[language];
-  const fallback = pages != null && available !== "all" && !available?.includes(slot);
+  const has = (code) => pages == null || pages[code] === "all" || !!pages[code]?.includes(slot);
+  const fallback = !has(language);
+  if (fallback && !has("en")) return null;
   const url = new URL(`../share/${profile}/${fallback ? "en" : lang}/${kind}/${id}/`, data);
   if (fallback) url.searchParams.set("lang", language);
   return url.href;
@@ -27,8 +28,9 @@ export function pokedexRouteURL(base, current, hash, species = null) {
   const url = new URL(current, base);
   url.pathname = new URL("pokedex", base).pathname;
   url.hash = hash;
-  if (!species) return url.href;
-  const target = new URL(speciesShareURL(species.data, species.game, species.language, species.slot, species.pages));
+  const shared = species && speciesShareURL(species.data, species.game, species.language, species.slot, species.pages);
+  if (!shared) return url.href;
+  const target = new URL(shared);
   if (target.origin !== url.origin) return url.href;
   url.searchParams.delete("lang");
   for (const [key, value] of url.searchParams) target.searchParams.append(key, value);
