@@ -1,7 +1,7 @@
 {
   "version": "1.4.0",
   "sha256": {
-    "rom-patcher.wasm": "e59b643ef2e8498fdd783e1495f2f9ff216d4a09c778b3e6fb2d8aac6f51c2e0",
+    "rom-patcher.wasm": "5b33080b984891685ffe4ed7ff04c6c255a346df93fc51df27871a9b70c57718",
     "rom-patcher.js": "3ca3d1ea64a73afecf96e6da49430e87cea6c9b0a3fa117e02d3a63c6060cce8",
     "LICENSE": "ed8d05eae0eedbf719b306e12da8289315584322e61cf0d54f813e5a5ace6a46"
   }
