@@ -7349,18 +7349,18 @@ msgid "Share"
 msgstr "Поделиться"
 
 #. js/pokedexshare.js
-msgctxt "site:Copy preview link"
-msgid "Copy preview link"
+msgctxt "site:Copy link"
+msgid "Copy link"
 msgstr "Копировать ссылку"
 
 #. js/pokedexshare.js
-msgctxt "site:Preview link copied"
-msgid "Preview link copied"
+msgctxt "site:Link copied"
+msgid "Link copied"
 msgstr "Ссылка скопирована"
 
 #. js/pokedexshare.js
-msgctxt "site:Could not copy the preview link"
-msgid "Could not copy the preview link"
+msgctxt "site:Could not copy the link"
+msgid "Could not copy the link"
 msgstr "Не удалось скопировать ссылку"
 
 #. js/draft.js

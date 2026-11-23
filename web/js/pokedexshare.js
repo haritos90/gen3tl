@@ -38,7 +38,7 @@ function initialize() {
   let reset = null;
   function sync() {
     button.replaceChildren(icon());
-    button.title = navigator.share ? t("Share") : t("Copy preview link");
+    button.title = navigator.share ? t("Share") : t("Copy link");
     button.setAttribute("aria-label", button.title);
   }
   async function share() {
@@ -57,9 +57,9 @@ function initialize() {
         catch (error) { if (error?.name === "AbortError") return; }
       }
       await copyText(url);
-      status.textContent = t("Preview link copied");
+      status.textContent = t("Link copied");
     } catch {
-      status.textContent = t("Could not copy the preview link");
+      status.textContent = t("Could not copy the link");
     } finally {
       button.disabled = false;
       reset = setTimeout(() => { status.textContent = ""; }, 4000);
