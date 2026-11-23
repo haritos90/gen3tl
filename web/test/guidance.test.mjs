@@ -232,7 +232,7 @@ test("invalid capture uploads show a readable error without changing notes", asy
   click(view, "Add note");
   const control = descendants(view).find((node) => node.tagName === "INPUT" && node.getAttribute("type") === "file");
   await control.listeners.change({ target: { files: [{ size: 6 * 1024 * 1024 }], value: "" } });
-  assert.match(view.textContent, /Evidence images must be at most 3 MiB/);
+  assert.match(view.textContent, /Evidence images must be at most 3 MB/);
   assert.equal(edits.forSubject(note.subject)[0].attachments, undefined);
 });
 

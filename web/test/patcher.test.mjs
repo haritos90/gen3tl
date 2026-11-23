@@ -4,12 +4,12 @@ import { readFileSync } from "node:fs";
 
 import { test } from "node:test";
 
-import { formatName, lacksChecksums, patchSource, patchStep, patchSummary, resultName, sizeLabel } from "../js/patch.js";
+import { formatName, lacksChecksums, patchSource, patchStep, patchSummary, resultName, romName, saveName, sizeLabel } from "../js/patch.js";
 
-test("sizes read in MiB and KiB", () => {
-  assert.equal(sizeLabel(33554432), "32 MiB");
-  assert.equal(sizeLabel(1332576), "1.3 MiB");
-  assert.equal(sizeLabel(131072), "128 KiB");
+test("sizes read in MB and KB", () => {
+  assert.equal(sizeLabel(33554432), "32 MB");
+  assert.equal(sizeLabel(1332576), "1.3 MB");
+  assert.equal(sizeLabel(131072), "128 KB");
   assert.equal(sizeLabel(12), "12 bytes");
 });
 
@@ -88,6 +88,8 @@ const FORMATS = [
 const NOTE = "{format} patches carry no checksum of the result, so the result cannot be confirmed.";
 const CONFIRMED = "Result confirmed by the checksum in the patch.";
 const UNCONFIRMED = "Result not confirmed: the patch carries no checksum of the whole result.";
+const MEMO = "To keep playing an existing save, rename it to {save}, or to the same name ending in .srm for a .srm save. "
+  + "An emulator loads a save only when it has the ROM's name.";
 // BLAKE3 of the fixture's source and result
 const SOURCE_DIGEST = "b177ec1bf26dfb3b7010d473e6d44713b29b765b99c6e60ecbfae742de496543";
 const RESULT_DIGEST = "ce0f0bb1026da55f5c550317d92292db6adcbe4a4a07ee51128021c3250f0702";
@@ -120,6 +122,23 @@ test("own downloads combine the patch stem with the ROM extension", () => {
     [".rom", "patch", "patch"], ["game.sfc", ".patch", ".patch.sfc"]]) {
     assert.equal(resultName(rom, patch), name);
   }
+});
+
+test("a release ROM carries its version in the tag once", () => {
+  const release = (output, version) => ({ output, version });
+  assert.equal(romName(release("Example Hack 1.0 [RU by gen3tl].gba", "1.0.7")),
+    "Example Hack 1.0 [RU v1.0.7 by gen3tl].gba");
+  assert.equal(romName(release("Game [Beta] [PT-BR by gen3tl].gba", "2.3.0")), "Game [Beta] [PT-BR v2.3.0 by gen3tl].gba");
+  for (const [output, version] of [["Example Hack 1.0 [DE v0.1.0 by gen3tl].gba", "0.1.0"],
+    ["example-ru-1.0.7.gba", "1.0.7"]]) {
+    assert.equal(romName(release(output, version)), output);
+  }
+});
+
+test("the save memo names a save after the patched ROM", () => {
+  assert.equal(saveName("Example Hack 1.0 [RU v1.0.7 by gen3tl].gba"), "Example Hack 1.0 [RU v1.0.7 by gen3tl].sav");
+  assert.equal(saveName(resultName("game.gba", "my.patch.ups")), "my.patch.sav");
+  assert.equal(saveName("patch"), "patch.sav");
 });
 
 test("patch facts omit unstated sizes and preserve zero sizes", () => {
@@ -403,6 +422,8 @@ test("own patch controls share the ROM steps and keep completed sizes and hashes
   page.apply();
   await page.worker().finish();
   assert.equal($("download").download, "custom.SFC");
+  assert.equal($("rename-memo").hidden, false);
+  assert.equal($("rename-memo").textContent, MEMO.replace("{save}", "custom.sav"));
   assert.equal($("result-name").textContent, "custom.SFC · 3 bytes");
   assert.equal($("result-sha1").textContent, await digest(result));
   assert.equal($("download").hidden, false);
@@ -412,6 +433,7 @@ test("own patch controls share the ROM steps and keep completed sizes and hashes
   assert.equal($("result-name").textContent, "custom.SFC · 3 bytes");
   page.checkPatch(fileOf(patch, "other.ips"));
   assert.equal($("download").hidden, true);
+  assert.equal($("rename-memo").hidden, true);
   assert.equal($("patch-file-card").hidden, true);
   assert.equal($("patch-drop-title").textContent, "Drop your patch here");
   assert.equal(compact, false);
@@ -559,6 +581,7 @@ test("the note and the result line follow the site language with the format name
     russian();
     page.relabel();
     assert.equal($("status").textContent, catalog[line]);
+    assert.equal($("rename-memo").textContent, catalog[MEMO].replace("{save}", "custom.sav"));
     assert.equal($("patch-file-card").querySelector(".m").textContent.split(" · ")[0],
       catalog["Format: {format}"].replace("{format}", name));
     if (lacksChecksums(format)) assert.equal($("unverified-note").textContent, catalog[NOTE].replace("{format}", name));

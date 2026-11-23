@@ -230,8 +230,8 @@ test("capture validation keeps incomplete metadata and unavailable storage visib
   assert.match(problems, /ROM or build reference/);
   assert.match(problems, /matching original capture/);
   assert.match(noteProblems(draft.note).join(" "), /attachment is missing/);
-  await assert.rejects(edits.attach(id, { size: 6 * 1024 * 1024 }, {}), /at most 3 MiB/);
-  await assert.rejects(edits.attach(id, { size: 4 * 1024 * 1024 }, {}), /at most 3 MiB/);
+  await assert.rejects(edits.attach(id, { size: 6 * 1024 * 1024 }, {}), /at most 3 MB/);
+  await assert.rejects(edits.attach(id, { size: 4 * 1024 * 1024 }, {}), /at most 3 MB/);
   await assert.rejects(edits.attach(id, { arrayBuffer: async () => new TextEncoder().encode("<svg />").buffer }, {}), /PNG or JPEG/);
   assert.equal(edits.get(id).attachments.length, 1);
   assert.throws(() => edits.set(note.subject, { kind: "graphic", id: "G02" }, note), /Invalid note subject/);

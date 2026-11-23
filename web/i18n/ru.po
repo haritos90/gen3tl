@@ -3219,14 +3219,14 @@ msgid "The drafts could not be saved."
 msgstr "Черновики не удалось сохранить."
 
 #. js/patch.js
-msgctxt "site:{n} MiB"
-msgid "{n} MiB"
-msgstr "{n} МиБ"
+msgctxt "site:{n} MB"
+msgid "{n} MB"
+msgstr "{n} МБ"
 
 #. js/patch.js, js/save.js
-msgctxt "site:{n} KiB"
-msgid "{n} KiB"
-msgstr "{n} КиБ"
+msgctxt "site:{n} KB"
+msgid "{n} KB"
+msgstr "{n} КБ"
 
 #. js/patch.js
 msgctxt "site:{n} bytes"
@@ -9357,9 +9357,9 @@ msgstr ""
 "контекстом экрана."
 
 #. js/store.js
-msgctxt "site:Evidence images must be at most 3 MiB."
-msgid "Evidence images must be at most 3 MiB."
-msgstr "Изображение с подтверждением должно быть не больше 3 МиБ."
+msgctxt "site:Evidence images must be at most 3 MB."
+msgid "Evidence images must be at most 3 MB."
+msgstr "Изображение с подтверждением должно быть не больше 3 МБ."
 
 #. js/store.js
 msgctxt "site:Evidence attachments must be PNG or JPEG images."
@@ -10603,3 +10603,31 @@ msgid ""
 "Result not confirmed: the patch carries no checksum of the whole result."
 msgstr ""
 "Результат не подтверждён: в патче нет контрольной суммы всего результата."
+
+#. js/patch.js
+msgctxt ""
+"site:To keep playing an existing save, rename it to {save}, or to the "
+"same name ending in .srm for a .srm save. An emulator loads a save only "
+"when it has the ROM's name."
+msgid ""
+"To keep playing an existing save, rename it to {save}, or to the same "
+"name ending in .srm for a .srm save. An emulator loads a save only when "
+"it has the ROM's name."
+msgstr ""
+"Чтобы продолжить игру с прежним сохранением, переименуйте его в {save}, а "
+"файл .srm — в то же имя с расширением .srm. Эмулятор загружает "
+"сохранение, только если его имя совпадает с именем ROM."
+
+#. js/save.js
+msgctxt ""
+"site:Before loading {file}, rename it to your ROM's name with the "
+"extension {ext}. An emulator loads a save only when it has the ROM's "
+"name. Keep the original save as a backup."
+msgid ""
+"Before loading {file}, rename it to your ROM's name with the extension "
+"{ext}. An emulator loads a save only when it has the ROM's name. Keep the "
+"original save as a backup."
+msgstr ""
+"Перед загрузкой дайте файлу {file} имя вашего ROM с расширением {ext}. "
+"Эмулятор загружает сохранение, только если его имя совпадает с именем "
+"ROM. Исходное сохранение оставьте как резервную копию."

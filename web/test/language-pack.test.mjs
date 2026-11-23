@@ -7,7 +7,7 @@ import { Codec, Glyphs, Measure } from "../js/font.js";
 import { fontRuns } from "../js/fonts.js";
 import { candidates, filterTerms, norm, surfaces } from "../js/terms.js";
 import { TermEdits } from "../js/store.js";
-import { ORIGINAL, outputName, pairOf, rowState, sidesOf } from "../js/save.js";
+import { ORIGINAL, pairOf, rowState, sidesOf } from "../js/save.js";
 import { languagesOf } from "../js/patch.js";
 import { digest, patchRelease } from "../js/patcher-core.js";
 import { patchFixture } from "./patch-fixture.mjs";
@@ -55,7 +55,7 @@ for (const [code, name] of [["es", "Ñandú"], ["de", "Bär"], ["fr", "Élodie"]
     assert.deepEqual(await patchRelease(source, patch, release), result);
     assert.equal(languagesOf([release])[0].code, code);
     const pair = pairOf(ORIGINAL, `${code}@1.0.0`, sidesOf([release]));
-    assert.equal(outputName("game.sav", pair), `game-${code}.sav`);
+    assert.equal(pair.release, release);
     assert.equal(rowState({ limit: 7, after: name, kind: "kept" }, name, Object.keys(chars).join("")).bad, false);
     assert.deepEqual(metadata.save.transliteration, {});
   });

@@ -97,13 +97,13 @@ export function pairOf(from, to, sides) {
   return null;
 }
 
-/** Name output for its target and selected extension. */
-export function outputName(name, pair, output = "original") {
+/** Name output after its source with the selected extension. */
+export function outputName(name, output = "original") {
   if (!["original", "sav", "srm"].includes(output)) throw new Error(`Unknown save output format: ${output}`);
   const original = name.match(/\.[A-Za-z][A-Za-z0-9]*$/)?.[0] ?? ".sav";
   const ext = output === "original" ? original : `.${output}`;
   const stem = (name.endsWith(original) ? name.slice(0, -original.length) : name) || "save";
-  return `${stem}-${pair.edit ? "edited" : pair.back ? "en" : pair.release.language}${ext}`;
+  return `${stem}-changed${ext}`;
 }
 
 /** The game whose default names match the most Pokémon. */
@@ -279,7 +279,7 @@ export function editSummaryText(report, name) {
 }
 
 /** Format a byte count for display. */
-const kib = (n) => t("{n} KiB", { n: formatNumber(+(n / 1024).toFixed(n % 1024 ? 1 : 0)) });
+const kib = (n) => t("{n} KB", { n: formatNumber(+(n / 1024).toFixed(n % 1024 ? 1 : 0)) });
 
 const $ = (id) => document.getElementById(id);
 
@@ -367,6 +367,7 @@ function clearDownload() {
   state.url = null;
   $("download").hidden = true;
   $("download").removeAttribute("href");
+  $("rename-memo").hidden = true;
 }
 
 function renderDirection() {
@@ -479,7 +480,7 @@ function renderConvert() {
   $("convert").hidden = Boolean(state.url);
   $("convert-note").textContent = r && p
     ? t("Writes {file} · checksums updated · original untouched",
-      { file: outputName(state.file.name, p, $("output-format").value) }) : "";
+      { file: outputName(state.file.name, $("output-format").value) }) : "";
   setStep("step-names", !r ? "locked" : over ? "active" : "done");
   setStep("step-convert", !r ? "locked" : state.url ? "done" : over ? "locked" : "active");
 }
@@ -607,9 +608,12 @@ async function convert() {
   const bytes = out.toJs();
   out.destroy();
   state.url = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
-  const name = outputName(state.file.name, p, report.output?.format ?? output);
+  const name = outputName(state.file.name, report.output?.format ?? output);
   Object.assign($("download"), { href: state.url, download: name, hidden: false });
   showText($("download"), "Download {file}", { file: name });
+  showText($("rename-memo"), N_("Before loading {file}, rename it to your ROM's name with the extension {ext}. An emulator loads a save only when it has the ROM's name. Keep the original save as a backup."),
+    { file: name, ext: name.slice(name.lastIndexOf(".")) });
+  $("rename-memo").hidden = false;
   setStatus({ report, name, back: p.back, edit: p.edit });
   renderConvert();
   $("download").focus();

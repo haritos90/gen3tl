@@ -4,9 +4,11 @@ import { test } from "node:test";
 
 import { readFileSync } from "node:fs";
 
-import { CONTAINER_NAMES, editSummaryText, foldOf, groupsText, KIND_NOTES, missingLetters, namesNote, overBy, placeLabel, requestsOf, rowState, shownName, summaryText } from "../js/save.js";
+import { CONTAINER_NAMES, editSummaryText, foldOf, groupsText, KIND_NOTES, missingLetters, namesNote, ORIGINAL, outputName, overBy, placeLabel, requestsOf, rowState, shownName, summaryText } from "../js/save.js";
 
 import { setCatalog, setUiLanguage } from "../js/ui.js";
+
+import { stubPage } from "./fixture.mjs";
 
 test("save placeholders reuse final markup and cannot match another page", () => {
   const html = readFileSync(new URL("../save.html", import.meta.url), "utf8");
@@ -186,4 +188,55 @@ test("default and egg rows cannot create manual nickname requests", () => {
     { place: "party 2", after: "Egg", egg: true }];
   assert.deepEqual(requestsOf(rows, ["New", "Bulbasaur", "New"]), [["box 1 slot 2", "Bulbasaur"]]);
   assert.equal(foldOf(rows[1]), -1, "PC nicknames use their own selector");
+});
+
+test("a converted save keeps its name with -changed and the extension rules", () => {
+  for (const [name, out] of [["Example Hack 1.0 [Rus by player].srm", "Example Hack 1.0 [Rus by player]-changed.srm"],
+    ["Game.SaveRAM", "Game-changed.SaveRAM"], ["GAME.SAV", "GAME-changed.SAV"],
+    ["Example Hack 1.0", "Example Hack 1.0-changed.sav"], [".srm", "save-changed.srm"]]) {
+    assert.equal(outputName(name), out, name);
+  }
+  assert.equal(outputName("Game.srm", "sav"), "Game-changed.sav");
+  assert.equal(outputName("Game.gsv", "srm"), "Game-changed.srm");
+  assert.throws(() => outputName("Game.srm", "gsv"), /Unknown save output format/);
+});
+
+const MEMO = "Before loading {file}, rename it to your ROM's name with the extension {ext}. "
+  + "An emulator loads a save only when it has the ROM's name. Keep the original save as a backup.";
+
+test("every direction downloads the save with -changed and the rename memo", async (context) => {
+  const { $ } = stubPage(context, "save", "", readFileSync(new URL("../save.html", import.meta.url), "utf8"));
+  const source = readFileSync(new URL("../js/save.js", import.meta.url), "utf8")
+    .replace(/from "(\.\/[^"]+)"/g, (_, path) => `from "${new URL(`../js/${path.slice(2)}`, import.meta.url).href}"`)
+    .replace(/if \(typeof document[^\n]+main\(\);\s*$/, "export { state, convert, fillSides, wire };\n");
+  const page = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
+  const release = { language: "ru", version: "1.0.7", profile_name: "Game", names: "game/ru/1.0.7.names.json" };
+  const report = { rows: [], over: [], defaults: 2, transliterated: 0, renamed: 0, output: { format: "srm" } };
+  const call = () => Object.assign(() => JSON.stringify(report), { destroy() {} });
+  const output = () => ({ toJs: () => new Uint8Array([1]), destroy() {} });
+  Object.assign(page.state, { game: { id: "game", name: "Game" }, named: [release], ready: true,
+    py: { globals: { get: (name) => (name === "save_output" ? output : call()) } },
+    file: { name: "Example Hack 1.0 [Rus by player].srm" }, bytes: new Uint8Array(1),
+    report: { rows: [] }, names: new Map([[release.names, "{}"]]) });
+  context.after(() => { if (page.state.url) URL.revokeObjectURL(page.state.url); });
+  page.fillSides();
+  page.wire();
+  $("download").focus = () => {};
+  $("output-format").value = "original";
+  const name = "Example Hack 1.0 [Rus by player]-changed.srm";
+  for (const [rename, from, to] of [[false, ORIGINAL, "ru@1.0.7"], [false, "ru@1.0.7", ORIGINAL], [true, ORIGINAL, ORIGINAL]]) {
+    $("rename-only").checked = rename;
+    $("from").value = from;
+    $("to").value = to;
+    $("edit-game").value = from;
+    await page.convert();
+    assert.equal($("download").download, name);
+    assert.equal($("download").hidden, false);
+    assert.equal($("rename-memo").hidden, false);
+    assert.equal($("rename-memo").textContent, MEMO.replace("{file}", name).replace("{ext}", ".srm"));
+    assert.match($("convert-note").textContent, /^Writes Example Hack 1\.0 \[Rus by player\]-changed\.srm · /);
+    $("output-format").listeners.change();
+    assert.equal($("download").hidden, true);
+    assert.equal($("rename-memo").hidden, true);
+  }
 });

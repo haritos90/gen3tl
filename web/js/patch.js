@@ -22,8 +22,8 @@ export const versionsOf = (releases, code) => releases.filter((r) => r.language 
 
 /** Format a byte count for display. */
 export function sizeLabel(n) {
-  if (n >= 1048576) return t("{n} MiB", { n: formatNumber(+(n / 1048576).toFixed(n % 1048576 ? 1 : 0)) });
-  if (n >= 1024) return t("{n} KiB", { n: formatNumber(+(n / 1024).toFixed(n % 1024 ? 1 : 0)) });
+  if (n >= 1048576) return t("{n} MB", { n: formatNumber(+(n / 1048576).toFixed(n % 1048576 ? 1 : 0)) });
+  if (n >= 1024) return t("{n} KB", { n: formatNumber(+(n / 1024).toFixed(n % 1024 ? 1 : 0)) });
   return t("{n} bytes", { n });
 }
 
@@ -43,16 +43,25 @@ export function romProblem(size, sha1, release) {
 /** Name the download for a release's patch. */
 export const patchName = (release) => release.output.replace(/\.gba$/, ".ups");
 
+/** Name a release's patched ROM with the version in its tag. */
+export function romName(release) {
+  const tag = ` v${release.version} by `;
+  // early releases already carry it
+  return release.output.includes(tag) ? release.output : release.output.replace(/^(.*\[[^\]\s]+) by /, `$1${tag}`);
+}
+
 /** Keep explicit game arrivals on their translation. */
 export function patchSource(hasReleases, game, requested = null) {
   return hasReleases ? requested ?? (game ? "translation" : "own") : "own";
 }
 
+const stem = (name) => name.lastIndexOf(".") > 0 ? name.slice(0, name.lastIndexOf(".")) : name;
+
 /** Use the patch stem and the ROM extension. */
-export function resultName(rom, patch) {
-  const stem = (name) => name.lastIndexOf(".") > 0 ? name.slice(0, name.lastIndexOf(".")) : name;
-  return stem(patch) + rom.slice(stem(rom).length);
-}
+export const resultName = (rom, patch) => stem(patch) + rom.slice(stem(rom).length);
+
+/** Name a save the way emulators look for it. */
+export const saveName = (rom) => `${stem(rom)}.sav`;
 
 // The module names some formats by their container.
 const FORMAT_NAMES = { VCDIFF: "xdelta", "APS-GBA": "APS (GBA)", "APS-N64": "APS (N64)" };
@@ -142,6 +151,7 @@ function stopWork() {
   state.result = null;
   $("download").hidden = true;
   $("download").removeAttribute("href");
+  $("rename-memo").hidden = true;
   $("cancel").hidden = true;
 }
 
@@ -203,7 +213,7 @@ function render() {
     Object.assign($("patch-link"), { href: new URL(r.patch, state.base).href, download: patchName(r) });
     showText($("patch-link"), "Download UPS patch");
     $("rom-expected").textContent = t("Expected SHA-1 {sha1}", { sha1: r.source_sha1 });
-    $("result-name").textContent = `${r.output} · ${sizeLabel(r.result_size)}`;
+    $("result-name").textContent = `${romName(r)} · ${sizeLabel(r.result_size)}`;
     $("result-sha1").textContent = r.result_sha1;
     $("patch-facts").textContent = `${patchName(r)} · ${sizeLabel(r.patch_size)}`;
   }
@@ -375,7 +385,7 @@ function chooseSource(source) {
 function apply() {
   const release = state.release, own = state.source === "own";
   if (!state.check?.ok || !(own ? state.patchInfo : release)) return;
-  const name = own ? resultName(state.file.name, state.patchFile.name) : release.output;
+  const name = own ? resultName(state.file.name, state.patchFile.name) : romName(release);
   const message = own ? { file: state.file, patchFile: state.patchFile }
     : { file: state.file, release, patchURL: new URL(release.patch, state.base).href };
   runWorker(message, (data) => {
@@ -383,6 +393,9 @@ function apply() {
     state.url = URL.createObjectURL(new Blob([data.result], { type: "application/octet-stream" }));
     Object.assign($("download"), { href: state.url, download: name, hidden: false });
     showText($("download"), "Download {file}", { file: name });
+    showText($("rename-memo"), N_("To keep playing an existing save, rename it to {save}, or to the same name ending in .srm for a .srm save. An emulator loads a save only when it has the ROM's name."),
+      { save: saveName(name) });
+    $("rename-memo").hidden = false;
     if (own) status(data.verified ? N_("Result confirmed by the checksum in the patch.")
       : N_("Result not confirmed: the patch carries no checksum of the whole result."));
     else status(N_("Verified {version}: the result has SHA-1 {sha1}, as released."),

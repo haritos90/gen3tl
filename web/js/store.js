@@ -244,9 +244,9 @@ export class NoteEdits {
   async attach(id, file, metadata, base = null) {
     if (!this.get(id) && !base) return false;
     const epoch = this.attachmentEpochs.get(id);
-    if (file.size > CAPTURE_LIMIT) throw uiError("Evidence images must be at most 3 MiB.");
+    if (file.size > CAPTURE_LIMIT) throw uiError("Evidence images must be at most 3 MB.");
     const bytes = new Uint8Array(await file.arrayBuffer());
-    if (bytes.length > CAPTURE_LIMIT) throw uiError("Evidence images must be at most 3 MiB.");
+    if (bytes.length > CAPTURE_LIMIT) throw uiError("Evidence images must be at most 3 MB.");
     const starts = (...signature) => signature.every((byte, index) => bytes[index] === byte);
     const type = starts(137, 80, 78, 71, 13, 10, 26, 10) ? "image/png"
       : starts(255, 216, 255) ? "image/jpeg" : null;
