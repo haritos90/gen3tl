@@ -7,10 +7,9 @@ import re
 
 from ..core.lists import append_unique
 from ..core.notes import has_prose
-from ..core.rom import RomEvidence, field_spec, value_at
+from ..core.rom import ROM_BASE, ROM_MIRROR_END, RomEvidence, field_spec, rom_offset, value_at
 
 FIELDS = ("price", "held_effect", "hold_effect_param", "pocket", "battle_usage")
-POINTER_LOW, POINTER_HIGH = 0x08000000, 0x0A000000
 
 
 def join_rewards(items: list[dict]) -> None:
@@ -251,7 +250,7 @@ def _names(names, *, pointer=False) -> bool:
             value = int(number, 0) if pointer else int(number)
         except (TypeError, ValueError):
             return False
-        if not (POINTER_LOW <= value < POINTER_HIGH if pointer else 0 <= value <= 255):
+        if not (ROM_BASE <= value < ROM_MIRROR_END if pointer else 0 <= value <= 255):
             return False
         if not isinstance(key, str) or not key.strip():
             return False
@@ -412,9 +411,9 @@ def build(block: dict, data: bytes) -> list[dict]:
     for item in range(int(block.get("first", 0)), count):
         start = int(block["base"]) + item * int(block["stride"])
         description = None
-        pointer = _field_value(data, start, fields["description"])
-        if pointer and POINTER_LOW <= pointer < POINTER_HIGH:
-            description = f"s{pointer - POINTER_LOW:07X}"
+        offset = rom_offset(_field_value(data, start, fields["description"]))
+        if offset is not None:
+            description = f"s{offset:07X}"
         tm_index = _tm_index(tm, item) if tm else None
         taught_move = None
         if tm_index is not None:
@@ -426,9 +425,9 @@ def build(block: dict, data: bytes) -> list[dict]:
         _effect_names(block, record, data, start, item)
         name = f"{block.get('name_table', 'items')}:{item}"
         if block.get("long_name_pointers"):
-            pointer = int.from_bytes(data[start:start + 4], "little")
-            if POINTER_LOW <= pointer < POINTER_HIGH:
-                name = f"s{pointer - POINTER_LOW:07X}"
+            offset = rom_offset(value_at(data, start))
+            if offset is not None:
+                name = f"s{offset:07X}"
         record.update({
             "id": item,
             "offset": f"0x{start:06x}",

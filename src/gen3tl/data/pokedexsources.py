@@ -10,7 +10,7 @@ from collections import defaultdict
 from ..core.notes import has_prose
 from ..discover.maps import Walker
 from ..discover.reach import Code, SCRIPT_OPERAND
-from ..core.rom import Rom, RomEvidence, value_at
+from ..core.rom import ROM_BASE, Rom, RomEvidence, pointer_at, value_at
 from ..discover.scan import pointer_index
 
 
@@ -180,14 +180,14 @@ def _bound_trades(trades: dict, data: bytes, species_count: int) -> list[dict]:
     records = []
     for binding in trades["bindings"]:
         index, header = binding["index"], binding["map_header"]
-        if _runtime_word(data, trades["context"], binding["map"]) != 0x08000000 + header:
+        if _runtime_word(data, trades["context"], binding["map"]) != ROM_BASE + header:
             raise ValueError(f"trade {index}: runtime map differs")
-        events = (value_at(data, header + 4, 4) or 0) - 0x08000000
+        events = (value_at(data, header + 4, 4) or 0) - ROM_BASE
         count = value_at(data, events, 1)
-        objects = (value_at(data, events + 4, 4) or 0) - 0x08000000
+        objects = (value_at(data, events + 4, 4) or 0) - ROM_BASE
         if count is None or objects < 0 or objects + count * 24 > len(data):
             raise ValueError(f"trade {index}: invalid map objects")
-        roots = {value_at(data, objects + i * 24 + 16, 4) - 0x08000000
+        roots = {value_at(data, objects + i * 24 + 16, 4) - ROM_BASE
                  for i in range(count) if data[objects + i * 24 + 2] != 255}
         if not set(binding["roots"]) <= roots:
             raise ValueError(f"trade {index}: NPC script roots differ")
@@ -202,7 +202,7 @@ def _bound_trades(trades: dict, data: bytes, species_count: int) -> list[dict]:
             selected = selector["base"] + (selected - selector["first"]) * selector["stride"] + choice
         if selected != index:
             raise ValueError(f"trade {index}: selector index differs")
-        if "dispatch" in binding and value_at(data, binding["dispatch"], 4) != 0x08000000 + binding["script"]:
+        if "dispatch" in binding and value_at(data, binding["dispatch"], 4) != ROM_BASE + binding["script"]:
             raise ValueError(f"trade {index}: dispatch script differs")
         at = trades["base"] + index * trades["stride"]
         species = value_at(data, at + trades["species"], 2)
@@ -219,14 +219,14 @@ def _bound_trades(trades: dict, data: bytes, species_count: int) -> list[dict]:
             offset = binding["speaker_offset"]
             pointer = value_at(data, offset, 4)
             if data[offset - 2:offset] != b"\x0f\x00" \
-                    or pointer != 0x08000000 + int(binding["speaker"][1:], 16):
+                    or pointer != ROM_BASE + int(binding["speaker"][1:], 16):
                 raise ValueError(f"trade {index}: speaker name box differs")
             record["speaker"] = binding["speaker"]
         if "original_trainer" in trades:
-            pointer = value_at(data, at + trades["original_trainer"], 4)
-            if pointer is None or not 0x08000000 <= pointer < 0x08000000 + len(data):
+            trainer = pointer_at(data, at + trades["original_trainer"])
+            if trainer is None:
                 raise ValueError(f"trade {index}: invalid original trainer pointer")
-            record.update(original_trainer=f"s{pointer - 0x08000000:07X}", original_trainer_offset=f"0x{at:07X}")
+            record.update(original_trainer=f"s{trainer:07X}", original_trainer_offset=f"0x{at:07X}")
         records.append(record)
     return records
 

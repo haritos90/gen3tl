@@ -8,7 +8,7 @@ import re
 
 from ..core.notes import has_prose
 from ..core.charmap import Charmap, CharmapError
-from ..core.rom import Rom, pointer_at
+from ..core.rom import ROM_BASE, Rom, pointer_at
 from ..families.knowledge import load_script
 
 # total command length (opcode included) for fixed-size FRLG commands
@@ -272,7 +272,7 @@ class Walker:
             at = table + 4 * g
             if not 0 <= at <= len(self.d) - 4:
                 raise ValueError("runtime map table exceeds ROM")
-            bank = (int.from_bytes(self.d[at:at + 4], "little") ^ cfg.get("bank_xor", 0)) - 0x08000000
+            bank = (int.from_bytes(self.d[at:at + 4], "little") ^ cfg.get("bank_xor", 0)) - ROM_BASE
             if not 0 <= bank <= len(self.d) - 4 or bank % 4:
                 raise ValueError(f"invalid runtime map bank {g}")
             banks.append(bank)

@@ -10,6 +10,7 @@ from pathlib import Path
 from ..core.notes import has_prose
 from ..build.graphics import lz77_decompress
 from ..check.render import indexed_png
+from ..core.rom import ROM_BASE, pointer_at
 
 SPRITE_TABLES = ("front", "back")
 PALETTE_TABLES = ("palettes", "shiny_palettes")
@@ -70,10 +71,10 @@ def trainer_sources(pictures: dict, data: bytes) -> list[dict]:
             at = int(table["base"]) + picture * int(table["stride"])
             if at + 8 > len(data):
                 raise ValueError(f"trainer picture {picture} {name}: record exceeds ROM")
-            pointer = int.from_bytes(data[at:at + 4], "little")
-            if not 0x08000000 <= pointer < 0x08000000 + len(data):
+            offset = pointer_at(data, at)
+            if offset is None:
                 raise ValueError(f"trainer picture {picture} {name}: invalid pointer")
-            row[name] = {"record": f"0x{at:06x}", "data": f"0x{pointer - 0x08000000:06x}"}
+            row[name] = {"record": f"0x{at:06x}", "data": f"0x{offset:06x}"}
         sources.append(row)
     return sources
 
@@ -92,7 +93,7 @@ def _record(rom_data: bytes, table: dict, slot: int, what: str) -> tuple[int, in
 
 def _sprite_bytes(rom_data: bytes, pointer: int, what: str, side: int | None = None) -> tuple[list[list[int]], int]:
     """The pixel indices (4 bits each) of the square sprite a pointer holds."""
-    offset = pointer - 0x08000000
+    offset = pointer - ROM_BASE
     blob, _ = lz77_decompress(rom_data, offset)
     if side is None:
         side = int((len(blob) * 2) ** 0.5)
@@ -115,7 +116,7 @@ def _sprite_bytes(rom_data: bytes, pointer: int, what: str, side: int | None = N
 
 def _palette(rom_data: bytes, pointer: int) -> list[tuple[int, int, int]]:
     """The 16 RGB555 colours of a palette blob, expanded to 8-bit channels."""
-    blob, _ = lz77_decompress(rom_data, pointer - 0x08000000)
+    blob, _ = lz77_decompress(rom_data, pointer - ROM_BASE)
     out = []
     for i in range(16):
         v = struct.unpack_from("<H", blob, i * 2)[0]
@@ -172,9 +173,9 @@ def build(block: dict, rom_data: bytes) -> dict:
     trainers = []
     if pictures := block.get("trainers", {}).get("pictures"):
         for source in trainer_sources(pictures, rom_data):
-            pixels, _ = _sprite_bytes(rom_data, 0x08000000 + int(source["front"]["data"], 16),
+            pixels, _ = _sprite_bytes(rom_data, ROM_BASE + int(source["front"]["data"], 16),
                                       f"trainer picture {source['id']}", int(pictures["side"]))
-            palette = _palette(rom_data, 0x08000000 + int(source["palettes"]["data"], 16))
+            palette = _palette(rom_data, ROM_BASE + int(source["palettes"]["data"], 16))
             trainers.append({**source, "png": indexed_png(pixels, palette, 4, transparent=0)})
     return {"rom_sha1": hashlib.sha1(rom_data).hexdigest(), "count": count,
             "files": variant_files, "slots": docs, "trainers": trainers}

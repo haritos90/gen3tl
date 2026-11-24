@@ -7,9 +7,9 @@ from collections import defaultdict
 
 from ..core import thumb
 from ..core.graphics import GraphicsError, lz77_decompress
-from ..core.rom import Rom
+from ..core.rom import Rom, rom_offset
 from .consumerproof import (DMA3_COPY, TransferProof, consumer_paths, consumer_start, graphic_proofs,
-                            palette_proofs, rom_offset as proof_rom_offset, staged_palette_candidates)
+                            palette_proofs, staged_palette_candidates)
 
 MAX_RAW_SIZE = 65536
 DUPLICATE_TILES = 256
@@ -288,7 +288,7 @@ def verified_descriptor_triples(rom: Rom, triples: list[dict],
 
     def from_field(proof, pool: int, target: int) -> bool:
         return proof.target == target and any(
-            origin.pool == pool and proof_rom_offset(origin.value) == target
+            origin.pool == pool and rom_offset(origin.value) == target
             for origin in proof.origins)
 
     for base, sites in sorted(loads.items()):

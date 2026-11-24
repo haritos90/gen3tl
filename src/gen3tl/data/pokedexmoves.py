@@ -7,7 +7,7 @@ import re
 from collections import defaultdict
 
 from ..core.notes import has_prose
-from ..core.rom import Rom, RomEvidence, field_spec, value_at
+from ..core.rom import Rom, RomEvidence, field_spec, rom_offset, value_at
 from ..discover.maps import VAR_FIRST, Walker
 
 FIELDS = ("effect", "power", "type", "accuracy", "pp", "secondary_chance",
@@ -16,7 +16,6 @@ TABLES = ("targets", "effects", "flag_bits")
 KEY = re.compile(r"[a-z0-9]+(?:_[a-z0-9]+)*")
 MECHANICS_KEY = re.compile(r"page:mechanics:[a-z0-9_]+(?::[a-z0-9_]+)*")
 ENVIRONMENT_COLUMNS = ("effect", "move", "type")
-POINTER_LOW, POINTER_HIGH = 0x08000000, 0x0A000000
 
 
 def _field_value(data: bytes, at: int, spec) -> int | None:
@@ -578,9 +577,9 @@ def build(block: dict, data: bytes, places: dict[int, dict] | None = None) -> li
         description = None
         if descriptions and move < int(descriptions["count"]):
             at = int(descriptions["base"]) + move * int(descriptions.get("stride", 4))
-            pointer = int.from_bytes(data[at:at + 4], "little")
-            if POINTER_LOW <= pointer < POINTER_HIGH:
-                description = f"s{pointer - POINTER_LOW:07X}"
+            offset = rom_offset(value_at(data, at))
+            if offset is not None:
+                description = f"s{offset:07X}"
         record = {name: _field_value(data, start, fields[name]) for name in FIELDS}
         record.update({
             "id": move,

@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 
 from ..core import thumb
 from ..core.graphics import GraphicsError, lz77_decompress
-from ..core.rom import ROM_BASE, ROM_MIRROR_END, Rom
+from ..core.rom import ROM_BASE, Rom, rom_offset
 from .accessors import Expression, Literal, aligned
 
 FUNCTION_SPAN = 0x100
@@ -18,12 +18,6 @@ PALETTE_RAM = (0x05000000, 0x05000400)
 CPU_SET = (0x0B, 0x0C)
 LZ77 = (0x11, 0x12)
 _HIGH_OPERATIONS, _HIGH_BX = 0x4400, 0x4700
-
-
-def rom_offset(value: int) -> int | None:
-    if not ROM_BASE <= value < ROM_MIRROR_END:
-        return None
-    return value - ROM_BASE
 
 
 @dataclass(frozen=True)

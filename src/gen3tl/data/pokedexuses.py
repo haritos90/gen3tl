@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from ..core.lists import append_unique
 from ..core.notes import has_prose
-from ..core.rom import Rom, RomEvidence
+from ..core.rom import Rom, RomEvidence, value_at
 from ..discover.maps import Walker
 
 KINDS = ("exchange", "upgrade", "requirement")
@@ -15,10 +15,6 @@ VARIABLE = 0x4000
 SET_OPS = (0x16, 0x1A)   # setvar, setorcopyvar: u16 variable, then value
 ADDITEM, GIVEMON, LOADPOINTER, CALLASM = 0x44, 0x79, 0x0F, 0x23
 ITEM_VAR, QUANTITY_VAR, TUTOR_VAR = 0x8000, 0x8001, 0x8005
-
-
-def _u16(data: bytes, at: int) -> int:
-    return int.from_bytes(data[at:at + 2], "little")
 
 
 def _offset(value) -> bool:
@@ -178,7 +174,7 @@ def _take(data: bytes, at: int, row: dict, index: int) -> tuple[bool, int | None
     op = data[at] if 0 <= at < len(data) else None
     if op not in TAKES:
         raise ValueError(f"item use {index}: 0x{at:07X} is not checkitem or removeitem")
-    item, quantity = _u16(data, at + 1), _u16(data, at + 3)
+    item, quantity = value_at(data, at + 1, 2), value_at(data, at + 3, 2)
     if (item >= VARIABLE) != ("items" in row or "held_effect" in row):
         raise ValueError(f"item use {index}: 0x{at:07X} item operand and declared items disagree")
     if quantity >= VARIABLE:
@@ -195,18 +191,18 @@ def _proof(data: bytes, give: dict, kind: str, index: int) -> int | None:
     at, value, op = give["at"], give[kind], data[give["at"]]
     found, quantity = None, None
     if op in SET_OPS:
-        var, found = _u16(data, at + 1), _u16(data, at + 3)
+        var, found = value_at(data, at + 1, 2), value_at(data, at + 3, 2)
         if kind == "tutor" and var != TUTOR_VAR:
             found = None
         nxt = at + 5
-        if kind == "item" and var == ITEM_VAR and data[nxt] in SET_OPS and _u16(data, nxt + 1) == QUANTITY_VAR:
-            quantity = _u16(data, nxt + 3)
+        if kind == "item" and var == ITEM_VAR and data[nxt] in SET_OPS and value_at(data, nxt + 1, 2) == QUANTITY_VAR:
+            quantity = value_at(data, nxt + 3, 2)
     elif op == ADDITEM and kind in ("item", "upgrade"):
-        found, quantity = _u16(data, at + 1), _u16(data, at + 3)
+        found, quantity = value_at(data, at + 1, 2), value_at(data, at + 3, 2)
     elif op in TAKES and kind == "upgrade":
-        found = _u16(data, at + 1)
+        found = value_at(data, at + 1, 2)
     elif op == GIVEMON and kind == "species":
-        found = _u16(data, at + 1)
+        found = value_at(data, at + 1, 2)
     if found != value:
         raise ValueError(f"item use {index}: 0x{at:07X} does not give {kind} {value}")
     if quantity is not None and quantity >= VARIABLE:
@@ -223,7 +219,7 @@ def _gives(data: bytes, row: dict, index: int, taken: int, items: dict, moves: l
         found = _proof(data, give, kind, index)
         if kind == "table":
             for n in range(give["count"]):
-                item = _u16(data, give["table"] + 2 * n)
+                item = value_at(data, give["table"] + 2 * n, 2)
                 if item not in items:
                     raise ValueError(f"item use {index}: table item {item} is not an item")
                 out.append({"item": item})
@@ -283,7 +279,7 @@ def _native_rows(block: dict, data: bytes, items: dict, moves: list[int] | None)
     """Expand evidenced native tables into ordinary exchanges."""
     for row in block.get("recipes", []):
         for n in range(row["outputs"]["count"]):
-            item = _u16(data, row["outputs"]["base"] + n * 2)
+            item = value_at(data, row["outputs"]["base"] + n * 2, 2)
             index = items.get(item, {}).get(row["index_field"])
             if type(index) is not int or not 0 <= index < row["count"]:
                 raise ValueError(f"item recipe: invalid output or cost index {item}")
@@ -302,7 +298,7 @@ def _native_rows(block: dict, data: bytes, items: dict, moves: list[int] | None)
                 if len(record) != row["stride"]:
                     raise ValueError("item tutor: truncated table")
                 tutor = record[row["tutor"]]
-                move = _u16(record, row["move"])
+                move = value_at(record, row["move"], 2)
                 quantity = record[row["quantity"]]
                 if moves is None or tutor >= len(moves) or moves[tutor] != move or not move or not quantity:
                     raise ValueError("item tutor: move or cost disagrees with tutor table")
@@ -339,7 +335,7 @@ def build(block: dict, data: bytes, profile: dict, items: list[dict], tutor: dic
     by_id = {record["id"]: record for record in items}
     moves = None
     if tutor:
-        moves = [_u16(data, int(tutor["move_base"]) + 2 * n) for n in range(int(tutor["move_count"]))]
+        moves = [value_at(data, int(tutor["move_base"]) + 2 * n, 2) for n in range(int(tutor["move_count"]))]
     targets = {at for row in block["rows"] for at in row["takes"]} | {buyer["at"] for buyer in block.get("buyers", [])}
     targets |= {row["at"] for name in ("recipes", "prices") for row in block.get(name, [])}
     targets |= {entry["at"] for row in block.get("tutors", []) for entry in row["entries"]}
@@ -398,7 +394,7 @@ def build(block: dict, data: bytes, profile: dict, items: list[dict], tutor: dic
         place = where([buyer["at"]])
         for n in range(buyer["count"]):
             at = buyer["base"] + n * record["stride"]
-            item = _u16(data, at + record["item"])
+            item = value_at(data, at + record["item"], 2)
             price = int.from_bytes(data[at + record["price"]:at + record["price"] + 4], "little")
             if item not in by_id or price <= 0:
                 raise ValueError(f"buyer 0x{buyer['base']:07X}: record {n} is not an item and a price")

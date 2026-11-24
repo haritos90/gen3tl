@@ -13,7 +13,6 @@ from ..core.rom import Rom, pointer_at, value_at
 from ..discover.maps import Walker
 from .pokedexsprites import check_trainers, trainer_file
 
-ROM_BASE = 0x08000000
 TRAINERBATTLE = 0x5C
 VARIABLES = 0x4000   # a trainer operand from here on names a variable
 RUNTIME_MAP = re.compile(r"\d+\.\d+")
@@ -757,10 +756,10 @@ def build(block: dict, data: bytes, species_count: int, item_count: int, move_co
             classes = block["class_names"]
             if class_id >= int(classes["count"]):
                 raise ValueError(f"trainer {trainer_id}: invalid class {class_id}")
-            name_pointer = value_at(data, int(classes["base"]) + class_id * int(classes["stride"])
-                                    + int(classes["pointer"]), 4)
-            if name_pointer is not None and ROM_BASE <= name_pointer < ROM_BASE + len(data):
-                class_name = f"s{name_pointer - ROM_BASE:07X}"
+            name_offset = pointer_at(data, int(classes["base"]) + class_id * int(classes["stride"])
+                                     + int(classes["pointer"]))
+            if name_offset is not None:
+                class_name = f"s{name_offset:07X}"
         pointer = pointer_at(data, header + int(fields["party"])) if size else None
         if size and pointer is None:
             raise ValueError(f"trainer {trainer_id}: invalid party pointer")

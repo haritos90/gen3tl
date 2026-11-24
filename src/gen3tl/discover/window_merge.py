@@ -3,6 +3,7 @@
 from dataclasses import replace
 from itertools import product
 
+from ..core.rom import ROM_BASE, ROM_MIRROR_END
 from .accessors import Expression
 
 
@@ -72,7 +73,7 @@ class Joins:
 
     @staticmethod
     def pointer_values(values):
-        if any(isinstance(v, Expression) and not v.terms and 0x08000000 <= v.constant < 0x0A000000 for v in values):
+        if any(isinstance(v, Expression) and not v.terms and ROM_BASE <= v.constant < ROM_MIRROR_END for v in values):
             return 2
         return int(any(isinstance(v, Expression) and any(
             name.startswith(('load', 'getter')) for name, _ in v.terms) for v in values))

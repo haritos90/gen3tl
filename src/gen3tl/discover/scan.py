@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 
 from ..core.notes import has_prose
 from ..core.charmap import BASE_CHARS, CTRL, CTRL_CODES, EOS, NAMED_BYTES, NEWLINE, PARAGRAPH, PLACEHOLDER, PREFIXED_ARG, SCROLL, Charmap, CharmapError
-from ..core.rom import Rom
+from ..core.rom import ROM_BASE, Rom
 
 LETTERS = set(range(0xBB, 0xEF))
 DIGITS = set(range(0xA1, 0xAB))
@@ -166,7 +166,7 @@ def pointer_index(rom: Rom) -> dict[int, list[int]]:
         q = m.start() - 3
         if q < 0:
             continue
-        v = int.from_bytes(d[q:q + 4], "little") - 0x08000000
+        v = int.from_bytes(d[q:q + 4], "little") - ROM_BASE
         if 0 < v < size:
             idx[v].append(q)
     return idx
@@ -264,8 +264,8 @@ def table_base_problems(rom: Rom, tb: dict) -> list[str]:
     if base not in table_base_members(tb):
         out.append(f"[[strings.table_base]] {sid}: the base is not a member")
     for p in tb.get("pointers", []):
-        if rom.u32(p) != 0x08000000 + base:
-            out.append(f"[[strings.table_base]] {sid}: the word at {p:#x} does not hold {0x08000000 + base:#x}")
+        if rom.u32(p) != ROM_BASE + base:
+            out.append(f"[[strings.table_base]] {sid}: the word at {p:#x} does not hold {ROM_BASE + base:#x}")
     if "length" not in tb:
         return out
     # the declared field length
@@ -309,7 +309,7 @@ def classify_refs(rom: Rom, idx: dict[int, list[int]], starts: set[int],
         return any(q >= k and d[q - k] == 0x5C and d[q - k + 1] == typ for k, typ in tb_pairs)
 
     def is_ptr(q: int) -> bool:
-        return 0 <= q and rom.ptr_at(q) is not None
+        return rom.ptr_at(q) is not None
 
     for t in starts:
         refs = []

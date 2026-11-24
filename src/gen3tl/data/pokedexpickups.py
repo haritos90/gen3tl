@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import Counter
 
 from ..core.notes import has_prose
-from ..core.rom import Rom
+from ..core.rom import Rom, value_at
 from ..discover.maps import END_OPS, VAR_FIRST, VAR_SAFE_OPS, Walker
 
 KINDS = ("ground", "hidden", "gift")
@@ -14,14 +14,6 @@ SETVAR, COPYVAR, SETORCOPYVAR = 0x16, 0x19, 0x1A
 COMPARES = (0x21, 0x22)   # compare_var_value, compare_var_var: variable at +1
 TRAINERBATTLE = 0x5C
 CONNECTED = 255   # an object borrowed from a connected map
-
-
-def _u16(data: bytes, at: int) -> int:
-    return int.from_bytes(data[at:at + 2], "little")
-
-
-def _s16(data: bytes, at: int) -> int:
-    return int.from_bytes(data[at:at + 2], "little", signed=True)
 
 
 def _byte(value) -> bool:
@@ -98,7 +90,8 @@ class _PickupWalker(Walker):
             script = self.ptr(at + 16)
             if script is None:
                 continue
-            place = {**base, "event": at, "x": _s16(d, at + 4), "y": _s16(d, at + 6)}
+            place = {**base, "event": at, "x": value_at(d, at + 4, 2, signed=True),
+                     "y": value_at(d, at + 6, 2, signed=True)}
             if d[at + 2] == CONNECTED:
                 self.left["connected-map object"] += 1
                 continue
@@ -114,13 +107,13 @@ class _PickupWalker(Walker):
             at = coords + 16 * index
             script = self.ptr(at + 12)
             if script is not None:
-                self.walk_event(script, {**base, "event": at, "x": _u16(d, at), "y": _u16(d, at + 2)})
+                self.walk_event(script, {**base, "event": at, "x": value_at(d, at, 2), "y": value_at(d, at + 2, 2)})
         hidden = block["hidden"]
         for index in range(d[events + 3] if bgs is not None else 0):
             at = bgs + 12 * index
-            place = {**base, "event": at, "x": _u16(d, at), "y": _u16(d, at + 2)}
+            place = {**base, "event": at, "x": value_at(d, at, 2), "y": value_at(d, at + 2, 2)}
             if d[at + 5] == hidden["kind"]:
-                item = _u16(d, at + hidden["item"])
+                item = value_at(d, at + hidden["item"], 2)
                 if item:
                     self.rows.append({**place, "kind": "hidden", "item": item,
                                       "quantity": d[at + hidden["quantity"]] & hidden["mask"]})
@@ -133,10 +126,10 @@ class _PickupWalker(Walker):
     def ground(self, script: int) -> tuple[int, int] | None:
         """Item and quantity of an item ball script: two setorcopyvar commands, then callstd."""
         d, block = self.d, self.block
-        if (d[script] == SETORCOPYVAR and _u16(d, script + 1) == block["item_var"]
-                and d[script + 5] == SETORCOPYVAR and _u16(d, script + 6) == block["quantity_var"]
+        if (d[script] == SETORCOPYVAR and value_at(d, script + 1, 2) == block["item_var"]
+                and d[script + 5] == SETORCOPYVAR and value_at(d, script + 6, 2) == block["quantity_var"]
                 and d[script + 10] == CALLSTD and d[script + 11] == block["ground_std"]):
-            item, quantity = _u16(d, script + 3), _u16(d, script + 8)
+            item, quantity = value_at(d, script + 3, 2), value_at(d, script + 8, 2)
             if item < VAR_FIRST and quantity < VAR_FIRST:
                 return item, quantity
         return None
@@ -186,15 +179,15 @@ class _PickupWalker(Walker):
             if op == CALLSTD and d[pc + 1] in block["gift_std"]:
                 self.give(pc, known.get(block["item_var"]), known.get(block["quantity_var"]), decided)
             elif op == block["additem"]:
-                item, quantity = _u16(d, pc + 1), _u16(d, pc + 3)
+                item, quantity = value_at(d, pc + 1, 2), value_at(d, pc + 3, 2)
                 self.give(pc, item if item < VAR_FIRST else known.get(item),
                           quantity if quantity < VAR_FIRST else known.get(quantity), decided)
             if op == SETVAR:
-                var = _u16(d, pc + 1)
-                known[var] = _u16(d, pc + 3)
+                var = value_at(d, pc + 1, 2)
+                known[var] = value_at(d, pc + 3, 2)
                 tainted.discard(var)
             elif op in (COPYVAR, SETORCOPYVAR):
-                var, source = _u16(d, pc + 1), _u16(d, pc + 3)
+                var, source = value_at(d, pc + 1, 2), value_at(d, pc + 3, 2)
                 value = source if op == SETORCOPYVAR and source < VAR_FIRST else known.get(source)
                 if value is None:
                     known.pop(var, None)
@@ -206,11 +199,12 @@ class _PickupWalker(Walker):
                     tainted.discard(var)
             elif op in block["routines"]:
                 known.clear()
-                tainted.add(_u16(d, pc + 1) if op == 0x26 else block["result_var"])
+                tainted.add(value_at(d, pc + 1, 2) if op == 0x26 else block["result_var"])
             elif op in block["purchases"]:
                 decided = decided or "paid"
             elif op in COMPARES:
-                decided = decided or _u16(d, pc + 1) in tainted or op == COMPARES[1] and _u16(d, pc + 3) in tainted
+                decided = (decided or value_at(d, pc + 1, 2) in tainted
+                           or op == COMPARES[1] and value_at(d, pc + 3, 2) in tainted)
             elif op not in VAR_SAFE_OPS and op not in (GOTO, GOTO_IF, CALL, CALL_IF):
                 known.clear()
                 tainted.discard(block["result_var"])

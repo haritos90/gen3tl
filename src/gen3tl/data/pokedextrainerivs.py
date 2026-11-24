@@ -9,13 +9,13 @@ from pathlib import Path
 
 from ..core.lists import append_unique
 from ..core.notes import has_prose
+from ..core.rom import ROM_BASE
 from ..core.thumb import decode
 
 FORMAT = "gen3tl-pokedex-trainer-ivs"
 SCHEMA = 1
 DOC_SCHEMA = 3
 FILENAME = "trainer-ivs.json"
-ROM_BASE = 0x08000000
 OPERATIONS = ("base_uniform", "rival_spread", "spread_uniform", "speed_zero", "packed_masks")
 SPECIES_RULE_KINDS = ("trainer_level", "held_item_form", "minior_core", "scaled_evolution")
 SPECIES_STAGES = ("create", "held_item", "adjustment", "final")

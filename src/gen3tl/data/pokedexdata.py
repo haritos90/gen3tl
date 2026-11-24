@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 
 from ..core.notes import has_prose
-from ..core.rom import field_spec, value_at
+from ..core.rom import field_spec, rom_offset, value_at
 
 FORMAT = "gen3tl-pokedex"
 SCHEMA = 1
@@ -22,7 +22,6 @@ STAT_FIELDS = ("hp", "attack", "defense", "speed", "sp_attack", "sp_defense")
 OPTIONAL = ("dex", "entries", "evolution")
 REQUIRED = ("species",)
 BROWSING_TABLES = ("species", "moves", "abilities", "items")
-POINTER_LOW, POINTER_HIGH = 0x08000000, 0x0A000000
 
 
 class PokedexError(ValueError):
@@ -31,9 +30,9 @@ class PokedexError(ValueError):
 
 def _text_id(data: bytes, at: int) -> tuple[str | None, int]:
     """The catalog id of the string a pointer at `at` leads to, and that pointer's offset."""
-    pointer = value_at(data, at, 4)
-    if pointer and POINTER_LOW <= pointer < POINTER_HIGH:
-        return f"s{pointer - POINTER_LOW:07X}", at
+    offset = rom_offset(value_at(data, at, 4))
+    if offset is not None:
+        return f"s{offset:07X}", at
     return None, at
 
 
@@ -644,10 +643,10 @@ def _evolution(block: dict, data: bytes, slot: int, start: int) -> list[dict] | 
         return values
 
     if ev.get("index") == "pointer":
-        pointer = value_at(data, start + int(ev["pointer"]), 4)
-        if not pointer or not POINTER_LOW <= pointer < POINTER_HIGH:
+        at = rom_offset(value_at(data, start + int(ev["pointer"]), 4))
+        if at is None:
             return []
-        at, limit = pointer - POINTER_LOW, int(ev.get("count", 32))
+        limit = int(ev.get("count", 32))
         rows = []
         for i in range(limit):
             row = at + i * size
@@ -908,9 +907,9 @@ def build(block: dict, data: bytes, profile: dict) -> dict:
         sections = block["map_sections"]
         doc["map_sections"] = []
         for section in range(int(sections["first"]), int(sections["first"]) + int(sections["count"])):
-            pointer = value_at(data, int(sections["base"]) + (section - int(sections["first"]))
-                               * int(sections.get("stride", 4)), 4)
-            name = f"s{pointer - POINTER_LOW:07X}" if pointer and POINTER_LOW <= pointer < POINTER_HIGH else None
+            offset = rom_offset(value_at(data, int(sections["base"]) + (section - int(sections["first"]))
+                                         * int(sections.get("stride", 4)), 4))
+            name = f"s{offset:07X}" if offset is not None else None
             doc["map_sections"].append({"id": section, "name": name})
     learnsets = None
     if "learnsets" in block:

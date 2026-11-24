@@ -10,7 +10,8 @@ from test_roots import TOOLKIT_ROOT
 
 sys.path.insert(0, str(TOOLKIT_ROOT / "src"))
 
-from gen3tl.core.rom import Rom, RomError, RomEvidence, field_spec, pointer_at, ptr_bytes, value_at  # noqa: E402
+from gen3tl.core.rom import (Rom, RomError, RomEvidence, field_spec, pointer_at, ptr_bytes,  # noqa: E402
+                             rom_offset, value_at)
 from gen3tl.cli.main import main
 from project_fixture import rom_evidence
 
@@ -51,6 +52,13 @@ class RomTest(unittest.TestCase):
         for at in (-4, 0, 6, 13):   # outside, not a pointer, past the image, cut off
             with self.subTest(at=at):
                 self.assertIsNone(pointer_at(data, at))
+
+    def test_window_offsets(self):
+        self.assertEqual(rom_offset(0x08000010), 0x10)
+        self.assertEqual(rom_offset(0x09FFFFFF), 0x1FFFFFF)   # the window, not one image
+        for value in (None, 0, 0x07FFFFFF, 0x0A000000):
+            with self.subTest(value=value):
+                self.assertIsNone(rom_offset(value))
 
     def test_field_specs(self):
         for spec, expected in ((3, (3, 1, False)), ({"offset": 2}, (2, 1, False)),

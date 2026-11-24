@@ -128,6 +128,11 @@ def pointer_at(data: bytes | bytearray, at: int) -> int | None:
     return value - ROM_BASE if value is not None and ROM_BASE <= value < ROM_BASE + len(data) else None
 
 
+def rom_offset(value: int | None) -> int | None:
+    """The ROM offset of a GBA ROM address in the 32 MiB window, or None."""
+    return value - ROM_BASE if value is not None and ROM_BASE <= value < ROM_MIRROR_END else None
+
+
 def field_spec(spec) -> tuple[int, int, bool]:
     """(offset, width, signed) of a record field: an offset, or {offset, width, signed}."""
     if isinstance(spec, dict):

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from ..core.notes import has_prose
 from ..catalog.catalog import observed_entries, pointer_runs
 from .maps import CMD_LEN, END_OPS, TEXT_PTR_AT, Walker
-from ..core.rom import Rom, pointer_at
+from ..core.rom import ROM_BASE, Rom, pointer_at
 from .scan import TRAINERBATTLE_TEXT_OFFSETS, pointer_index, table_base_members
 
 SCRIPT_REACH_DESCRIPTION = """Reachability of the script text no map walk reaches.
@@ -380,12 +380,12 @@ class Thumb:
             h = self.hw(p)
             if h & 0xF800 == 0x4800:
                 w = ((p + 4) & ~3) + (h & 0xFF) * 4
-                v = int.from_bytes(self.d[w:w + 4], "little") - 0x08000000
+                v = int.from_bytes(self.d[w:w + 4], "little") - ROM_BASE
                 if pc < v <= pc + 64 and v % 4 == 0:
                     a = v
                     break
         for _ in range(CASES):
-            v = (int.from_bytes(self.d[a:a + 4], "little") - 0x08000000) & ~1
+            v = (int.from_bytes(self.d[a:a + 4], "little") - ROM_BASE) & ~1
             if not (0 <= v < len(self.d) and abs(v - pc) < CASE_SPAN and not self.nc[v]):
                 break
             out.append(v)
@@ -434,8 +434,8 @@ def movement_spans(data) -> dict[int, int]:
         lid = data[a + 1] | data[a + 2] << 8 if a + 2 < len(data) else 0
         if not (lid in (0xFF, 0x7F) or 1 <= lid < 0x40):
             continue
-        v = int.from_bytes(data[a + 3:a + 7], "little") - 0x08000000
-        if not 0 <= v < len(data) or v in out:
+        v = pointer_at(data, a + 3)
+        if v is None or v in out:
             continue
         e = data.find(b"\xfe", v, v + 32)
         if e > v and all(x < 0xE1 for x in data[v:e]):

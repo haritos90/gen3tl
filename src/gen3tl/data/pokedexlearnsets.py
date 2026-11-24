@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from ..core.notes import has_prose
+from ..core.rom import rom_offset, value_at
 
-POINTER_LOW, POINTER_HIGH = 0x08000000, 0x0A000000
 LEVEL_UP, TM_HM, EGG, TUTOR = 0, 1, 2, 3
 METHODS = ("level_up", "tmhm", "egg", "tutor")   # names of the method codes
 
@@ -44,16 +44,11 @@ def resolve_species(block: dict, slot: int, evolution: list[dict] | None) -> int
     return next(iter(targets)) if len(targets) == 1 else slot
 
 
-def _u16(data: bytes, at: int) -> int:
-    if at < 0 or at + 2 > len(data):
+def _read(data: bytes, at: int, width: int) -> int:
+    value = value_at(data, at, width)
+    if value is None:
         raise ValueError(f"read outside ROM at 0x{at:x}")
-    return int.from_bytes(data[at:at + 2], "little")
-
-
-def _u32(data: bytes, at: int) -> int:
-    if at < 0 or at + 4 > len(data):
-        raise ValueError(f"read outside ROM at 0x{at:x}")
-    return int.from_bytes(data[at:at + 4], "little")
+    return value
 
 
 def _record(species: int, method: int, move: int, index: int | None, level: int | None, offset: int) -> dict:
@@ -63,13 +58,13 @@ def _record(species: int, method: int, move: int, index: int | None, level: int 
 
 def _level_up(table: dict, data: bytes, count: int, out: dict[int, list]) -> None:
     for species in range(count):
-        pointer = _u32(data, int(table["base"]) + species * 4)
-        if not POINTER_LOW <= pointer < POINTER_HIGH:
+        pointer = _read(data, int(table["base"]) + species * 4, 4)
+        start = rom_offset(pointer)
+        if start is None:
             raise ValueError(f"species {species}: invalid level-up pointer 0x{pointer:08x}")
-        start = pointer - POINTER_LOW
         for index in range(256):
             at = start + index * 3
-            move, level = _u16(data, at), data[at + 2]
+            move, level = _read(data, at, 2), data[at + 2]
             if move == 0 and level == 0xFF:
                 break
             out[species].append(_record(species, LEVEL_UP, move, None, level, at))
@@ -82,8 +77,8 @@ def _bitfields(table: dict, data: bytes, count: int, out: dict[int, list], metho
         start = int(table["base"]) + species * int(table["stride"])
         for index in range(int(table["move_count"])):
             at = start + (index // 32) * 4
-            if _u32(data, at) & (1 << (index % 32)):
-                move = _u16(data, int(table["move_base"]) + index * 2)
+            if _read(data, at, 4) & (1 << (index % 32)):
+                move = _read(data, int(table["move_base"]) + index * 2, 2)
                 out[species].append(_record(species, method, move, index, None, at))
 
 
@@ -91,7 +86,7 @@ def _egg(table: dict, data: bytes, count: int, out: dict[int, list]) -> None:
     at = int(table["base"])
     species = None
     for _ in range(100000):
-        value = _u16(data, at)
+        value = _read(data, at, 2)
         if value == 0xFFFF:
             return
         if value >= 20000:

@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from ..core.lists import append_unique
 from ..core.notes import has_prose
-from ..core.rom import RomEvidence
-
-POINTER_LOW, POINTER_HIGH = 0x08000000, 0x0A000000
+from ..core.rom import ROM_BASE, ROM_MIRROR_END, RomEvidence, rom_offset, value_at
 
 
 def check(block: dict) -> list[str]:
@@ -55,7 +53,7 @@ def check(block: dict) -> list[str]:
                             or len(values) != len(set(values))):
                         problems.append(f"{label} {selector}")
                 value = rule.get("value")
-                limit = int(block.get("count", 0)) if field == "names" else POINTER_HIGH - POINTER_LOW
+                limit = int(block.get("count", 0)) if field == "names" else ROM_MIRROR_END - ROM_BASE
                 if type(value) is not int or not 0 <= value < limit:
                     problems.append(f"{label} value")
         proofs = presentation.get("rom")
@@ -81,9 +79,9 @@ def build(block: dict, data: bytes) -> list[dict]:
         description = None
         if descriptions and ability < int(descriptions["count"]):
             at = int(descriptions["base"]) + ability * int(descriptions.get("stride", 4))
-            pointer = int.from_bytes(data[at:at + 4], "little")
-            if POINTER_LOW <= pointer < POINTER_HIGH:
-                description = f"s{pointer - POINTER_LOW:07X}"
+            offset = rom_offset(value_at(data, at))
+            if offset is not None:
+                description = f"s{offset:07X}"
         if descriptions and description is None:
             continue
         record = {

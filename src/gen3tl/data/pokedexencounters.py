@@ -5,10 +5,9 @@ from __future__ import annotations
 import re
 
 from ..core.notes import has_prose
-from ..core.rom import pointer_at, value_at
+from ..core.rom import ROM_BASE, pointer_at, value_at
 
 VARIANTS = ("day", "morning", "evening", "night")
-ROM_BASE = 0x08000000
 
 
 def check(block: dict | None) -> list[str]:
