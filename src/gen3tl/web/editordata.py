@@ -577,8 +577,7 @@ def slot_word(source: dict) -> str | None:
         source = source["source"]
     if source["code"] == "slot_table" or (source["code"] == "slot_record" and re.fullmatch(r"[a-z]+", source["kind"])):
         source = source["word"]
-    named = source["code"] in ("slot_untranslated", "slot_empty") or (
-        source["code"] == "slot_word" and source["text"].startswith("'"))
+    named = source["code"] in ("slot_untranslated", "slot_empty", "slot_word")
     return source["id"] if named and WORD_ID.fullmatch(source["id"]) else None
 
 

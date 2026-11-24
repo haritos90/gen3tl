@@ -235,6 +235,16 @@ class TermsDataTest(unittest.TestCase):
         self.assertEqual(data["slots"], {"groups": [], "lines": [
             {"line": "s0000002", "slot": "STR_VAR_1", "words": ["s0000004", "items:26"]}]})
 
+    def test_a_slot_word_fills_its_line_in_either_quote_form(self):
+        # an apostrophe puts the repr in double quotes
+        for text in ("Сумка", "Фарфетч'д"):
+            with self.subTest(text=text):
+                doc = json.loads(json.dumps(self.DOC))
+                doc["entries"][1]["window"]["slot_sources"]["STR_VAR_1"]["word"]["text"] = repr(text)
+                data = editordata.terms_data(self.TERMS, doc, self.CATALOG)
+                self.assertEqual(data["slots"]["lines"], [
+                    {"line": "s0000002", "slot": "STR_VAR_1", "words": ["s0000004", "items:26"]}])
+
     def test_structured_dependencies_preserve_script_sources(self):
         for dependencies in (["items:26"], ["items:27"], ["items:26", "items:27"]):
             with self.subTest(dependencies=dependencies):

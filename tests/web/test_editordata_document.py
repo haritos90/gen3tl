@@ -132,12 +132,15 @@ class ExplanationTest(unittest.TestCase):
     def test_the_word_a_slot_source_names(self):
         from gen3tl.check.provenance import code
         word = code("slot_word", id="s0000200", text="'Зелье'")
+        apostrophe = code("slot_word", id="table:species/83", text=repr("Фарфетч'д"))   # a repr in double quotes
         for source, named in ((word, "s0000200"), (code("slot_untranslated", id="items:3"), "items:3"),
                               (code("slot_empty", id="hash:0000abcd"), "hash:0000abcd"),
                               (code("slot_record", kind="item", word=word), "s0000200"),
                               (code("slot_table", table="items", word=word), "s0000200"),
                               (code("slot_reasons", source=word, reasons=[code("slot_no_fill")]), "s0000200"),
-                              (code("slot_word", id="s0000200", text='"It\'s"'), None),
+                              (apostrophe, "table:species/83"),
+                              (code("slot_table", table="species", word=apostrophe), "table:species/83"),
+                              (code("slot_record", kind="species", word=apostrophe), "table:species/83"),
                               (code("slot_record", kind="std_text", word=word), None),
                               (code("slot_number", value=5), None), (code("slot_profile"), None),
                               (code("slot_word", id="the bag", text="'x'"), None)):
