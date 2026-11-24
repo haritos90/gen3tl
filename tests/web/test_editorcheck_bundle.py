@@ -32,7 +32,7 @@ class BundleTest(unittest.TestCase):
             editorcheck.write_bundle(archive, {})
             self.assertTrue(editorcheck.bundle_current(archive))
 
-    def test_bundle_holds_every_module_the_page_glue_imports(self):
+    def test_bundle_holds_exactly_the_modules_the_page_glue_imports(self):
         package = Path(editorcheck.__file__).parents[1]
         files = {path.relative_to(package).as_posix() for path in package.rglob("*.py")}
 
@@ -68,6 +68,7 @@ class BundleTest(unittest.TestCase):
                     queue.extend(imports(path))
         self.assertIn("web/editorcheck.py", reached)
         self.assertEqual(sorted(reached - set(editorcheck.BUNDLE)), [])
+        self.assertEqual(sorted(set(editorcheck.BUNDLE) - reached), [])
 
     def test_rule_models_and_evaluator_run_in_isolated_bundle(self):
         from test_languagerules import fixture
