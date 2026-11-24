@@ -41,6 +41,7 @@ export const MESSAGES = [
   N_("not centred in the {window} px window: lead with {token}"),
   N_("glossary term {term} -> {translation} not found"),
   N_("no inventory entry for this id"),
+  N_("substitution measurements unavailable: {error}"),
 ];
 
 /** The character map's errors, the {error} of "not encodable". */
@@ -61,6 +62,15 @@ export const NOTES = {
   unverified_width: N_("[unverified limit: an estimate for this language]"),
   prefix_stripped: N_("(prefix {prefix} stripped)"),
 };
+
+/** The templates of an inserted word in a problem, with its extras. */
+export const SLOT_ITEMS = [
+  N_("{token} = {width} px ({source})"),
+  N_("{source}; recorded width; sources unavailable"),
+  N_("{source}; {parts}"),
+  N_("«{text}» {width} px"),
+  N_("no prefix 0 px"),
+];
 
 /** The graphics check's findings. */
 export const FINDINGS = [
@@ -400,6 +410,9 @@ function ruleText(rule, sources) {
     && (other.section !== "table" || other.field));
   return described ? whereText(described.where) : t(WINDOW_KINDS[window.section]);
 }
+
+/** The rule sources the toolkit writes as text, shown by their keys. */
+export const RULE_SOURCES = [N_("catalog context"), N_("reach study, review")];
 
 /** A limit, a window or a rule source in words, without profile notation; `sources` describe a coded window. */
 export function limitText(rule, sources = []) {

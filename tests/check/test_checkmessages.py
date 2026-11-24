@@ -1,5 +1,5 @@
 from test_roots import SUPPORT_ROOT, TOOLKIT_ROOT
-"""Every check message has a site catalog key."""
+"""Every check message and every rule source the toolkit writes as text has a site catalog key."""
 import dataclasses
 import json
 import shutil
@@ -10,6 +10,7 @@ import tempfile
 import unittest
 import zlib
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(TOOLKIT_ROOT / "src"))
 sys.path.insert(0, str(SUPPORT_ROOT))
@@ -22,21 +23,24 @@ from gen3tl.check.entrycheck import entry_problems  # noqa: E402
 from gen3tl.check.layout import Limit, Measure, SpriteMeasure, check, slot_rewraps, wrapped_dash_lines  # noqa: E402
 from gen3tl.check.provenance import MESSAGES as TEMPLATES, NOTES  # noqa: E402
 from gen3tl.check.render import PngImage, indexed_png  # noqa: E402
+from gen3tl.check.rules import context_rules  # noqa: E402
 from gen3tl.core.charmap import Charmap  # noqa: E402
 from gen3tl.lang.langpack import LangPack  # noqa: E402
 from gen3tl.lang.termbase import Term, TermMatcher  # noqa: E402
 from gen3tl.web import sitecatalog  # noqa: E402
+from gen3tl.web.editordata import reach_data  # noqa: E402
 from gen3tl.web.editorcheck import Checker  # noqa: E402
 from gen3tl.web.editorgfx import Pictures, graphics_data, read_png  # noqa: E402
 from project_fixture import select_language  # noqa: E402
 
 WEB = TOOLKIT_ROOT / "web"
 NODE = shutil.which("node")
+SLOT_TEMPLATES = ("slot_item", "slot_unavailable", "slot_parts", "slot_part", "slot_no_prefix")
 
 KEYS = '''
 import fs from "node:fs";
-import { ENCODING, MESSAGES, NOTES } from "%s";
-fs.writeFileSync(process.argv[3], JSON.stringify({ keys: [...MESSAGES, ...ENCODING], notes: NOTES }));
+import { ENCODING, MESSAGES, NOTES, SLOT_ITEMS } from "%s";
+fs.writeFileSync(process.argv[3], JSON.stringify({ keys: [...MESSAGES, ...ENCODING, ...SLOT_ITEMS], notes: NOTES }));
 '''
 
 PARSE_FINDINGS = '''
@@ -64,6 +68,8 @@ def messages() -> list[dict]:
                       ("а\\nб\\nв", Limit("dialogue", 100, 2)), ("абв", Limit("single", 100, None, keys=2)),
                       ("абвгдежз", Limit("single", 30, None)),
                       ("абв {PLAYER}", Limit("single", 30, None, placeholders={"PLAYER": 42})),
+                      ("абв {PLAYER}", Limit("single", 30, None, placeholders={"PLAYER": 42}, slot_details={"PLAYER": {
+                          "unavailable": True, "contributors": [{"text": "Ян", "width": 12}, {"label": "No prefix"}]}})),
                       ("абвгдежз{CLEAR_TO 05}и", Limit("single", 200, None)),
                       ("{PLAYER}абв{CLEAR_TO 05}и", Limit("single", 200, None, placeholders={"PLAYER": 42})),
                       ("Я: абвгдежз", Limit("single", 30, None, strip=["Я: "])), ("а\\nб", Limit("multiline", 100, 1))):
@@ -105,15 +111,26 @@ def messages() -> list[dict]:
            "placeholders": {"default": 0, "widths": {}}, "charmap": {}, "glossary": {}}
     checker = Checker(doc, {"main": bytes([6] * 256)})
     out.extend(p["message"] for p in checker.check({"id": "x", "source_text": "Hi", "window": None}, "Hi")["problems"])
+    with patch.object(checker, "substitution_window", side_effect=ValueError("fill_source: unmeasurable draft: x")):
+        out.extend(p["message"] for p in checker.check({"id": "x", "source_text": "Hi", "window": None}, "Hi")["problems"])
     return list({json.dumps(p, sort_keys=True): p for p in out}.values())
 
 
 def shown_codes(problem: dict) -> list[str]:
-    """The codes a problem shows with a key of its own: its notes, the problem and its encoder error."""
+    """The codes a problem shows with a key of its own: its notes, the problem, its encoder error, inserted words."""
     if problem["code"] in NOTES:
         return [problem["code"], *shown_codes(problem["message"])]
     error = problem.get("error")
-    return [problem["code"], *(shown_codes(error) if isinstance(error, dict) else [])]
+    words = [code for item in problem.get("slots", []) for code in slot_codes(item)]
+    return [problem["code"], *(shown_codes(error) if isinstance(error, dict) else []), *words]
+
+
+def slot_codes(item) -> list[str]:
+    """The codes of an inserted word shown by their template: the word, its extras and their parts."""
+    if not isinstance(item, dict) or item["code"] not in SLOT_TEMPLATES:
+        return []   # a slot source shows through its own keys
+    return [item["code"], *slot_codes(item.get("source")),
+            *(code for part in item.get("parts", []) for code in slot_codes(part))]
 
 
 def findings() -> list[str]:
@@ -227,10 +244,22 @@ class CheckMessagesTest(unittest.TestCase):
                     used.add(key)
         keys = [*out["keys"], *out["notes"].values()]
         self.assertEqual(sorted(set(keys) - used), [], "a key no problem of the check has")
-        self.assertEqual(len(keys), 44)
+        self.assertEqual(len(keys), 50)
         self.assertEqual(sorted(out["notes"]), sorted(NOTES))
         ru = sitecatalog.strings(sitecatalog.load(sitecatalog.CATALOGS / "ru.po"))
         self.assertEqual([k for k in keys if k not in ru], [])
+
+    def test_every_rule_source_written_as_text_has_a_russian_entry(self):
+        ctx = {"hosts": [{"slot": "{STR_VAR_1}", "id": "s0000100"}],
+               "words": [{"slot": "{STR_VAR_2}", "id": "s0000200"}]}
+        sources = set()
+        for evidence in ("reach study: unreachable script text", "review: no caller",
+                         "reach study: unreachable script text; review: no caller"):
+            first, last = context_rules(ctx, reach_data("s0000300", [f"reach: never shown ({evidence})"], None))
+            sources.update(r["source"] for r in first + last)
+        self.assertEqual(sorted(sources), ["catalog context", "reach study", "reach study, review", "review"])
+        ru = sitecatalog.strings(sitecatalog.load(sitecatalog.CATALOGS / "ru.po"))
+        self.assertEqual([s for s in sorted(sources) if s not in ru], [])
 
     def test_every_graphics_finding_has_a_key_and_a_russian_entry(self):
         found = findings()

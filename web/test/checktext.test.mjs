@@ -1,10 +1,11 @@
 // The check's messages: codes, notes, values and site language.
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { ENCODING, MESSAGES, NOTES, checkFailed, checkText, explanationText, extractionFailed, findingText,
-  glossaryMissing, layoutFailed, limitReferences, limitText, missingTerms, parseFinding, sameExplanation, setMessages,
-  setPlaces, setReasons, slotSource, unnoted, wordingText } from "../js/checktext.js";
+import { ENCODING, MESSAGES, NOTES, RULE_SOURCES, SLOT_ITEMS, checkFailed, checkText, explanationText, extractionFailed,
+  findingText, glossaryMissing, layoutFailed, limitReferences, limitText, missingTerms, parseFinding, sameExplanation,
+  setMessages, setPlaces, setReasons, slotSource, unnoted, wordingText } from "../js/checktext.js";
 import { slotRows } from "../js/slots.js";
 import { setCatalog, setUiLanguage, t } from "../js/ui.js";
 
@@ -21,6 +22,9 @@ const RU = {
   "check failed: {error}": "проверка не удалась: {error}",
   "Preserve the source placeholders and control codes.": "Сохраните подстановки и управляющие коды оригинала.",
 };
+// the site catalog's one-line entries
+const SITE_RU = Object.fromEntries([...readFileSync(new URL("../i18n/ru.po", import.meta.url), "utf8")
+  .matchAll(/^msgid (".*")\nmsgstr (".*")$/gm)].map(([, key, text]) => [JSON.parse(key), JSON.parse(text)]));
 
 // the data's problem templates (gen3tl.check.provenance.MESSAGES)
 const PROBLEMS = {
@@ -39,6 +43,7 @@ const PROBLEMS = {
   slot_item: "{token} = {width} px ({source})", slot_unavailable: "{source}; recorded width; sources unavailable",
   slot_parts: "{source}; {parts}", slot_part: "«{text}» {width} px", slot_no_prefix: "no prefix 0 px",
   unmapped_character: "character {char} (U+{unicode}) has no byte, in {text}",
+  substitution_unavailable: "substitution measurements unavailable: {error}",
 };
 // the explanation templates with them
 const table = () => ({ ...TEMPLATES, ...PROBLEMS });
@@ -112,14 +117,22 @@ test("an inserted word's source in a message shows as in the slot rows, its extr
   assert.equal(rows[0].label, "Имя тренера");
   assert.equal(checkText({ ...message, slots: message.slots.slice(0, 1) }), "строка слишком широкая: 210 > 196 px: "
     + "'Привет, {PLAYER}! Как дела?' при {B_TRAINER1_NAME} = 60 px (Имя тренера, боевой текст, имя тренера противника)");
+  setCatalog(SITE_RU);
+  assert.equal(checkText({ ...message, slots: message.slots.slice(1) }), "строка слишком широкая: 210 > 196\u00a0px: "
+    + "'Привет, {PLAYER}! Как дела?' при {STR_VAR_1} = 42\u00a0px "
+    + "(ширина из профиля; записанная ширина; источники недоступны; «Зелье» 30\u00a0px, без приставки 0\u00a0px)");
+  assert.equal(checkText({ code: "substitution_unavailable", error: "fill_source: unmeasurable draft: s0000100" }),
+    "измерения подстановок недоступны: fill_source: unmeasurable draft: s0000100", "its error stays as written");
 });
 
 test("every key's holes are named and every kind is distinct", () => {
-  const keys = [...MESSAGES, ...ENCODING, ...Object.values(NOTES)];
+  const keys = [...MESSAGES, ...ENCODING, ...Object.values(NOTES), ...SLOT_ITEMS];
   assert.equal(new Set(keys).size, keys.length);
   for (const key of keys) assert.match(key, /^(?:[^{}]|\{\w+\})*$/, key);
   for (const [code, template] of Object.entries(PROBLEMS)) {
-    if (!code.startsWith("slot_") && !Object.hasOwn(NOTES, code) && code !== "unmapped_character") assert.ok(MESSAGES.includes(template), code);
+    if (Object.hasOwn(NOTES, code)) continue;
+    const shown = code.startsWith("slot_") ? SLOT_ITEMS : code === "unmapped_character" ? ENCODING : MESSAGES;
+    assert.ok(shown.includes(template), code);
   }
 });
 
@@ -248,6 +261,8 @@ test("profile rule sources use descriptions in words and retain identities as re
   // other rule sources are texts: a key or as written, their identifiers kept
   setCatalog({ "catalog context": "контекст каталога" });
   assert.equal(limitText("catalog context"), "контекст каталога");
+  setCatalog(MARKED);
+  assert.deepEqual(RULE_SOURCES.map((source) => limitText(source)), ["ru:catalog context", "ru:reach study, review"]);
   assert.deepEqual(limitReferences("catalog context"), []);
   assert.deepEqual(limitReferences("review of s0000100 and s0000100"), ["s0000100"]);
 });

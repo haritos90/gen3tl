@@ -10530,3 +10530,43 @@ msgstr "{label}, {where}"
 msgctxt "site:{label}, English {english} px, {where}"
 msgid "{label}, English {english} px, {where}"
 msgstr "{label}, в английском {english} px, {where}"
+
+#. js/checktext.js
+msgctxt "site:substitution measurements unavailable: {error}"
+msgid "substitution measurements unavailable: {error}"
+msgstr "измерения подстановок недоступны: {error}"
+
+#. js/checktext.js
+msgctxt "site:{token} = {width} px ({source})"
+msgid "{token} = {width} px ({source})"
+msgstr "{token} = {width} px ({source})"
+
+#. js/checktext.js
+msgctxt "site:{source}; recorded width; sources unavailable"
+msgid "{source}; recorded width; sources unavailable"
+msgstr "{source}; записанная ширина; источники недоступны"
+
+#. js/checktext.js
+msgctxt "site:{source}; {parts}"
+msgid "{source}; {parts}"
+msgstr "{source}; {parts}"
+
+#. js/checktext.js
+msgctxt "site:«{text}» {width} px"
+msgid "«{text}» {width} px"
+msgstr "«{text}» {width} px"
+
+#. js/checktext.js
+msgctxt "site:no prefix 0 px"
+msgid "no prefix 0 px"
+msgstr "без приставки 0 px"
+
+#. js/checktext.js
+msgctxt "site:catalog context"
+msgid "catalog context"
+msgstr "контекст каталога"
+
+#. js/checktext.js
+msgctxt "site:reach study, review"
+msgid "reach study, review"
+msgstr "исследование достижимости, рецензия"
