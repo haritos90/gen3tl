@@ -30,7 +30,7 @@ def discover_candidates(args):
 
 @command("discover run")
 def discover(args):
-    """Derive identity, family, codec and fonts into a generated profile and evidence report."""
+    """Derive identity, family, codec and fonts into a generated profile, its metadata and an evidence report."""
     import json
     from ..discover import emission, foundations
 
@@ -48,6 +48,7 @@ def discover(args):
     observations.apply(rom, result, prof.path, args.observations)
     output = emission.write(result, destination, prof.name, prof)
     line("wrote", output["profile"])
+    line("wrote", output["metadata"])
     line("report", output["report"])
     for key in ("verified", "candidate", "omitted", "unresolved"):
         line(key, f"{output[key]} facts")

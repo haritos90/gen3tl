@@ -15,10 +15,11 @@ from urllib.parse import urlsplit
 
 from ..core import notes
 from ..core.rom import RomError
-from . import tsv
+from . import metadata, tsv
 
 SCHEMA = 1
 GENERATED = "profile.toml"
+DISCOVERY = "discovery.json"   # generated metadata of the discovery run
 OVERLAY = "overlay.toml"
 OVERLAY_DIR = "overlay"
 OVERLAY_ORDER = "order.txt"
@@ -460,6 +461,15 @@ def read(path: str | Path) -> Sources:
     header = generated.pop(HEADER, None)
     if not isinstance(header, dict) or header.get("schema") != SCHEMA:
         raise ProfileError(f"{path / GENERATED}: needs [{HEADER}] schema = {SCHEMA}")
+    if (path / DISCOVERY).is_file():
+        try:
+            stored = metadata.read(path / DISCOVERY)
+        except metadata.MetadataError as exc:
+            raise ProfileError(str(exc)) from exc
+        repeated = sorted(set(header) & set(stored))
+        if repeated:
+            raise ProfileError(f"{path / DISCOVERY}: {', '.join(repeated)} also in [{HEADER}] of {GENERATED}")
+        header.update(stored)
     if HEADER in overlay:
         raise ProfileError(f"{overlay_file}: [{HEADER}] is reserved for {GENERATED}")
     records = generated.pop(RECORD, []), overlay.pop(RECORD, [])

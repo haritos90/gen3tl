@@ -37,7 +37,7 @@ class WindowsDiscoveryTest(unittest.TestCase):
         self.assertNotIn("window_box", layout)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
-            (path / "profile.toml").write_text(emission.document(result.data, result.facts, {}))
+            (path / "profile.toml").write_text(emission.document(result.data, result.facts))
             loaded = schema.load(path)
             self.assertEqual(loaded["layout"]["window"][0]["evidence"], self.window["evidence"])
             self.assertEqual(loaded["layout"]["window_width"], layout["window_width"])
@@ -62,7 +62,7 @@ class WindowsDiscoveryTest(unittest.TestCase):
         result = windows.discover(self.rom, self.knowledge)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
-            (path / "profile.toml").write_text(emission.document(result.data, result.facts, {}))
+            (path / "profile.toml").write_text(emission.document(result.data, result.facts))
             loaded = schema.load(path)["layout"]
             self.assertEqual(loaded["window_binding"]["s0000400"], loaded["window"][0])
             self.assertEqual(loaded["window_newline_scroll_after"], {"s0000400": 1})
@@ -71,7 +71,7 @@ class WindowsDiscoveryTest(unittest.TestCase):
         result = windows.discover(self.rom, self.knowledge)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
-            (path / "profile.toml").write_text(emission.document(result.data, result.facts, {}))
+            (path / "profile.toml").write_text(emission.document(result.data, result.facts))
             (path / "overlay.toml").write_text('[layout.window_width]\nmanual = 60\n')
             loaded = schema.load(path)["layout"]
             self.assertEqual(loaded["window_width"], {"manual": 60, "s0000400": 88})

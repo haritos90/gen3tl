@@ -44,8 +44,8 @@ def source_files(path: str | Path) -> list[Path]:
 
     path = Path(path)
     sources = schema.read(path) if path.is_dir() else schema.flat(path)
-    instance = [path / schema.GENERATED, *sources.overlay_files] \
-        if path.is_dir() else [path]
+    generated = [path / name for name in (schema.GENERATED, schema.DISCOVERY) if (path / name).is_file()]
+    instance = [*generated, *sources.overlay_files] if path.is_dir() else [path]
     return (family_sources(sources.family_file) if sources.family_file is not None else []) + instance
 
 

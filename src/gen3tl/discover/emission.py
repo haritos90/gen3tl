@@ -10,7 +10,7 @@ import tempfile
 import tomllib
 from pathlib import Path
 
-from ..profile import check, residue, schema
+from ..profile import check, metadata, residue, schema
 from ..profile.profile import Profile
 from . import table_scope
 from .foundations import Result, evidence, fact
@@ -36,9 +36,8 @@ def record(proof: schema.Fact) -> dict:
                 "counts": dict(details.counts), "sentence": details.sentence}}
 
 
-def document(data: dict, facts: list[schema.Fact], metadata: dict) -> str:
+def document(data: dict, facts: list[schema.Fact]) -> str:
     lines = [schema.GENERATED_TEXT.rstrip()]
-    lines.extend(f"{schema.key_text(key)} = {literal(value)}" for key, value in metadata.items() if key != "schema")
     for name, value in data.items():
         items = value if isinstance(value, list) else [value]
         for item in items:
@@ -170,7 +169,7 @@ def report(result: Result, name: str, declared=None) -> str:
 
 
 def write(result: Result, directory: Path, name: str, reference: Profile | None = None) -> dict:
-    """Validate both outputs before replacing generated files; preserve overlays."""
+    """Validate every output before replacing generated files; preserve overlays."""
     directory = Path(directory)
     if directory.exists() and not directory.is_dir():
         raise ValueError("discovery output must be a profile directory")
@@ -191,24 +190,30 @@ def write(result: Result, directory: Path, name: str, reference: Profile | None 
         expected = schema.overlay_facts(check.sources_of(reference.path))
         structural = table_scope.compare(expected, result.facts)
         structural = {**structural, "full_overlay_facts": len(expected)}
-    metadata = {**result.metadata, "comparison": compared}
-    generated = document(data, facts, metadata)
+    discovered = {key: value for key, value in result.metadata.items() if key != "schema"}
+    discovered["comparison"] = compared
+    outputs = {schema.GENERATED: document(data, facts), schema.DISCOVERY: metadata.encode(discovered)}
     declared = residue.read(reference.path, result.data["rom"]["sha1"]) if reference else None
-    rendered = report(result, name, declared)
+    outputs[schema.REPORT] = report(result, name, declared)
     with tempfile.TemporaryDirectory(prefix="discovery-validate-") as temporary:
         stage = Path(temporary)
-        (stage / schema.GENERATED).write_text(generated, encoding="utf-8")
-        schema.generated_facts(schema.read(stage))
+        for filename in (schema.GENERATED, schema.DISCOVERY):
+            (stage / filename).write_text(outputs[filename], encoding="utf-8")
+        sources = schema.read(stage)
+        schema.generated_facts(sources)
+        if sources.header != {"schema": schema.SCHEMA, **json.loads(json.dumps(discovered))}:
+            raise ValueError("discovery metadata differs once stored")
     directory.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".discovery-", dir=directory) as temporary:
-        for filename, text in ((schema.GENERATED, generated), (schema.REPORT, rendered)):
+        for filename, text in outputs.items():
             target = directory / filename
             staged = Path(temporary) / filename
             staged.write_text(text, encoding="utf-8")
             if target.exists():
                 staged.chmod(stat.S_IMODE(target.stat().st_mode))
             os.replace(staged, target)
-    output = {"profile": str(directory / schema.GENERATED), "report": str(directory / schema.REPORT),
+    output = {"profile": str(directory / schema.GENERATED), "metadata": str(directory / schema.DISCOVERY),
+              "report": str(directory / schema.REPORT),
               "verified": len(facts), "candidate": sum(f.status == "candidate" for f in result.issues),
               "omitted": sum(f.status == "omitted" for f in result.issues),
               "unresolved": sum(f.status == "unresolved" for f in result.issues), "comparison": compared}

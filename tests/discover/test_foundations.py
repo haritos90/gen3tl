@@ -6,6 +6,7 @@ import os
 import stat
 import struct
 import tempfile
+import tomllib
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -298,9 +299,11 @@ class EmissionTest(unittest.TestCase):
             first, second = Path(temporary) / "first", Path(temporary) / "second"
             emission.write(result, first, "fixture")
             emission.write(result, second, "fixture")
-            self.assertEqual((first / "profile.toml").read_bytes(), (second / "profile.toml").read_bytes())
-            self.assertEqual((first / "report.md").read_bytes(), (second / "report.md").read_bytes())
+            for name in ("profile.toml", "discovery.json", "report.md"):
+                self.assertEqual((first / name).read_bytes(), (second / name).read_bytes())
             sources = schema.read(first)
+            self.assertEqual(json.dumps(sources.header), json.dumps(result.metadata | {"comparison": {"available": False}}))
+            self.assertEqual(tomllib.loads((first / "profile.toml").read_text())["discovery"], {"schema": 1})
             self.assertEqual(len(schema.generated_facts(sources)), 3)
             self.assertNotIn("font_slots", Profile.load(first).data)
             self.assertEqual(Profile.load(first)["support"]["stage"], "discovery")
@@ -311,7 +314,7 @@ class EmissionTest(unittest.TestCase):
         result = self.result()
         with tempfile.TemporaryDirectory() as temporary:
             target = Path(temporary)
-            expected = {"profile.toml": 0o644, "report.md": 0o664}
+            expected = {"profile.toml": 0o644, "discovery.json": 0o640, "report.md": 0o664}
             for name, mode in expected.items():
                 path = target / name
                 path.write_text("")
@@ -337,7 +340,7 @@ class EmissionTest(unittest.TestCase):
                     emission.write(result, target, "fixture")
                 finally:
                     os.umask(previous)
-                for name in ("profile.toml", "report.md"):
+                for name in ("profile.toml", "discovery.json", "report.md"):
                     self.assertEqual(stat.S_IMODE((target / name).stat().st_mode), 0o666 & ~mask)
 
     def test_failed_replacement_keeps_existing_output_and_cleans_staging(self):

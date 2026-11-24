@@ -14,10 +14,16 @@ from ..profile import residue, schema
 from ..profile.profile import Profile
 from ..project import build_scope
 
+OUTPUTS = (schema.GENERATED, schema.DISCOVERY, schema.REPORT)
+
+
+def outputs(directory: Path) -> dict[str, bytes]:
+    return {name: (directory / name).read_bytes() for name in OUTPUTS if (directory / name).is_file()}
+
 
 def differences(expected, actual, previous=None):
     problems = []
-    for name in (schema.GENERATED, schema.REPORT):
+    for name in OUTPUTS:
         if actual.get(name) != expected.get(name):
             problems.append(f"tracked:{name}")
         if previous is not None and actual.get(name) != previous.get(name):
@@ -33,7 +39,7 @@ def run(args):
     if not profile.path.is_dir():
         raise ValueError("regeneration requires a generated profile directory")
     rom = profile.load_rom(args.rom)
-    expected = {name: (profile.path / name).read_bytes() for name in (schema.GENERATED, schema.REPORT)}
+    expected = outputs(profile.path)
     declared = residue.read(profile.path, rom.sha1())
     prior, failures = None, []
     parent = Path(args.work_dir) if args.work_dir else args.project.build / "regeneration"
@@ -68,7 +74,7 @@ def run(args):
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(source, target)
             emission.write(result, output, profile.name, profile)
-            actual = {name: (output / name).read_bytes() for name in expected}
+            actual = outputs(output)
             problems = differences(expected, actual, prior)
             for problem in problems:
                 line("difference", problem)

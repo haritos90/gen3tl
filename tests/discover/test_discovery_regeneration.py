@@ -15,7 +15,7 @@ from gen3tl.project import build_root
 
 class RegenerationTest(unittest.TestCase):
     def test_each_output_must_match_tracked_and_previous_bytes(self):
-        expected = {"profile.toml": b"profile", "report.md": b"report"}
+        expected = {"profile.toml": b"profile", "discovery.json": b"metadata", "report.md": b"report"}
         self.assertEqual(regeneration.differences(expected, expected, expected), [])
         for name in expected:
             changed = {**expected, name: b"changed"}
@@ -25,7 +25,7 @@ class RegenerationTest(unittest.TestCase):
     def test_stale_studies_are_not_used_and_tracked_outputs_are_not_overwritten(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            expected = {"profile.toml": b"profile", "report.md": b"report"}
+            expected = {"profile.toml": b"profile", "discovery.json": b"metadata", "report.md": b"report"}
             for name, content in expected.items():
                 (root / name).write_bytes(content)
             (root / "inventory.json").write_text("stale")

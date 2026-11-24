@@ -81,7 +81,7 @@ class TableWindowsTest(unittest.TestCase):
         result = table_windows.discover(self.rom, self.knowledge)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
-            (path / "profile.toml").write_text(emission.document(result.data, result.facts, {}))
+            (path / "profile.toml").write_text(emission.document(result.data, result.facts))
             (path / "overlay.toml").write_text('[[layout.table_window]]\nname = "sample-table"\n'
                 'evidence = "Original measurement."\n[[layout.table_window]]\nname = "manual"\nwidth = 80\n')
             rows = schema.load(path)["layout"]["table_window"]

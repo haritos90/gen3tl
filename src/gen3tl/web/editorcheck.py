@@ -29,7 +29,7 @@ BUNDLE = ("core/terminal.py", "lang/language.py", "__init__.py", "core/charmap.p
           "project/scope.py", "project/registry.py", "check/provenance.py", "check/policy.py", "build/textprefix.py",
           "build/codereplace.py", "catalog/po.py", "catalog/source.py", "catalog/entrynotes.py", "catalog/keys.py",
           "catalog/guidance.py", "discover/maps.py", "build/keyboard.py", "verify/savefile.py",
-          "profile/schema.py", "profile/tsv.py", "profile/languagerules.py", "check/languagerules.py",
+          "profile/schema.py", "profile/metadata.py", "profile/tsv.py", "profile/languagerules.py", "check/languagerules.py",
           "web/editorrules.py", "web/policyrules.py", "families/knowledge.py",
           "build/__init__.py", "catalog/__init__.py", "check/__init__.py", "core/__init__.py", "lang/__init__.py",
           "profile/__init__.py", "families/__init__.py", "verify/__init__.py", "web/__init__.py", "discover/__init__.py")
