@@ -406,28 +406,31 @@ test("a coded slot source shows as its phrase did, its words and identifiers kep
   assert.equal(slotSource(SLOT_CODES.find((c) => c.fill?.fill?.code === "slot_digits")), "3 цифры, английский 18\u00a0px, сумка");
 });
 
-test("a fill-source label shows in the site language, its where text too, as the slot rows show it", (ctx) => {
+test("a fill-source label only the project defines shows in the site language, as the slot rows show it", (ctx) => {
   ctx.after(() => { setCatalog(null); setPlaces(null); setUiLanguage("en"); });
-  const label = { code: "slot_label", label: "Battle name with prefix" };
+  const label = { code: "slot_label", label: "Frostbite-curing berry" };
   const sources = [label, { code: "slot_reasons", source: label, reasons: [{ code: "slot_by_code" }] },
     { code: "slot_fill", fill: { code: "slot_label", label: "Nickname of up to ten letters" },
       where: "Mega Evolution and wish messages, unprefixed nickname" },
     { code: "slot_fill", fill: { code: "slot_english", fill: { code: "slot_label", label: "Trainer name" }, source_width: 67 },
       where: "battle text, name of the opposing trainer" },
-    { code: "slot_code_fill", fill: { code: "slot_label", label: "Item name" } }];
-  const rowLabel = () => slotRows({ slot_details: { "{B_BUFF1}": { label: label.label, width: 60, state: "computed" } } })[0].label;
-  assert.deepEqual(sources.map(slotSource), ["Battle name with prefix", "Battle name with prefix (shown by code)",
+    { code: "slot_code_fill", fill: { code: "slot_label", label: "Number" } }];
+  const rowLabels = () => slotRows({ slot_details: { "{B_LAST_ITEM}": { label: label.label, width: 60, state: "computed" },
+    "{STR_VAR_1}": { label: "Number", width: 18, state: "computed" } } }).map((row) => row.label);
+  assert.deepEqual(sources.map(slotSource), ["Frostbite-curing berry", "Frostbite-curing berry (shown by code)",
     "Nickname of up to ten letters, Mega Evolution and wish messages, unprefixed nickname",
-    "Trainer name, English 67\u00a0px, battle text, name of the opposing trainer", "Item name, code fill"]);
+    "Trainer name, English 67 px, battle text, name of the opposing trainer", "Number, code fill"]);
+  assert.deepEqual(rowLabels(), ["Frostbite-curing berry", "Number"]);
+  // the profile's labels come with its descriptions, the toolkit's with the site catalog
   setPlaces({ "Mega Evolution and wish messages, unprefixed nickname": { ru: "сообщения мегаэволюции и желания, кличка без префикса" },
-    "battle text, name of the opposing trainer": { ru: "боевой текст, имя тренера противника" } });
+    "battle text, name of the opposing trainer": { ru: "боевой текст, имя тренера противника" },
+    "Frostbite-curing berry": { ru: "Ягода от обморожения" }, "Nickname of up to ten letters": { ru: "Кличка длиной до десяти букв" },
+    "Trainer name": { ru: "Имя тренера" } });
   setUiLanguage("ru");
-  setCatalog({ "Battle name with prefix": "Имя с приставкой в бою", "Nickname of up to ten letters": "Кличка длиной до десяти букв",
-    "Trainer name": "Имя тренера", "Item name": "Название предмета", "shown by code": "выводится кодом",
-    "code fill": "заполнение кодом", "{label}, {where}": "{label}, {where}",
-    "{label}, English {english} px, {where}": "{label}, в английском {english} px, {where}" });
-  assert.deepEqual(sources.map(slotSource), ["Имя с приставкой в бою", "Имя с приставкой в бою (выводится кодом)",
+  setCatalog({ "Number": "Число", "shown by code": "выводится кодом", "code fill": "заполнение кодом",
+    "{label}, {where}": "{label}, {where}", "{label}, English {english} px, {where}": "{label}, в английском {english} px, {where}" });
+  assert.deepEqual(sources.map(slotSource), ["Ягода от обморожения", "Ягода от обморожения (выводится кодом)",
     "Кличка длиной до десяти букв, сообщения мегаэволюции и желания, кличка без префикса",
-    "Имя тренера, в английском 67\u00a0px, боевой текст, имя тренера противника", "Название предмета, заполнение кодом"]);
-  assert.equal(slotSource(label), rowLabel());
+    "Имя тренера, в английском 67 px, боевой текст, имя тренера противника", "Число, заполнение кодом"]);
+  assert.deepEqual(rowLabels(), ["Ягода от обморожения", "Число"]);
 });

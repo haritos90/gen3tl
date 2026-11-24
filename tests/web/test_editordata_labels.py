@@ -56,6 +56,17 @@ class ProfileLabelsTest(unittest.TestCase):
         self.assertEqual(texts["name box"], {"aa": "name label"})
         self.assertEqual(texts["paired box"], {"aa": "paired label"})
 
+    def test_a_fill_source_label_only_the_profile_defines_is_translated_by_its_field(self):
+        self.prof.data["layout"]["fill_source"] = {
+            "cured-berry": {"label": "Frostbite-curing berry"}, "old-name": {"label": "Renamed label"}}
+        write(self.paths["aa"], [
+            PoEntry("layout.fill_source.cured-berry.label", "Frostbite-curing berry", "berry label"),
+            PoEntry("layout.fill_source.old-name.label", "Old label", "stale label"),
+            PoEntry("layout.fill_source.cured-berry.where", "Frostbite-curing berry", "other field"),
+        ], {})
+        texts = editordata.where_texts(self.prof, keys.EMPTY)
+        self.assertEqual(texts, {"Frostbite-curing berry": {"aa": "berry label"}})
+
     def test_missing_empty_and_changed_sources_keep_english_fallback(self):
         self.assertEqual(editordata.where_texts(self.prof, keys.EMPTY), {})
         write(self.paths["aa"], [

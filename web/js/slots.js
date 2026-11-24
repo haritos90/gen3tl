@@ -6,10 +6,8 @@ import { limitText } from "./checktext.js";
 const STATES = { computed: N_("computed"), recorded: N_("recorded; sources undeclared"),
   override: N_("override"), unavailable: N_("measurement unavailable"),
   fallback: N_("recorded; sources unavailable") };
-const LABELS = [N_("Battle name prefix"), N_("Nickname of up to ten letters"),
-  N_("Player name of up to seven letters"), N_("Species name"), N_("Move name"), N_("Ability name"),
-  N_("Item name"), N_("Trainer class"), N_("Nickname or species name"), N_("Battle name with prefix"),
-  N_("Trainer name"), N_("Battle side prefix"), N_("Battle side label"), N_("Typed name"), N_("Number"), N_("Inserted text"), N_("Source text"), N_("No prefix")];
+// a profile's own labels come with its descriptions
+const LABELS = [N_("Typed name"), N_("Number"), N_("Inserted text"), N_("Source text"), N_("No prefix")];
 
 /** Include candidates that are currently below the maximum. */
 export function sourceIds(window, graph) {

@@ -278,7 +278,7 @@ def profile_label_inputs(prof) -> dict[str, Path]:
 
 
 def where_texts(prof, aliases: keys.Aliases) -> dict:
-    """Keep profile descriptions in the chosen site language."""
+    """Keep profile descriptions and fill-source labels in the chosen site language."""
     from ..catalog.po import read
     from ..profile.schema import element_ids, key_text
 
@@ -294,14 +294,16 @@ def where_texts(prof, aliases: keys.Aliases) -> dict:
             for identity, child in zip(element_ids(value), value):
                 collect(child, f"{path}[{identity}]")
         elif isinstance(value, dict):
-            where = value.get("where")
-            if isinstance(where, str):
+            for field in ("where", "label"):   # the editor shows fill-source labels too
+                text = value.get(field)
+                if not isinstance(text, str):
+                    continue
                 texts = {code: entry.msgstr for code, entries in catalogs.items()
-                         if (entry := entries.get(f"{path}.where")) is not None and entry.msgid == where}
+                         if (entry := entries.get(f"{path}.{field}")) is not None and entry.msgid == text}
                 if texts:
-                    out.setdefault(where, {}).update(texts)
-                    out.setdefault(aliases.rekey_text(where), {}).update(
-                        {code: aliases.rekey_text(text) for code, text in texts.items()})
+                    out.setdefault(text, {}).update(texts)
+                    out.setdefault(aliases.rekey_text(text), {}).update(
+                        {code: aliases.rekey_text(shown) for code, shown in texts.items()})
             for key, child in value.items():
                 collect(child, f"{path}.{key_text(key)}")
 

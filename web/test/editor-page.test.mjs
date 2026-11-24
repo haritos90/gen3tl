@@ -976,7 +976,9 @@ test("window facts follow the site language and preserve citations", async (cont
   context.after(() => { setCatalog(null); setUiLanguage("en"); setPlaces(null); });
   const { $, state, files, base, openWorkspace, renderWindow } = await referenceWorkspace(context);
   const where = "battle move menu";
-  files[`${base}es/index.json`].where_texts = { [where]: { ru: "меню приёмов в бою" } };
+  // the project translates its own labels
+  files[`${base}es/index.json`].where_texts = { [where]: { ru: "меню приёмов в бою" },
+    "Species name": { ru: "Название вида" }, "Item name": { ru: "Название предмета" }, "Move name": { ru: "Название приёма" } };
   await openWorkspace("game", "es");
   const window = { kind: "field", width: 63, lines: 1, font: "normal",
     placeholders: { STR_VAR_1: 60, STR_VAR_2: 50, STR_VAR_3: 40 },
