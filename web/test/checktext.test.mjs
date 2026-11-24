@@ -4,6 +4,7 @@ import { test } from "node:test";
 
 import { ENCODING, MESSAGES, NOTES, checkText, explanationText, extractionFailed, findingText, layoutFailed, limitReferences,
   limitText, parseFinding, parseMessage, sameExplanation, setMessages, setPlaces, setReasons, slotSource } from "../js/checktext.js";
+import { slotRows } from "../js/slots.js";
 import { setCatalog, setUiLanguage, t } from "../js/ui.js";
 
 const RU = {
@@ -383,6 +384,9 @@ test("a coded window without a description takes another source's of the same wi
   assert.equal(limitText(bare, sources), "сумка");
 });
 
+// a fill-source label: the phrase has none to read
+const labelled = (source) => [source, source.fill, source.fill?.fill].some((part) => part?.code === "slot_label");
+
 test("a coded slot source shows as its phrase did, its words and identifiers kept", (ctx) => {
   ctx.after(() => { setMessages(null); setCatalog(null); setPlaces(null); setUiLanguage("en"); });
   setMessages(TEMPLATES);
@@ -390,7 +394,7 @@ test("a coded slot source shows as its phrase did, its words and identifiers kep
   for (const [language, catalog] of [["en", null], ["ru", MARKED]]) {
     setUiLanguage(language);
     setCatalog(catalog);
-    for (const source of SLOT_CODES) {
+    for (const source of SLOT_CODES.filter((code) => language === "en" || !labelled(code))) {
       const phrase = explanationText(source);
       assert.equal(slotSource(source), slotSource(phrase), `${language}: ${phrase}`);
     }
@@ -400,5 +404,30 @@ test("a coded slot source shows as its phrase did, its words and identifiers kep
   assert.equal(slotSource(SLOT_CODES.find((c) => c.word?.code === "slot_empty")), "предмет items:3 '' (пусто)");
   assert.equal(slotSource({ code: "slot_code_fill", fill: { code: "slot_width", width: 66 } }), "66\u00a0px, заполнение кодом");
   assert.equal(slotSource(SLOT_CODES.find((c) => c.fill?.fill?.code === "slot_digits")), "3 цифры, английский 18\u00a0px, сумка");
-  assert.equal(slotSource({ code: "slot_label", label: "Battle name with prefix" }), "Battle name with prefix");
+});
+
+test("a fill-source label shows in the site language, its where text too, as the slot rows show it", (ctx) => {
+  ctx.after(() => { setCatalog(null); setPlaces(null); setUiLanguage("en"); });
+  const label = { code: "slot_label", label: "Battle name with prefix" };
+  const sources = [label, { code: "slot_reasons", source: label, reasons: [{ code: "slot_by_code" }] },
+    { code: "slot_fill", fill: { code: "slot_label", label: "Nickname of up to ten letters" },
+      where: "Mega Evolution and wish messages, unprefixed nickname" },
+    { code: "slot_fill", fill: { code: "slot_english", fill: { code: "slot_label", label: "Trainer name" }, source_width: 67 },
+      where: "battle text, name of the opposing trainer" },
+    { code: "slot_code_fill", fill: { code: "slot_label", label: "Item name" } }];
+  const rowLabel = () => slotRows({ slot_details: { "{B_BUFF1}": { label: label.label, width: 60, state: "computed" } } })[0].label;
+  assert.deepEqual(sources.map(slotSource), ["Battle name with prefix", "Battle name with prefix (shown by code)",
+    "Nickname of up to ten letters, Mega Evolution and wish messages, unprefixed nickname",
+    "Trainer name, English 67\u00a0px, battle text, name of the opposing trainer", "Item name, code fill"]);
+  setPlaces({ "Mega Evolution and wish messages, unprefixed nickname": { ru: "сообщения мегаэволюции и желания, кличка без префикса" },
+    "battle text, name of the opposing trainer": { ru: "боевой текст, имя тренера противника" } });
+  setUiLanguage("ru");
+  setCatalog({ "Battle name with prefix": "Имя с приставкой в бою", "Nickname of up to ten letters": "Кличка длиной до десяти букв",
+    "Trainer name": "Имя тренера", "Item name": "Название предмета", "shown by code": "выводится кодом",
+    "code fill": "заполнение кодом", "{label}, {where}": "{label}, {where}",
+    "{label}, English {english} px, {where}": "{label}, в английском {english} px, {where}" });
+  assert.deepEqual(sources.map(slotSource), ["Имя с приставкой в бою", "Имя с приставкой в бою (выводится кодом)",
+    "Кличка длиной до десяти букв, сообщения мегаэволюции и желания, кличка без префикса",
+    "Имя тренера, в английском 67\u00a0px, боевой текст, имя тренера противника", "Название предмета, заполнение кодом"]);
+  assert.equal(slotSource(label), rowLabel());
 });

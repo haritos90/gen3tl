@@ -360,9 +360,10 @@ const FILLS = {
   slot_width: [N_("{width} px, {where}"), N_("{width} px, English {english} px, {where}")],
   slot_width_estimate: [N_("{width} px, unverified estimate, {where}"),
     N_("{width} px, unverified estimate, English {english} px, {where}")],
+  slot_label: [N_("{label}, {where}"), N_("{label}, English {english} px, {where}")],
 };
 
-/** A code-fill slot source in the site language; a profile label stays as written. */
+/** A code-fill slot source in the site language; a profile label shows as in the slot rows. */
 function fillText(source) {
   let fill = source.fill;
   const english = fill.code === "slot_english" ? fill.source_width : null;
@@ -370,7 +371,7 @@ function fillText(source) {
   if (!FILLS[fill.code]) return explanationText(source);
   const where = source.code === "slot_code_fill" ? t(CODE_FILL) : fillPlace(source.where);
   return t(FILLS[fill.code][english === null ? 0 : 1],
-    { id: fill.id, n: fill.digits, width: fill.width, english, where });
+    { id: fill.id, n: fill.digits, width: fill.width, label: fill.label && limitText(fill.label), english, where });
 }
 
 /** A coded slot source in the site language, before its reasons. */
@@ -397,6 +398,7 @@ function codedSlot(source) {
       return WORD_NOTES[word.code] ? t(WORD_NOTES[word.code], { word: `${kind} ${wordHead(word)}` }) : `${kind} ${head(word)}`;
     }
     case "slot_fill": case "slot_code_fill": return fillText(source);
+    case "slot_label": return limitText(source.label);
     default: return explanationText(source);
   }
 }

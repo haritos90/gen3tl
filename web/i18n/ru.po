@@ -10631,3 +10631,13 @@ msgstr ""
 "Перед загрузкой дайте файлу {file} имя вашего ROM с расширением {ext}. "
 "Эмулятор загружает сохранение, только если его имя совпадает с именем "
 "ROM. Исходное сохранение оставьте как резервную копию."
+
+#. js/checktext.js
+msgctxt "site:{label}, {where}"
+msgid "{label}, {where}"
+msgstr "{label}, {where}"
+
+#. js/checktext.js
+msgctxt "site:{label}, English {english} px, {where}"
+msgid "{label}, English {english} px, {where}"
+msgstr "{label}, в английском {english} px, {where}"
