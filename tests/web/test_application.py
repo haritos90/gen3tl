@@ -1,10 +1,13 @@
 """Application assembly publishes only interface data."""
 
 import contextlib
+import html
 import importlib.util
 import io
 import json
 from pathlib import Path
+import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -15,7 +18,7 @@ from test_roots import TOOLKIT_ROOT
 from gen3tl import __version__
 from gen3tl.cli.web import site_assemble, site_registry
 from gen3tl.project import registry_scope
-from gen3tl.web import editordata, editorstore, sitecatalog
+from gen3tl.web import editordata, editorstore, sitecatalog, siteshell
 
 
 class ApplicationTest(unittest.TestCase):
@@ -57,7 +60,20 @@ class ApplicationTest(unittest.TestCase):
         for address in doc["include"]:
             self.assertRegex(address, r"^https://[^/]+/.+/registry\.json$")
         self.assertEqual(set(doc), {"schema", "games", "include", "site"})
-        self.assertEqual([row["url"] for row in doc["site"]["licenses"]], ["../license-gen3tl.txt", "../fonts/OFL.txt"])
+
+    def test_tracked_application_registry_lists_the_licences_of_the_guide_footer(self):
+        def links(region):
+            found = re.findall(r'<a href="([^"]*)"[^>]*>([^<]*)</a>', region)
+            self.assertEqual(len(found), region.count("<a "), region)
+            return [(html.unescape(url), html.unescape(label)) for url, label in found]
+
+        data = self.root / "data"
+        data.mkdir()
+        shutil.copyfile(TOOLKIT_ROOT / ".github/site-registry.json", data / "registry.json")   # as the build writes it
+        footer = links(siteshell.render("footer", "index.html", siteshell.WEB, siteshell.registry_licenses(data)))
+        guide = links(siteshell.render("footer-static", "guide.html", siteshell.WEB))
+        self.assertTrue(guide)
+        self.assertEqual(footer, guide)
 
     def test_application_contains_exact_interface_files_and_readable_editor_parts(self):
         out = self.assemble()

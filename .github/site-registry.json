@@ -5,7 +5,8 @@
   "site": {
     "licenses": [
       {"label_key": "gen3tl licence", "url": "../license-gen3tl.txt"},
-      {"label_key": "Font licenses", "url": "../fonts/OFL.txt"}
+      {"label_key": "Font licenses", "url": "../fonts/OFL.txt"},
+      {"label_key": "Content licence", "url": "https://creativecommons.org/licenses/by-sa/4.0/"}
     ]
   }
 }
