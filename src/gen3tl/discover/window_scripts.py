@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..core.lists import append_unique
 from ..core.thumb import ThumbError, decode
 from ..families.windows import argument_slot
 from .accessors import Expression
@@ -105,8 +106,7 @@ class Scripts:
                         if copies:
                             row['evidence']['buffer_trace'] = [{'call': at,
                                 'helper': self.consumers.summaries.transfers.get(target)} for at, target in copies]
-                        if row not in found:
-                            found.append(row)
+                        append_unique(found, row)
                 for access in flow.accesses:
                     if access.write and access.value.key == symbol:
                         stops.append({'site': access.site, 'kind': 'stored-operand',

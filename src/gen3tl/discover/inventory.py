@@ -8,6 +8,7 @@ from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+from ..core.lists import append_unique
 from ..core.notes import has_prose
 from ..core.charmap import Charmap, CharmapError
 from ..core.fields import long_name_fields
@@ -414,8 +415,7 @@ def build(prof: Profile, rom: Rom, cm: Charmap | None = None, *,
     for a, b in zip(ordered, ordered[1:]):
         if b.offset < a.offset + a.length:
             for x in (a, b):
-                if "overlap" not in x.flags:
-                    x.flags.append("overlap")
+                append_unique(x.flags, "overlap")
     entries = _split(entries, split_rules(prof.get("strings", {}).get("split", [])))
     out_entries = []
     for e in entries:

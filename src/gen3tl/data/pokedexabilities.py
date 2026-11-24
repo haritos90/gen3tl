@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..core.lists import append_unique
 from ..core.notes import has_prose
 from ..core.rom import RomEvidence
 
@@ -137,8 +138,7 @@ def inherited_slots(block: dict, species: list[dict]) -> dict[int, list[dict]]:
                                                       "hidden": False, "sources": []})
                 for role in ("regular", "hidden"):
                     row[role] |= detail[role]
-                if record["slot"] not in row["sources"]:
-                    row["sources"].append(record["slot"])
+                append_unique(row["sources"], record["slot"])
     return {slot: list(rows.values()) for slot, rows in inherited.items()}
 
 

@@ -22,7 +22,7 @@ from ..lang.termbase import Term, TermMatcher
 # font and rom decode the ROM glyph cells;
 # paths under the package, then the package files
 BUNDLE = ("core/terminal.py", "lang/language.py", "__init__.py", "core/charmap.py", "check/layout.py", "check/fillsources.py", "build/release.py", "core/ups.py",
-          "lang/termbase.py", "core/rom.py", "core/font.py", "build/font.py", "check/entrycheck.py", "web/editorcheck.py",
+          "lang/termbase.py", "core/rom.py", "core/lists.py", "core/font.py", "build/font.py", "check/entrycheck.py", "web/editorcheck.py",
           "profile/profile.py", "check/render.py", "core/graphics.py", "core/notes.py", "build/graphics.py", "web/editorgfx.py", "build/graphiclabel.py",
           "lang/renamecheck.py", "lang/termedit.py", "lang/research.py", "lang/cite.py", "project/__init__.py", "project/manifest.py",
           "project/scope.py", "project/registry.py", "web/snapshotstore.py", "check/provenance.py", "check/policy.py", "build/textprefix.py",

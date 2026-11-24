@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import replace
 
+from ..core.lists import append_unique
 from ..core.rom import ROM_BASE
 from ..core.charmap import Charmap, CharmapError
 from ..core.thumb import ThumbError
@@ -96,8 +97,7 @@ class Consumers:
                     for call in flow.calls:
                         if call.site in instructions and self.printer(call.target):
                             instruction = replace(instructions[call.site], target=call.target)
-                            if instruction not in calls:
-                                calls.append(instruction)
+                            append_unique(calls, instruction)
                 self.functions[start] = (fingerprint, branches, calls, None)
             except (ThumbError, ValueError) as exc:
                 self.functions[start] = (None, None, None, str(exc))
@@ -171,8 +171,7 @@ class Consumers:
                                 row['evidence']['buffer_trace'] = [
                                     {'call': site, 'helper': self.summaries.transfers.get(target)}
                                     for site, target in copies]
-                            if row not in found:
-                                found.append(row)
+                            append_unique(found, row)
         if not found and not reasons:
             reasons.add("No literal value reaches a fingerprinted printer argument.")
         return found, sorted(reasons)
@@ -239,8 +238,7 @@ class Consumers:
                 continue
             for consumer in self.tables[key]:
                 row = dict(consumer, evidence=dict(consumer["evidence"], reference=reference["at"]))
-                if row not in found:
-                    found.append(row)
+                append_unique(found, row)
         return found, [] if found else ["Indexed table reader continuation to a printer is unresolved."]
 
     def reader_bindings(self):

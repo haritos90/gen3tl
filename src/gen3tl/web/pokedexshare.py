@@ -14,6 +14,7 @@ import zlib
 
 from .. import TOOLKIT_ROOT
 from ..lang import language as language_metadata
+from ..core.lists import append_unique
 
 ID = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9._-]*$")
 LANGUAGE = re.compile(r"^[a-z]{2,3}(?:-[A-Za-z0-9]+)?$")
@@ -493,8 +494,7 @@ class ShareGenerator:
         for type_id in record["types"]:
             if type_id not in self.types:
                 raise ValueError(f"Unknown type {type_id} at slot {record['slot']}")
-            if type_id not in types:
-                types.append(type_id)
+            append_unique(types, type_id)
         rows = [{"id": type_id, "name": self.entry(language, f"types:{type_id}"), "colour": self.types[type_id]["colour"]}
                 for type_id in types]
         if not self.english and (not self.entry(language, record["name"]) or any(not row["name"] for row in rows)):

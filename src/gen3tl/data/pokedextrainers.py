@@ -7,6 +7,7 @@ import heapq
 import re
 from collections import defaultdict
 
+from ..core.lists import append_unique
 from ..core.notes import has_prose
 from ..core.rom import Rom, pointer_at, value_at
 from ..discover.maps import Walker
@@ -420,8 +421,7 @@ def verify_encounters(battles, trainers: list[dict], block: dict) -> list[str]:
                         not isinstance(row["settings"], list) or not row["settings"]
                         or any(value not in settings for value in row["settings"]))):
                 return error
-            if index not in memberships[row["record"]]:
-                memberships[row["record"]].append(index)
+            append_unique(memberships[row["record"]], index)
     if any(row.get("encounters") != memberships[index] or "base" in row for index, row in enumerate(trainers)):
         return error
     for group in block.get("participants", []):
@@ -592,8 +592,7 @@ def encounters(trainers: list[dict], difficulty: dict | None, groups: list[dict]
     for encounter in out:
         for variant in encounter["variants"]:
             trainer = trainers[variant["record"]]
-            if encounter["id"] not in trainer["encounters"]:
-                trainer["encounters"].append(encounter["id"])
+            append_unique(trainer["encounters"], encounter["id"])
             serves.setdefault(variant["record"], set()).update(variant["settings"] or settings)
     for record, values in serves.items():
         if settings and values != set(settings):

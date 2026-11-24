@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 
+from ..core.lists import append_unique
 from ..core.notes import has_prose
 from ..core.rom import Rom
 from .maps import Branch, BufferFill, Join, Walker, gender_source, identity_context, native_fill_sources
@@ -68,19 +69,18 @@ def context_identities(records: dict, entries: dict, prof, walker) -> None:
     declared = participant_rules(prof, set(records))
     colours = config.get("textcolor_genders", {})
 
-    def add(role, source):
-        if source not in role["sources"]:
-            role["sources"].append(source)
+    def add_source(role, source):
+        append_unique(role["sources"], source)
 
     def sprite(role, number, evidence):
         fact = sprites.get(str(number), {})
-        add(role, gender_source("sprite", fact.get("gender"), number,
-                               "; ".join(x for x in (evidence, fact.get("evidence")) if x)))
+        add_source(role, gender_source("sprite", fact.get("gender"), number,
+                                      "; ".join(x for x in (evidence, fact.get("evidence")) if x)))
 
     def trainer(role, info, evidence):
         if info:
-            add(role, gender_source("trainer", info["gender"],
-                                   f"{info['id']} / {info['class']}", evidence))
+            add_source(role, gender_source("trainer", info["gender"],
+                                          f"{info['id']} / {info['class']}", evidence))
 
     for sid, rec in records.items():
         identity = identity_context(entries[sid]["text"])
@@ -94,15 +94,15 @@ def context_identities(records: dict, entries: dict, prof, walker) -> None:
                 sprite(speaker, use["sprite"], evidence)
             trainer(speaker, use.get("trainer"), evidence)
             if use.get("trainer") and not any(r["role"] == "addressee" for r in declared.get(sid, [])):
-                add(identity["addressee"], gender_source("player", "variable", "", evidence))
+                add_source(identity["addressee"], gender_source("player", "variable", "", evidence))
             if use.get("textcolor") is not None and not lead:
-                add(speaker, gender_source("text colour", use["textcolor_gender"],
-                                           use.get("textcolor", ""), evidence))
+                add_source(speaker, gender_source("text colour", use["textcolor_gender"],
+                                                  use.get("textcolor", ""), evidence))
         for label in rec.get("speakers", []):
-            add(speaker, gender_source("label", label.get("gender"), label.get("colour", "")))
+            add_source(speaker, gender_source("label", label.get("gender"), label.get("colour", "")))
         if lead:
             colour = LEADING_COLOUR.match(entries[sid]["text"])[1]
-            add(speaker, gender_source("text colour", lead, colour, "inline"))
+            add_source(speaker, gender_source("text colour", lead, colour, "inline"))
         for rule in declared.get(sid, []):
             role = identity[rule["role"]]
             if "sprite" in rule:
@@ -113,10 +113,10 @@ def context_identities(records: dict, entries: dict, prof, walker) -> None:
                     raise ValueError("context participant trainer is missing")
                 trainer(role, info, rule["evidence"])
             if "textcolor" in rule:
-                add(role, gender_source("text colour", colours.get(str(rule["textcolor"])),
-                                        rule["textcolor"], rule["evidence"]))
+                add_source(role, gender_source("text colour", colours.get(str(rule["textcolor"])),
+                                               rule["textcolor"], rule["evidence"]))
             if rule.get("player"):
-                add(role, gender_source("player", "variable", "", rule["evidence"]))
+                add_source(role, gender_source("player", "variable", "", rule["evidence"]))
             if "in_source" in rule:
                 role.update(in_source=rule["in_source"], basis=rule.get("basis", ""))
         rec["identity"] = identity

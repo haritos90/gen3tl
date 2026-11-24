@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import re
 
+from ..core.lists import append_unique
 from ..core.notes import has_prose
 from ..core.rom import RomEvidence, value_at
 
@@ -40,8 +41,7 @@ def join_rewards(items: list[dict]) -> None:
                                             if key in use}, "kind": "exchange"}
                     if "quantity" in give:
                         source["quantity"] = give["quantity"]
-                    if source not in sources:
-                        sources.append(source)
+                    append_unique(sources, source)
     groups = {}
     for item in items:
         for source in item.get("sources", []):
@@ -302,8 +302,7 @@ def _source_records(block: dict | None, count: int) -> dict[int, list[dict]]:
             if not 0 <= item < count:
                 raise ValueError(f"item source: invalid shop item {item}")
             source = {"kind": "shop", "map": shop["map"], "map_section": shop["map_section"]}
-            if source not in out[item]:
-                out[item].append(source)
+            append_unique(out[item], source)
     return out
 
 
@@ -356,8 +355,7 @@ def _mining_records(block: dict, data: bytes, count: int) -> dict[int, list[dict
             if not 0 < item < count:
                 raise ValueError(f"mining source: invalid item {item}")
             source = {"kind": "mining", "chance": round(chance, 1)}
-            if source not in out[item]:
-                out[item].append(source)
+            append_unique(out[item], source)
     return out
 
 

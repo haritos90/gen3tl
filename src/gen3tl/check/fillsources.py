@@ -6,6 +6,7 @@ from collections import Counter
 from itertools import product
 
 from ..core.charmap import CharmapError
+from ..core.lists import append_unique
 from .layout import Measure, line_width, split_tokens
 
 OPS = frozenset({"source", "entries", "table", "pointers", "max", "concat", "paired", "letters", "digits", "empty"})
@@ -332,8 +333,7 @@ class Evaluator:
         found = []
         for field in ("advance", "extent"):
             for row in sorted(rows, key=lambda r: -r[field])[:3]:
-                if row not in found:
-                    found.append(row)
+                append_unique(found, row)
         return found
 
     def _rows(self, name, context, original):
@@ -514,8 +514,7 @@ def merge_results(results, floor=0):
     rows = []
     for row in known:
         for choice in row.get("choices", [row]):
-            if choice not in rows:
-                rows.append(choice)
+            append_unique(rows, choice)
     if len(rows) == 1 and not floor:
         return rows[0]
     winner = max(rows, key=lambda row: row["width"])

@@ -11,6 +11,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from ..core.font import FontTable
+from ..core.lists import append_unique
 from ..profile import schema
 from .verification import annotate
 
@@ -45,8 +46,7 @@ def scenario_sources(path):
             source = Path(args[0])
         else:
             continue
-        if str(source) not in files:
-            files.append(str(source))
+        append_unique(files, str(source))
     return steps, files
 
 

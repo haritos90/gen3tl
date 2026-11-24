@@ -11,6 +11,7 @@ from pathlib import Path
 from .. import TOOLKIT_ROOT
 from ..catalog.po import PoEntry, read, write as write_po
 from .sitepreview import translated as preview_texts
+from ..core.lists import append_unique
 
 SITE = "site"   # the editor project id, never a ROM profile
 PREVIEW_NOTE = "Link preview "   # opens every generated preview note
@@ -129,10 +130,8 @@ def page_keys(web: Path | None = None, registry: set[str] | None = None) -> dict
     web = Path(web or WEB)
     keys: dict[str, list[str]] = {}
 
-    def add(key, where):
-        keys.setdefault(key, [])
-        if where not in keys[key]:
-            keys[key].append(where)
+    def add_use(key, where):
+        append_unique(keys.setdefault(key, []), where)
 
     pages = [name for name in PAGES if (web / name).is_file()]
     pages += sorted(path.name for path in web.glob("*.html")
@@ -140,14 +139,14 @@ def page_keys(web: Path | None = None, registry: set[str] | None = None) -> dict
     for name in pages:
         text = (web / name).read_text(encoding="utf-8")
         for key in MARKUP.findall("".join(SITE_PARTS.findall(text))):
-            add(html.unescape(key), name)
+            add_use(html.unescape(key), name)
         if name in MASTHEAD_ONLY:
             continue
         body = SITE_PARTS.sub("", text)
         if name == "pokedex.html":   # its other keys are game strings first
             body = "".join(tag for tag in TAGS.findall(body) if SITE_MARK.search(tag))
         for key in MARKUP.findall(body):
-            add(html.unescape(key), name)
+            add_use(html.unescape(key), name)
     for path in sorted((web / "js").rglob("*.js")):
         source = "\n".join(line for line in path.read_text(encoding="utf-8").split("\n")
                            if not re.match(r"\s*//", line))
@@ -157,17 +156,17 @@ def page_keys(web: Path | None = None, registry: set[str] | None = None) -> dict
         for match in CALLS.finditer(source):
             key = json.loads(f'"{match.group(1)}"')
             if not pokedex:
-                add(key, where)
+                add_use(key, where)
         for pattern in SITE_CALLS:
             for match in pattern.finditer(source):
-                add(json.loads(f'"{match.group(1)}"'), where)
+                add_use(json.loads(f'"{match.group(1)}"'), where)
     if registry is None and web.resolve() == WEB.resolve():
         registry = registry_keys()
     for key in sorted(registry or ()):
-        add(key, REGISTERED)
+        add_use(key, REGISTERED)
     for row in preview_texts(web).values():
         for key in row.values():
-            add(key, "fragments/page-previews.json")
+            add_use(key, "fragments/page-previews.json")
     return keys
 
 

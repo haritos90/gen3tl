@@ -6,6 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from ..core.lists import append_unique
 from .termbase import Term, attach_notes
 from . import research
 
@@ -61,8 +62,8 @@ def merge(terms: list[Term], rows: list[dict], category: str, label: str) -> Sum
     for r in rows:
         if r["source_text"] in by_en:
             found[r["source_text"]].append(r)
-        elif r["source_text"] not in summ.unknown:
-            summ.unknown.append(r["source_text"])
+        else:
+            append_unique(summ.unknown, r["source_text"])
     for en, rs in found.items():
         if any(t.note_ids for t in by_en[en]) or any(r.get("finding") and r["finding"].note_ids for r in rs):
             if any(not r.get("finding") or not r["finding"].record_id for r in rs):

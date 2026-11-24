@@ -2,6 +2,7 @@
 
 from dataclasses import replace
 
+from ..core.lists import append_unique
 from ..core.rom import ROM_BASE
 from ..core.thumb import ThumbError
 from .accessors import Expression, Literal, MemoryAccess
@@ -208,8 +209,7 @@ class ReturnConsumers:
                                        'getters': [*chain, {'entry': target, 'call': site}],
                                        'arguments': [describe(v, flow.loads) for v in call.arguments],
                                        'assumption': ASSUMPTION + ' Getter domains describe possible indices, not reachability.'}}
-                            if row not in found:
-                                found.append(row)
+                            append_unique(found, row)
                     if any(site in value.sites and source_match(value, flow.loads, string)
                            for _, value in flow.returned):
                         todo.append((start, (*chain, {'entry': target, 'call': site})))
@@ -237,8 +237,7 @@ def reference_strings(consumers, entries):
         if not text or '{0x' in text:
             return
         row = strings.setdefault(target, {'id': f's{target:07X}', 'offset': target, 'references': []})
-        if reference not in row['references']:
-            row['references'].append(reference)
+        append_unique(row['references'], reference)
 
     while todo:
         start, depth = todo.pop()

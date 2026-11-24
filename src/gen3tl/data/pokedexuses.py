@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from ..core.lists import append_unique
 from ..core.notes import has_prose
 from ..core.rom import Rom, RomEvidence
 from ..discover.maps import Walker
@@ -389,8 +390,7 @@ def build(block: dict, data: bytes, profile: dict, items: list[dict], tutor: dic
             if row.get("conditions"):
                 use["conditions"] = list(row["conditions"])
             for entry in listed:
-                if use not in out[entry["item"]]:
-                    out[entry["item"]].append(use)
+                append_unique(out[entry["item"]], use)
     record = block["buyer_record"]
     for buyer in block.get("buyers", []):
         if data[buyer["at"]] != CALLASM:
@@ -404,8 +404,7 @@ def build(block: dict, data: bytes, profile: dict, items: list[dict], tutor: dic
                 raise ValueError(f"buyer 0x{buyer['base']:07X}: record {n} is not an item and a price")
             use = {"kind": "exchange", "takes": [{"item": item, "quantity": None}],
                    "gives": [{"money": price}], **place}
-            if use not in out[item]:
-                out[item].append(use)
+            append_unique(out[item], use)
     for row, at, takes, gives in _native_rows(block, data, by_id, moves):
         if data[at] != CALLASM:
             raise ValueError(f"native item use 0x{at:07X}: not a callasm command")
@@ -415,6 +414,5 @@ def build(block: dict, data: bytes, profile: dict, items: list[dict], tutor: dic
         for entry in takes:
             if entry["item"] not in out:
                 raise ValueError(f"native item use: invalid cost item {entry['item']}")
-            if use not in out[entry["item"]]:
-                out[entry["item"]].append(use)
+            append_unique(out[entry["item"]], use)
     return out

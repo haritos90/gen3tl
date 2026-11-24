@@ -7,6 +7,7 @@ import itertools
 import re
 from pathlib import Path
 
+from ..core.lists import append_unique
 from ..core.notes import has_prose
 from ..core.thumb import decode
 
@@ -519,8 +520,7 @@ def default_moves(learnsets: dict, species: int, level: int) -> list[int] | None
     eligible = [row for row in rows if row.get("method") == 0 and (row.get("level") or 0) <= level]
     moves = []
     for row in eligible[-4:]:
-        if row["move"] not in moves:
-            moves.append(row["move"])
+        append_unique(moves, row["move"])
     return moves
 
 

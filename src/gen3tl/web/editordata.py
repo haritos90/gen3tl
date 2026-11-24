@@ -12,6 +12,7 @@ from ..catalog.catalog import never_shown_evidence, nothing_to_translate
 from ..catalog.po import catalog_name, comment_kind
 from ..catalog.source import digest as text_digest
 from ..core.charmap import PLACEHOLDER, CharmapError
+from ..core.lists import append_unique
 from ..discover.maps import gender_source, identity_context
 # re-exported from the browser check
 from .editorcheck import LIMIT_FIELDS, RULES, export_rules, limit_of  # noqa: F401
@@ -114,11 +115,6 @@ def status(e, blank: bool | None = None) -> str:
     return "fuzzy" if e.fuzzy else "approved"
 
 
-def add(items: list, value) -> None:
-    if value not in items:
-        items.append(value)
-
-
 def context(comments: list[str], catalog: dict, aliases: keys.Aliases = keys.EMPTY,
             english: str | None = None) -> dict:
     """Context of an entry from its PO extracted comments; `aliases` names the entries of the comments by key."""
@@ -129,43 +125,43 @@ def context(comments: list[str], catalog: dict, aliases: keys.Aliases = keys.EMP
         if m := USED.match(c):
             used += 1
             if m["map"] != "?":
-                add(out["maps"], m["map"])
-            add(out["events"], m["event"])
+                append_unique(out["maps"], m["map"])
+            append_unique(out["events"], m["event"])
             if b := re.search(r", box (\w+)", m["rest"]):
-                add(out["boxes"], b[1])
+                append_unique(out["boxes"], b[1])
             if g := re.search(r", speaker colour (\w+)", m["rest"]):
-                add(out["speakers"], {"gender": g[1], "source": "text colour"})
+                append_unique(out["speakers"], {"gender": g[1], "source": "text colour"})
             if sprite := re.search(r", sprite (\d+)", m["rest"]):
-                add(out["identity"]["speaker"]["sources"], gender_source("sprite", None, sprite[1]))
+                append_unique(out["identity"]["speaker"]["sources"], gender_source("sprite", None, sprite[1]))
         elif m := USED_IN.match(c):
             out["uses"] = int(m[1])
         elif c.startswith(INFERRED):
-            add(out["maps"], c[len(INFERRED):])
+            append_unique(out["maps"], c[len(INFERRED):])
         elif m := LABEL.match(c):
-            add(out["speakers"], {"name": m["name"], "gender": m["gender"], "source": "label"})
+            append_unique(out["speakers"], {"name": m["name"], "gender": m["gender"], "source": "label"})
         elif m := TRAINER.match(c):
-            add(out["speakers"], {"name": m["name"], "class": m["cls"], "gender": m["gender"],
-                                  "source": "trainer"})
+            append_unique(out["speakers"], {"name": m["name"], "class": m["cls"], "gender": m["gender"],
+                                            "source": "trainer"})
         elif m := RECORD.match(c):
             sp = {"gender": m["gender"], "source": "record"}
             if m["cls"]:
                 sp["class"] = m["cls"]
-            add(out["speakers"], sp)
+            append_unique(out["speakers"], sp)
             cls = re.match(r"\d+", m["cls"] or "")
             value = m["record"] + (f" / {cls[0]}" if cls else "")
-            add(out["identity"]["speaker"]["sources"],
-                gender_source("record", m["gender"], value, m["table"]))
+            append_unique(out["identity"]["speaker"]["sources"],
+                          gender_source("record", m["gender"], value, m["table"]))
         elif m := WORD.match(c):
             w = catalog.get(aliases.entry_id(m[2]))
-            add(out["words"], {"slot": m[1], "id": aliases.key(m[2]), "source_text": w[1].msgid if w else "",
-                               "translation": w[1].msgstr if w else ""})
+            append_unique(out["words"], {"slot": m[1], "id": aliases.key(m[2]), "source_text": w[1].msgid if w else "",
+                                         "translation": w[1].msgstr if w else ""})
         elif m := HOST.match(c):
-            add(out["hosts"], {"slot": m[1], "id": aliases.key(m[2])})
+            append_unique(out["hosts"], {"slot": m[1], "id": aliases.key(m[2])})
     out["uses"] = max(out["uses"], used)
     for speaker in out["speakers"]:
         sources = out["identity"]["speaker"]["sources"]
         if not any(s["source"] == speaker["source"] and s["gender"] == speaker["gender"] for s in sources):
-            add(sources, gender_source(speaker["source"], speaker["gender"]))
+            append_unique(sources, gender_source(speaker["source"], speaker["gender"]))
     return out
 
 
@@ -181,7 +177,7 @@ def merge_identity(ctx: dict, record: dict) -> None:
             if not any(s["source"] == source["source"] and
                        (s["gender"] == source["gender"] or source["gender"] == "unknown")
                        and (not source["value"] or s["value"] == source["value"]) for s in sources):
-                add(sources, source)
+                append_unique(sources, source)
         identity[role] = {**measured[role], "sources": sources}
     ctx["identity"] = identity
 
@@ -212,7 +208,7 @@ def text_free(ctx: dict, names: dict[str, str] | None = None) -> dict:
         if "name" in sp and sp["name"] in names:
             out["name"] = names[sp["name"]]
         out.update({k: v for k, v in sp.items() if k not in ("name", "class")})
-        add(speakers, out)
+        append_unique(speakers, out)
     return {**{k: v for k, v in ctx.items() if k != "maps"},
             "maps": [names[m] for m in ctx["maps"] if m in names],
             "comments": [c for c in ctx["comments"] if not comment_kind(c)[1]], "speakers": speakers,
@@ -225,10 +221,10 @@ def context_links(records: dict, catalog: dict, aliases: keys.Aliases) -> dict:
     for sid, rec in sorted(records.get("strings", {}).items()):
         entry = catalog.get(sid)
         for host, slot in rec.get("fills", []):
-            add(out.setdefault(sid, {"hosts": [], "words": []})["hosts"],
-                {"slot": slot, "id": aliases.key(host)})
-            add(out.setdefault(host, {"hosts": [], "words": []})["words"],
-                {"slot": slot, "id": aliases.key(sid), "translation": entry[1].msgstr if entry else ""})
+            append_unique(out.setdefault(sid, {"hosts": [], "words": []})["hosts"],
+                          {"slot": slot, "id": aliases.key(host)})
+            append_unique(out.setdefault(host, {"hosts": [], "words": []})["words"],
+                          {"slot": slot, "id": aliases.key(sid), "translation": entry[1].msgstr if entry else ""})
     return out
 
 
@@ -1165,7 +1161,7 @@ def build(lang: str, prof, catalog: dict, limits: dict, measure, cm, packs: dict
             original = facts[sid][5]["context"]
             speakers = [{k: v for k, v in sp.items() if v is not None} for sp in original["speakers"]]
             for speaker in ctx["speakers"]:
-                add(speakers, speaker)
+                append_unique(speakers, speaker)
             merge_identity(ctx, original)
             ctx.update({**{k: v for k, v in original.items() if k != "identity"}, "speakers": speakers})
         if contexts is not None:

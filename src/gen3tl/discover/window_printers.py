@@ -6,6 +6,7 @@ from collections import defaultdict
 import sys
 from array import array
 
+from ..core.lists import append_unique
 from ..core.thumb import ThumbError, decode
 from ..core.rom import ROM_BASE
 from ..families.fingerprints import Fingerprint, find
@@ -52,8 +53,7 @@ def call_index(rom):
                         indirect.append(((value - ROM_BASE) & ~1, site))
                 break
     for target, site in indirect:
-        if site not in result[target]:
-            result[target].append(site)
+        append_unique(result[target], site)
     return result
 
 
@@ -164,8 +164,7 @@ class Printers:
                                 value = argument(call, flow, callee, name)
                             if value is not None:
                                 row[name] = describe(value, flow.loads)
-                        if row not in summaries:
-                            summaries.append(row)
+                        append_unique(summaries, row)
                 if summaries:
                     self.rows[start] = summaries
                     following.add(start)

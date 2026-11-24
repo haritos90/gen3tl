@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..core.lists import append_unique
 from ..core.notes import has_prose
 from ..lang import language
 
@@ -1191,8 +1192,7 @@ def compute_limits(prof, inv: dict, catalog, measure: Measure, cm: Charmap, ctx:
                     width = max(0, width - shift) if shift >= 0 else 0
                     source = {**source, "rule": coded("centred", rule=source["rule"], reference=centre["reference"])}
                 consumer = window_consumer(width, source, arrow, rule, rule.get("box") in ("dialogue", "battle"))
-                if consumer not in consumers:
-                    consumers.append(consumer)
+                append_unique(consumers, consumer)
         if not consumers or sid in windows or strict or sid in lay.get("window_binding", {}):
             rule = dict(lay.get("window_binding", {}).get(sid, {}))
             if sid in lay.get("window_prompt_arrow_width", {}):

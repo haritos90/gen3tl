@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..core.charmap import Charmap, CharmapError
+from ..core.lists import append_unique
 from ..profile.languagerules import load
 
 
@@ -267,6 +268,5 @@ def catalog_problems(prof, catalog: dict, cm: Charmap, *,
                     for message in result.problems:
                         problem = Problem(sid, f"{rule['id']}/{routine['id']}: {message}",
                                           "warning" if source_as_translation else "error")
-                        if problem not in problems:
-                            problems.append(problem)
+                        append_unique(problems, problem)
     return problems

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 
+from ..core.lists import append_unique
 from ..core.rom import ROM_BASE
 from ..core.thumb import ThumbError, decode
 from .references import function_instructions, instruction_word
@@ -297,8 +298,7 @@ class Readers:
                             elif 'constant' in row['base'] and 'constant' in row['count']:
                                 base, count = row['base']['constant'] - ROM_BASE, row['count']['constant']
                                 if base % 4 == 0 and count > 0 and count <= 1024 and 0 <= base <= len(self.rom) - count * row['stride']:
-                                    if row not in self.calls:
-                                        self.calls.append(row)
+                                    append_unique(self.calls, row)
                             else:
                                 self.stops.append(row)
             frontier = following
