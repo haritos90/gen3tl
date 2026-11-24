@@ -280,7 +280,8 @@ def write(path: Path, doc: dict) -> None:
         shared = _shared(path)
         documents = {name: _assemble(path.with_name(name), shared)
                      for name in shared["snapshots"] if name != path.name}
-    documents[path.name] = doc
+    # fresh and loaded documents fill the tables alike
+    documents[path.name] = _sorted(doc)
     _save(path.parent, documents)
 
 

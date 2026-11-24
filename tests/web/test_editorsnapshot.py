@@ -183,6 +183,16 @@ class SnapshotTest(unittest.TestCase):
         loaded = [source[1] for row in snapshot.load(path)["source"].values() for source in row[5]["sources"].values()]
         self.assertTrue(loaded and all(rule["code"] in provenance.MESSAGES for rule in loaded))   # read back as codes
 
+    def test_limit_sources_are_independent_of_the_write_order(self):
+        docs = {code: dict(self.doc, language=code) for code in ("de", "es", "fr", "ru")}
+        for folder, codes in (("forward", list(docs)), ("reverse", list(reversed(docs)))):
+            for code in codes:
+                snapshot.write(self.root / folder / f"{code}.snapshot.json", docs[code])
+        shared = json.loads((self.root / "forward/shared.json").read_text())
+        self.assertGreater(len(shared["tables"]["limit_sources"]), 1)
+        self.assertEqual({p.name: p.read_bytes() for p in (self.root / "forward").iterdir()},
+                         {p.name: p.read_bytes() for p in (self.root / "reverse").iterdir()})
+
     def test_shared_fact_edits_fail_the_existing_checksum(self):
         path = self.root / "aa.snapshot.json"
         snapshot.write(path, self.doc)
