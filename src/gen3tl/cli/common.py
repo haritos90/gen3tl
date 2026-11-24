@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..core.terminal import StatusParser, StatusVersion, line
+from ..core.terminal import StatusParser, StatusVersion, line  # noqa: F401
 from ..profile.profile import Profile
 
 COMMANDS = {}

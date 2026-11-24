@@ -67,7 +67,7 @@ def font_preview(args):
     """Render the language pack glyphs beside the original font into build/."""
     from ..build.font import FontTable
     from ..lang.langpack import LangPack, style_problems
-    from ..check.render import Canvas, GlyphSource, draw_text, write_png, PALETTE
+    from ..check.render import Canvas, GlyphSource, draw_text, write_png
     from ..lang.langpack import style_geometry
     prof = Profile.by_name(args.profile)
     rom = prof.load_rom(args.rom)

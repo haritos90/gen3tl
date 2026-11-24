@@ -23,7 +23,7 @@ from ..core.graphics import GREY, GraphicsError, _PALETTE, lz77_decompress, pale
 from ..core.rom import Rom
 from .consumerproof import (COPIES, LZ77, consumer_paths, consumer_start, dma_transfers, event_length,
                             graphic_proofs, palette_proofs)
-from .graphicevidence import (adjacent_palette_records, descriptor_triples, literal_loads,
+from .graphicevidence import (adjacent_palette_records, descriptor_triples, literal_loads,  # noqa: F401
                               palette_evidence, palette_loads, raw_records, verified_descriptor_triples)
 from .scan import pointer_index
 

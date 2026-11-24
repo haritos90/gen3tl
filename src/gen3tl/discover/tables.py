@@ -6,11 +6,10 @@ from ..core.rom import Rom
 from .foundations import evidence
 from . import table_dex, table_encounters, table_evolution, table_graphics, table_learnsets, \
     table_maps, table_mining, table_sources, table_strings, table_trainers
-from .table_core import (SOURCE, Index, Names, Result, _issue, _record, _set, find_names,
-                         item_names, name_stride, names, pointer_name_dispatch, pointer_texts,
-                         record_layout, sign_extension, sprite_layout, text)
-from .table_readers import (Readers, _bounded_analysis, _copy_tables, _items, _keyboard,
-                            _move_lists, _patch_tables, scan_bounds)
+from .table_core import (Index, Result, _issue, _record, _set, find_names, item_names,  # noqa: F401
+                         name_stride, names, pointer_name_dispatch, pointer_texts, record_layout,
+                         sign_extension, sprite_layout)
+from .table_readers import Readers, _copy_tables, _items, _keyboard, _move_lists, _patch_tables
 
 
 def _extra_names(rom, result, config, index, bindings):

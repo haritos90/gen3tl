@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from ..core.thumb import ThumbError, decode
+from ..core.thumb import ThumbError
 from .scan import pointer_index
 from .window_switches import successors, walk
 

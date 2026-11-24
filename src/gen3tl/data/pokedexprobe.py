@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 from ..core.charmap import Charmap
 from ..core.rom import Rom

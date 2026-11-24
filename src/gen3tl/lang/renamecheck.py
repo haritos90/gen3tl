@@ -8,7 +8,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 
-from .termbase import FORM_ONLY, USE, Senses, Term, find_forms, rename_in_text, strip_codes
+from .termbase import FORM_ONLY, Senses, Term, rename_in_text
 
 FORMAT = "gen3tl-term-rename"
 VERSION = "2.0.0"

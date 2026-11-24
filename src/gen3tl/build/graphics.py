@@ -11,9 +11,10 @@ from pathlib import Path
 
 from ..check.render import PngImage, indexed_png, read_png_image, write_indexed_png
 from ..core import notes as structured
-from ..core.graphics import (GREY, LZ77_MAX, LZ77_MIN, LZ77_MIN_DISP, LZ77_TYPE, LZ77_WINDOW, GraphicsError, Rgb,
-                             _PALETTE, bgr555, graphics_document, lz77_compress, lz77_decompress, palette_colours,
-                             preview_views, tiles_to_pixels, validate_graphic_note, validate_graphics_document)
+from ..core.graphics import (GREY, LZ77_MAX, LZ77_MIN, LZ77_MIN_DISP, LZ77_TYPE, LZ77_WINDOW,  # noqa: F401
+                             GraphicsError, Rgb, bgr555, graphics_document, lz77_compress, lz77_decompress,
+                             palette_colours, preview_views, tiles_to_pixels, validate_graphic_note,
+                             validate_graphics_document)
 from ..core.rom import ROM_BASE, Rom, ptr_bytes
 
 DEFAULT_SHEET_WIDTH = 16   # tiles per row of an extracted sheet

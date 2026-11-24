@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from ..core.rom import Rom
-from ..core.font import (BACKGROUND, FORMATS, GLYPH_BYTES, INK, OUTSIDE, SHADOW, TILE_ORIGINS, FontTable,
-                         by_style, check_copies, decode_glyph, encode_glyph, font_codes, glyph_size, shadow_end)
+from ..core.font import (BACKGROUND, FORMATS, GLYPH_BYTES, INK, OUTSIDE, SHADOW, TILE_ORIGINS,  # noqa: F401
+                         FontTable, by_style, check_copies, decode_glyph, encode_glyph, font_codes, glyph_size,
+                         shadow_end)
 
 
 def write_glyphs(rom: Rom, fonts: list[FontTable], slots: dict[str, dict],

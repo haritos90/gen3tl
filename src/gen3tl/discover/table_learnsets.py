@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import math
 import re
 
-from ..core.thumb import decode, walk
+from ..core.thumb import decode
 from .foundations import evidence
 from .table_core import _issue, _set, text
 

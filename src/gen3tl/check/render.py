@@ -8,7 +8,7 @@ import zlib
 from pathlib import Path
 
 from ..core.charmap import CTRL, CTRL_CODES, EOS, NEWLINE, PARAGRAPH, PLACEHOLDER, PREFIXED_ARG, SCROLL, CharmapError
-from ..build.font import BACKGROUND, INK, OUTSIDE, SHADOW, FontTable, decode_glyph
+from ..build.font import BACKGROUND, INK, OUTSIDE, SHADOW, FontTable
 
 # message-box colours used for previews (approximation of the in-game palette)
 PALETTE = {

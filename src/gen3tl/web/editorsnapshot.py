@@ -10,7 +10,7 @@ from ..check import qa
 from ..catalog.batch import record_speakers
 from .editordata import context, fonts_data, merge_identity, name_keys, text_free
 from .editorcheck import Checker
-from .snapshotstore import load, paths, write
+from .snapshotstore import load, paths, write  # noqa: F401
 from .editorkeyboard import cursor_columns
 from ..build.font import FontTable, check_copies
 from ..lang.langpack import load_styles

@@ -310,7 +310,6 @@ def _caption(text: str, cm) -> bytes:
 def batch_render(args):
     """Render a batch as English/translated message boxes in the game font (build/screens/<batch>-boxes.png)."""
     import json
-    from pathlib import Path
     from ..build.font import FontTable
     from ..lang.langpack import LangPack
     from ..check.layout import Measure, entry_measure, layout, paragraphs, lines_of
