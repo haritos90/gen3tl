@@ -520,8 +520,7 @@ function ruleText(rule, sources) {
     case "english_file_lines": return t("the English: the most lines of {file}", { file: rule.file });
     case "in_place": return t("in place: its {n} bytes with the terminator, a reference the build cannot rewrite ({kinds})",
       { n: rule.bytes, kinds: rule.references });
-    // the interior row's description stays as written
-    case "interior": return whereText(`read from byte ${rule.offset}, in place in its ${rule.bytes} bytes`);
+    case "interior": return t("read from byte {byte}, in place in its {n} bytes", { byte: rule.offset, n: rule.bytes });
     default: break;
   }
   const window = windowOf(rule);
@@ -559,13 +558,14 @@ export function limitText(rule, sources = []) {
     if (bare && Object.hasOwn(WINDOW_KINDS, bare[1])) return t(WINDOW_KINDS[bare[1]]);
     if (PROFILE_STRINGS.test(source)) return t("Save or link text");
     const row = PROFILE_ROW.exec(source);
+    // their descriptions are phrases, not where texts
+    if (row && ["strings.table_base", "strings.interior"].includes(row[1]) && row[4]) {
+      return phrase(row[4], RULES);
+    }
     if (row && Object.hasOwn(WINDOW_KINDS, row[1])) {
       if (row[4]?.trim()) return row[1] === "table" && !row[3]
         ? phrase(row[4], RULES) : whereText(row[4]);
       return t(WINDOW_KINDS[row[1]]);
-    }
-    if (row && ["strings.table_base", "strings.interior"].includes(row[1]) && row[4]) {
-      return phrase(row[4], RULES);
     }
   }
   return phrase(whereText(t(source)), RULES, { rule: limitText, via: limitText, where: limitText });
