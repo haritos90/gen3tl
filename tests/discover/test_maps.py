@@ -50,3 +50,16 @@ class IdentityTest(unittest.TestCase):
                      {"text": "line", "role": "speaker", "sprite": -1, "evidence": "trace"}):
             with self.subTest(rule=rule), self.assertRaises(ValueError):
                 participant_rules({"context": {"participants": [rule]}}, {"line"})
+
+
+class WalkTest(unittest.TestCase):
+    def test_each_walk_returns_the_commands_it_decodes(self):
+        from gen3tl.core.rom import Rom, ptr_bytes
+        from gen3tl.discover.maps import Walker
+        rom = Rom(bytes([255]) * 0x1000)
+        rom.write(0x100, b"\x25\xEA\x00" + b"\x67" + ptr_bytes(0xD00) + b"\x02")   # special, message, end
+        rom.write(0x200, b"\x02")
+        walker = Walker(rom, {"maps": {}})
+        self.assertEqual(walker.walk_script(0x100, "", "", "npc", None, None), {0x100, 0x103, 0x108})
+        self.assertEqual(walker.walk_script(0x200, "", "", "npc", None, None), {0x200})
+        self.assertEqual((walker.decoded, walker.ctx.scripts), ({0x100, 0x103, 0x108, 0x200}, 2))

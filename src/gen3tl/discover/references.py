@@ -301,13 +301,8 @@ def script_operands(rom, profile, handlers=()):
 
     class Census(Walker):
         def walk_script(self, start, *args):
-            previous = self.decoded
-            self.decoded = set()
-            super().walk_script(start, *args)
-            for pc in self.decoded:
+            for pc in super().walk_script(start, *args):
                 roots.setdefault(pc, set()).add(start)
-            previous.update(self.decoded)
-            self.decoded = previous
 
     walker = Census(rom, profile)
     walker.walk_all()

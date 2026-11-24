@@ -415,12 +415,15 @@ class Walker:
         return out
 
     def walk_script(self, start: int, mid: str, name: str, event: str,
-                    local_id: int | None, sprite: int | None) -> None:
-        """Walk a script in execution order, entering calls and conditional branches where they occur."""
+                    local_id: int | None, sprite: int | None) -> set[int]:
+        """Walk a script in execution order, entering calls and conditional branches where they occur.
+
+        Returns the command starts this walk decoded."""
         self.ctx.scripts += 1
         seen: set[int] = set()
         state = self.new_state()
         self._walk(start, None, mid, name, event, local_id, sprite, start, seen, state, 0)
+        return seen
 
     def new_state(self) -> dict:
         """Walk state: text order and the buffer-link bookkeeping."""

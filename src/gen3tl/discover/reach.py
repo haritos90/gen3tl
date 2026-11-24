@@ -529,11 +529,8 @@ class _VisitWalker(Walker):
         self.visited: set[int] = set()
 
     def walk_script(self, start, mid, name, event, local_id, sprite):
-        self.ctx.scripts += 1
         self.roots.setdefault(start, f"{mid} {event}")
-        seen: set[int] = set()
-        self._walk(start, None, mid, name, event, local_id, sprite, start, seen, self.new_state(), 0)
-        self.visited |= seen
+        self.visited |= super().walk_script(start, mid, name, event, local_id, sprite)
 
 
 @dataclass

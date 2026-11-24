@@ -246,9 +246,7 @@ class _VariableWalker(Walker):
         self.writes: dict[int, set[tuple[str, str]]] = defaultdict(set)
 
     def walk_script(self, start, mid, name, event, local_id, sprite):
-        self.ctx.scripts += 1
-        seen = set()
-        self._walk(start, None, mid, name, event, local_id, sprite, start, seen, self.new_state(), 0)
+        seen = super().walk_script(start, mid, name, event, local_id, sprite)
         d = self.d
         for pc in seen:
             if d[pc] in VAR_WRITES and d[pc + 1:pc + 3] == self.variable:

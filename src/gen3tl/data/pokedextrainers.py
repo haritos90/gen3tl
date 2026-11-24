@@ -626,9 +626,7 @@ class _BattleWalker(Walker):
             self.selections[row["script"]].update(row["records"])
 
     def walk_script(self, start, mid, name, event, local_id, sprite):
-        self.ctx.scripts += 1
-        seen = set()
-        self._walk(start, None, mid, name, event, local_id, sprite, start, seen, self.new_state(), 0)
+        seen = super().walk_script(start, mid, name, event, local_id, sprite)
         selections = sorted(pc for pc in seen if pc in self.selections)
         for pc in seen:
             for trainer in self.selections.get(pc, ()):

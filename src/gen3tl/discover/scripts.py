@@ -1458,12 +1458,7 @@ def walk_inputs(rom: Rom, profile):
 
     class InputWalker(Walker):
         def walk_script(self, start, *args):
-            previous = self.decoded
-            self.decoded = set()
-            super().walk_script(start, *args)
-            census.setdefault(start, set()).update(self.decoded)
-            previous.update(self.decoded)
-            self.decoded = previous
+            census.setdefault(start, set()).update(super().walk_script(start, *args))
 
     census = {}
     walker = InputWalker(rom, profile)

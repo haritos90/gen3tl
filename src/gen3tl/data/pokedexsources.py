@@ -113,9 +113,7 @@ class _SourceWalker(Walker):
         self.contexts: dict[int, list[tuple[str, int, int]]] = defaultdict(list)
 
     def walk_script(self, start, mid, name, event, local_id, sprite):
-        self.ctx.scripts += 1
-        seen = set()
-        self._walk(start, None, mid, name, event, local_id, sprite, start, seen, self.new_state(), 0)
+        seen = super().walk_script(start, mid, name, event, local_id, sprite)
         section = self.d[self.ctx.headers[mid] + 20]
         for pc in seen:
             self.contexts[pc].append((mid, section, start))
