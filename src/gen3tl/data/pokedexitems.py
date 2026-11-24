@@ -7,7 +7,7 @@ import re
 
 from ..core.lists import append_unique
 from ..core.notes import has_prose
-from ..core.rom import RomEvidence, value_at
+from ..core.rom import RomEvidence, field_spec, value_at
 
 FIELDS = ("price", "held_effect", "hold_effect_param", "pocket", "battle_usage")
 POINTER_LOW, POINTER_HIGH = 0x08000000, 0x0A000000
@@ -67,14 +67,8 @@ def join_rewards(items: list[dict]) -> None:
                                      else len(order))
 
 
-def _field(spec) -> tuple[int, int]:
-    if isinstance(spec, dict):
-        return int(spec["offset"]), int(spec.get("width", 1))
-    return int(spec), 1
-
-
 def _field_value(data: bytes, at: int, spec) -> int | None:
-    offset, width = _field(spec)
+    offset, width, _ = field_spec(spec)
     return value_at(data, at + offset, width)
 
 
@@ -418,8 +412,7 @@ def build(block: dict, data: bytes) -> list[dict]:
     for item in range(int(block.get("first", 0)), count):
         start = int(block["base"]) + item * int(block["stride"])
         description = None
-        desc_offset, desc_width = _field(fields["description"])
-        pointer = _field_value(data, start, {"offset": desc_offset, "width": desc_width})
+        pointer = _field_value(data, start, fields["description"])
         if pointer and POINTER_LOW <= pointer < POINTER_HIGH:
             description = f"s{pointer - POINTER_LOW:07X}"
         tm_index = _tm_index(tm, item) if tm else None

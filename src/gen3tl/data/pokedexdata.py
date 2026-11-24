@@ -8,7 +8,7 @@ import re
 from pathlib import Path
 
 from ..core.notes import has_prose
-from ..core.rom import value_at
+from ..core.rom import field_spec, value_at
 
 FORMAT = "gen3tl-pokedex"
 SCHEMA = 1
@@ -27,13 +27,6 @@ POINTER_LOW, POINTER_HIGH = 0x08000000, 0x0A000000
 
 class PokedexError(ValueError):
     """The profile cannot drive a Pokedex dataset."""
-
-
-def _field(spec) -> tuple[int, int]:
-    """(offset, width) of one entry field: an offset, or {offset, width}."""
-    if isinstance(spec, dict):
-        return int(spec["offset"]), int(spec.get("width", 1))
-    return int(spec), 1
 
 
 def _text_id(data: bytes, at: int) -> tuple[str | None, int]:
@@ -587,7 +580,7 @@ def _dex_values(block: dict, data: bytes, slot: int, natdex: int | None) -> tupl
             return {}, None
         index = natdex
     start = int(records["base"]) + index * int(records.get("stride", 1))
-    fields = {name: _field(spec) for name, spec in records.get("fields", {}).items()}
+    fields = {name: field_spec(spec)[:2] for name, spec in records.get("fields", {}).items()}
     values = {}
     for name, (off, width) in fields.items():
         if width == 4 and name in ("description", "category"):
@@ -606,7 +599,7 @@ def _dex_values(block: dict, data: bytes, slot: int, natdex: int | None) -> tupl
 def _species_values(block: dict, data: bytes, slot: int) -> tuple[dict, int]:
     sp = block["species"]
     start = int(sp["base"]) + slot * int(sp["stride"])
-    fields = {name: _field(spec) for name, spec in sp.get("fields", {}).items()}
+    fields = {name: field_spec(spec)[:2] for name, spec in sp.get("fields", {}).items()}
     values = {name: value_at(data, start + off, width) for name, (off, width) in fields.items()}
     # an inline category, named by its [[table]]
     if sp.get("category_table"):
@@ -629,7 +622,7 @@ def _evolution(block: dict, data: bytes, slot: int, start: int) -> list[dict] | 
     ev = block.get("evolution")
     if not ev:
         return None
-    fields = {name: _field(spec) for name, spec in ev["fields"].items()}
+    fields = {name: field_spec(spec)[:2] for name, spec in ev["fields"].items()}
     size = int(ev.get("record", 8))
     stop = int(ev.get("stop", 0))
 

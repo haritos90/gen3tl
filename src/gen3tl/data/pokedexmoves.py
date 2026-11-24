@@ -7,7 +7,7 @@ import re
 from collections import defaultdict
 
 from ..core.notes import has_prose
-from ..core.rom import Rom, RomEvidence, value_at
+from ..core.rom import Rom, RomEvidence, field_spec, value_at
 from ..discover.maps import VAR_FIRST, Walker
 
 FIELDS = ("effect", "power", "type", "accuracy", "pp", "secondary_chance",
@@ -19,14 +19,8 @@ ENVIRONMENT_COLUMNS = ("effect", "move", "type")
 POINTER_LOW, POINTER_HIGH = 0x08000000, 0x0A000000
 
 
-def _field(spec) -> tuple[int, int, bool]:
-    if isinstance(spec, dict):
-        return int(spec["offset"]), int(spec.get("width", 1)), bool(spec.get("signed"))
-    return int(spec), 1, False
-
-
 def _field_value(data: bytes, at: int, spec) -> int | None:
-    offset, width, signed = _field(spec)
+    offset, width, signed = field_spec(spec)
     return value_at(data, at + offset, width, signed)
 
 

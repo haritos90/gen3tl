@@ -126,3 +126,10 @@ def pointer_at(data: bytes | bytearray, at: int) -> int | None:
     """The ROM offset the pointer at `at` refers to, or None."""
     value = value_at(data, at)
     return value - ROM_BASE if value is not None and ROM_BASE <= value < ROM_BASE + len(data) else None
+
+
+def field_spec(spec) -> tuple[int, int, bool]:
+    """(offset, width, signed) of a record field: an offset, or {offset, width, signed}."""
+    if isinstance(spec, dict):
+        return int(spec["offset"]), int(spec.get("width", 1)), bool(spec.get("signed"))
+    return int(spec), 1, False
