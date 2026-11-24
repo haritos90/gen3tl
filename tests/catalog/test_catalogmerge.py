@@ -140,8 +140,8 @@ def remap_materials(tmp, language="ru"):
     files = {
         "policy.toml": f'[layout.window_width]\n"{moved_old}" = 83\n"{same}" = 60\n"{obsolete[0]}" = 42\n',
         "rules.tsv": f"ids\tsource_text\trule\tsource\n{moved_old} {sim_old}\t\tKeep {obsolete[0]} and {same}.\tx\n",
-        "term-index.tsv": f"term\tstring\tform\ttext\tsource_names_term\tuse\tfile\n"
-                          f"move:x\t{moved_old}\tnomn.sing\t-\tyes\tyes\ttranslation/po/a.po\n",
+        "term-index.tsv": f"term\tstring\tform\ttext\tsource_names_term\tuse\n"
+                          f"move:x\t{moved_old}\tnomn.sing\t-\tyes\tyes\n",
         "batches/b/translation.json": json.dumps({moved_old: "Табличка.", sim_old: "Дверь."}),
         "graphics/labels.tsv": f"id\tkey\ttext\nG01\t{sim_old}\tlabel\n",
         "research/notes.md": f"see {moved_old} and {obsolete[1]}.\n",

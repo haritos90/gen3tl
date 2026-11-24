@@ -518,7 +518,6 @@ RUN = re.compile(r"[^\W_]+")
 
 def build_index(terms: list[Term], catalog, told=None) -> list[dict]:
     """Distinct glossary term occurrences, in first-match order."""
-    from ..catalog.po import catalog_name
     # a form matches only at whole-run boundaries:
     # - a match starts and ends on a boundary
     # - strings are tried only against forms starting with their runs
@@ -536,7 +535,7 @@ def build_index(terms: list[Term], catalog, told=None) -> list[dict]:
     senses = Senses(terms)
     rows = []
     seen = set()
-    for sid, (path, e) in sorted(catalog.items()):
+    for sid, (_, e) in sorted(catalog.items()):
         if not e.msgstr:
             continue
         cand = set(always)
@@ -552,7 +551,7 @@ def build_index(terms: list[Term], catalog, told=None) -> list[dict]:
             for key, text, pos, kind in found:
                 row = {"term": t.id, "string": sid, "form": key, "text": text,
                        "source_names_term": UNKNOWN if named is None else "yes" if named else "no",
-                       "use": "yes" if kind == USE else kind, "file": catalog_name(path)}
+                       "use": "yes" if kind == USE else kind}
                 identity = tuple(row.values())
                 if identity not in seen:
                     seen.add(identity)
@@ -561,7 +560,7 @@ def build_index(terms: list[Term], catalog, told=None) -> list[dict]:
 
 
 def save_index(path: Path, rows: list[dict]) -> None:
-    cols = ["term", "string", "form", "text", "source_names_term", "use", "file"]
+    cols = ["term", "string", "form", "text", "source_names_term", "use"]   # the catalog places each string
     from ..catalog import keys
     key = keys.for_profile(None).key   # the index names entries by key
     with path.open("w", encoding="utf-8", newline="") as fh:

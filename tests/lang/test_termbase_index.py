@@ -58,6 +58,21 @@ class IndexTest(unittest.TestCase):
             entry.keyed = True
             self.assertEqual(tb.build_index([dash], catalog, tb.told_by(path, str)), rows)
 
+    def test_the_index_leaves_the_catalog_file_to_the_catalog(self):
+        stone = tb.Term("item:stone", "item", "Stone", "Stone")
+        rows = tb.build_index([stone], {"s1": (Path("maps/a.po"), PoEntry("s1", "Stone", "Stone"))})
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "index.tsv"
+            tb.save_index(path, rows)
+            self.assertEqual(path.read_text(encoding="utf-8").splitlines(),
+                             ["term\tstring\tform\ttext\tsource_names_term\tuse",
+                              "item:stone\ts1\tnomn.sing\tStone\tyes\tyes"])
+            # a column beyond these is ignored
+            path.write_text("term\tstring\tform\ttext\tsource_names_term\tuse\tfile\n"
+                            "item:stone\ts1\tnomn.sing\tStone\tno\tform only\ttranslation/po/maps/a.po\n",
+                            encoding="utf-8")
+            self.assertEqual(tb.index_names(path), {("s1", stone.id): False})
+
     def test_index_and_missing_terms(self):
         t = tb.Term("i-potion", "item", "Potion", "Зелье",
                     forms={"nomn.sing": "Зелье", "gent.sing": "Зелья", "ablt.sing": "Зельем"})

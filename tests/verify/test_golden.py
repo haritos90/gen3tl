@@ -1,3 +1,4 @@
+import hashlib
 import io
 import json
 import subprocess
@@ -196,6 +197,105 @@ class GoldenManifestTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             paths = [pack / "language.json", pack / "__pycache__/agreement.cpython-314.pyc", pack / ".DS_Store"]
             self.assertEqual(golden.tracked_inputs(paths, Path(tmp), TOOLKIT_ROOT), [paths[0].resolve()])
+
+class GoldenTreeTest(unittest.TestCase):
+    """A tree of outputs is recorded as one hash; a failure names its differing files."""
+
+    def setUp(self):
+        from gen3tl.catalog.keys import Aliases
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.tree = self.root / "sprites"
+        self.store = self.root / "listings"
+        store = patch.object(golden, "listing_store", return_value=self.store)
+        store.start()
+        self.addCleanup(store.stop)
+        self.aliases = Aliases([("table:species/1", 0x100, "species:1")])
+        for name, data in (("manifest.json", b'{"species:1": 1}'), ("front/1.png", b"one"),
+                           ("front/2.png", b"two"), ("back/1.png", b"back")):
+            (self.tree / name).parent.mkdir(parents=True, exist_ok=True)
+            (self.tree / name).write_bytes(data)
+
+    def recorded(self):
+        rows = golden.tree_listing(self.tree, self.aliases)
+        golden.keep_listings({"sprites": rows})
+        return {"outputs": {"sprites": golden.listing_digest(rows)},
+                "identifiers": {"sprites": golden.listing_digest(rows, 2)}}
+
+    def current(self):
+        rows = golden.tree_listing(self.tree, self.aliases)
+        return rows, {"sprites": golden.listing_digest(rows)}, {"sprites": golden.listing_digest(rows, 2)}
+
+    def test_the_tree_hash_is_the_hash_of_its_sha256sum_listing(self):
+        rows = golden.tree_listing(self.tree, self.aliases)
+        self.assertEqual([row[0] for row in rows], ["back/1.png", "front/1.png", "front/2.png", "manifest.json"])
+        listing = "".join(f"{golden.file_hash(self.tree / name)}  {name}\n" for name, _, _ in rows)
+        self.assertEqual(golden.listing_digest(rows), hashlib.sha256(listing.encode()).hexdigest())
+        self.assertEqual(rows[1][2], rows[1][1])   # a picture has no canonical form
+        self.assertEqual(rows[3][2], golden.canonical_hash(self.tree / "manifest.json", self.aliases))
+        (self.tree / "front/2.png").write_bytes(b"other")
+        self.assertNotEqual(golden.listing_digest(golden.tree_listing(self.tree, self.aliases)),
+                            golden.listing_digest(rows))
+
+    def test_a_failure_names_the_changed_added_and_missing_files(self):
+        manifest = self.recorded()
+        (self.tree / "front/2.png").write_bytes(b"other")
+        (self.tree / "front/3.png").write_bytes(b"three")
+        (self.tree / "back/1.png").unlink()
+        # keyed references compare equal
+        (self.tree / "manifest.json").write_text('{"table:species/1": 1}', encoding="utf-8")
+        rows, outputs, identifiers = self.current()
+        self.assertEqual(golden.compare(manifest, outputs, identifiers),
+                         [f"sprites: expected {manifest['outputs']['sprites']}, got {outputs['sprites']}"])
+        self.assertEqual(golden.file_differences(manifest, "sprites", rows),
+                         [("missing", "sprites/back/1.png"), ("changed", "sprites/front/2.png"),
+                          ("added", "sprites/front/3.png")])
+
+    def test_a_tree_whose_canonical_hash_matches_passes(self):
+        manifest = self.recorded()
+        (self.tree / "manifest.json").write_text('{"table:species/1": 1}', encoding="utf-8")
+        rows, outputs, identifiers = self.current()
+        self.assertNotEqual(outputs, manifest["outputs"])
+        self.assertEqual(golden.differences(manifest, outputs, identifiers), {})
+        self.assertEqual(golden.identifier_only(manifest, outputs), ["sprites"])
+
+    def test_without_the_recorded_listing_the_failure_says_so(self):
+        manifest = self.recorded()
+        (self.tree / "front/2.png").write_bytes(b"other")
+        rows, _, _ = self.current()
+        # a listing that does not reproduce its name is not used
+        kept = self.store / f"{manifest['outputs']['sprites']}.json"
+        kept.write_text(json.dumps(rows), encoding="utf-8")
+        found = golden.file_differences(manifest, "sprites", rows)
+        self.assertEqual([label for label, _ in found], ["hint"])
+        self.assertIn("sprites: no listing of the recorded tree", found[0][1])
+        kept.unlink()
+        self.assertEqual(golden.file_differences(manifest, "sprites", rows), found)
+        self.assertEqual(golden.file_differences(manifest, "sprites", None), [])   # a file output names itself
+
+    def test_the_verification_prints_the_files_of_each_differing_tree(self):
+        from types import SimpleNamespace
+        recorded = self.recorded()
+        inputs = manifest()["inputs"]
+        recorded.update(schema=golden.SCHEMA, profile="game", language="xx", inputs=inputs)
+        recorded["outputs"]["build/game.gba"] = "0" * 64
+        path = self.root / "golden.json"
+        golden.write(path, recorded)
+        (self.tree / "front/1.png").write_bytes(b"changed")
+        rows, outputs, identifiers = self.current()
+        outputs["build/game.gba"] = "0" * 64
+        args = SimpleNamespace(project=SimpleNamespace(golden=path), record=False, work_dir=None)
+        output = io.StringIO()
+        with patch.object(golden, "identity", return_value=inputs), \
+                patch.object(golden, "generate", return_value=(outputs, identifiers, {"sprites": rows})), \
+                redirect_stdout(output):
+            self.assertEqual(golden.run(args), 1)
+        lines = output.getvalue().splitlines()
+        self.assertEqual(lines[0], "verified     failed")
+        self.assertTrue(lines[1].startswith("error        sprites: expected "))
+        self.assertEqual(lines[2:], ["changed      sprites/front/1.png"])
+
 
 class BuiltProject:
     """A game project whose default build is a release."""

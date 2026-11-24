@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-__version__ = "2.21.2"
+__version__ = "2.22.0"
 
 _PACKAGE = Path(__file__).resolve().parent
 # wheel: under share/; checkout: at the root

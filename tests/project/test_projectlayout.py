@@ -260,7 +260,7 @@ class LayoutTest(unittest.TestCase):
         for path in (project.snapshot, project.snapshot.with_name("shared.json")):
             relative = path.relative_to(project.root)
             self.assertEqual(outputs[relative.as_posix()], work / relative)
-        self.assertEqual(outputs[f"build/editor/{project.profile}/shared/{part.name}"], part)
+        self.assertEqual(outputs[f"build/editor/{project.profile}/shared"], part.parent)   # a tree
 
     def test_wording_defaults_select_the_canonical_container(self):
         from gen3tl.cli.main import project_defaults

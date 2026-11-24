@@ -451,5 +451,4 @@ class SenseRenameTest(unittest.TestCase):
             self.assertEqual([e.msgstr for e in read(po / "a.po")[1]], ["Нерпа здесь.", "Не хватает сил.",
                                                                         "Нерпы на исходе."])
             index = (root / "index.tsv").read_text(encoding="utf-8").splitlines()
-            self.assertEqual(index[0].split("\t"), ["term", "string", "form", "text", "source_names_term", "use",
-                                                     "file"])
+            self.assertEqual(index[0].split("\t"), ["term", "string", "form", "text", "source_names_term", "use"])

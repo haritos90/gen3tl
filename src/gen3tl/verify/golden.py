@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import os
 import subprocess
 import tempfile
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
@@ -13,10 +14,11 @@ from pathlib import Path
 from ..core.terminal import line
 from .. import __version__
 
-SCHEMA = 2
+SCHEMA = 3
 INPUT_KEYS = ("base_sha1", "tracked_sha256", "toolkit_version", "translation_version")
 GOLDEN_VERSION = "0.0.0"  # outputs embed it, so version bumps keep the hashes
 GENERATED = ("__pycache__", ".DS_Store")   # bytecode and desktop metadata, never inputs
+LISTINGS = "gen3tl-tree-listings"   # beside the temporary work directories
 
 
 class GoldenError(ValueError):
@@ -171,28 +173,106 @@ def canonical(path: Path, aliases) -> bytes:
     return json.dumps(walk(doc), ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
+def canonical_hash(path: Path, aliases) -> str:
+    return hashlib.sha256(canonical(path, aliases)).hexdigest()
+
+
 def identifier_hashes(paths: dict[str, Path], aliases) -> dict[str, str]:
     """The canonical hash of every JSON output."""
-    return {name: hashlib.sha256(canonical(path, aliases)).hexdigest()
-            for name, path in paths.items() if name.endswith(".json")}
+    return {name: canonical_hash(path, aliases) for name, path in paths.items() if name.endswith(".json")}
 
 
-def compare(manifest: dict, outputs: dict[str, str], identifiers: dict[str, str] | None = None) -> list[str]:
-    """Differences of the outputs; one whose canonical hash matches differs in identifiers only."""
-    differences = []
+def tree_listing(path: Path, aliases) -> list[list[str]]:
+    """[name, file hash, canonical hash] of every file of a tree, by name; only JSON has a canonical form."""
+    path = Path(path)
+    rows = []
+    for child in (child for child in path.rglob("*") if child.is_file()):
+        digest = file_hash(child)
+        rows.append([child.relative_to(path).as_posix(), digest,
+                     canonical_hash(child, aliases) if child.suffix == ".json" else digest])
+    return sorted(rows)
+
+
+def listing_digest(rows: list[list[str]], column: int = 1) -> str:
+    """The hash of a tree: the SHA-256 of its listing in sha256sum form."""
+    return hashlib.sha256("".join(f"{row[column]}  {row[0]}\n" for row in rows).encode("utf-8")).hexdigest()
+
+
+def listing_store() -> Path:
+    return Path(tempfile.gettempdir()) / LISTINGS
+
+
+def keep_listings(listings: dict[str, list[list[str]]]) -> None:
+    """Every tree listing, kept under its hash to name the files of a later difference."""
+    store = listing_store()
+    try:
+        store.mkdir(exist_ok=True)
+        for rows in listings.values():
+            path = store / f"{listing_digest(rows)}.json"
+            if not path.is_file():
+                temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+                temporary.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+                temporary.replace(path)
+    except OSError as exc:
+        line("warning", f"tree listings not kept: {exc}")
+
+
+def kept_listing(digest: str) -> list[list[str]] | None:
+    """The kept listing of a tree hash; None where none reproduces it."""
+    try:
+        rows = json.loads((listing_store() / f"{digest}.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(rows, list) or not all(isinstance(row, list) and len(row) == 3
+                                             and all(isinstance(value, str) for value in row) for row in rows):
+        return None
+    return rows if listing_digest(rows) == digest else None
+
+
+def differences(manifest: dict, outputs: dict[str, str], identifiers: dict[str, str] | None = None) -> dict[str, str]:
+    """How each differing output differs, by name; one whose canonical hash matches differs in identifiers only."""
+    found = {}
     expected_outputs = manifest["outputs"]
     expected_identifiers = manifest.get("identifiers", {})
     for name in sorted(set(expected_outputs) | set(outputs)):
         expected = expected_outputs.get(name)
         actual = outputs.get(name)
         if expected is None:
-            differences.append(f"{name}: not recorded, got {actual}")
+            found[name] = f"not recorded, got {actual}"
         elif actual is None:
-            differences.append(f"{name}: missing, expected {expected}")
+            found[name] = f"missing, expected {expected}"
         elif actual != expected and not (name in expected_identifiers and identifiers is not None
                                          and identifiers.get(name) == expected_identifiers[name]):
-            differences.append(f"{name}: expected {expected}, got {actual}")
-    return differences
+            found[name] = f"expected {expected}, got {actual}"
+    return found
+
+
+def compare(manifest: dict, outputs: dict[str, str], identifiers: dict[str, str] | None = None) -> list[str]:
+    """The differences of the outputs, each naming its output."""
+    return [f"{name}: {reason}" for name, reason in differences(manifest, outputs, identifiers).items()]
+
+
+def file_differences(manifest: dict, name: str, rows: list[list[str]] | None) -> list[tuple[str, str]]:
+    """(label, file) of each file that differs inside a differing tree, from the kept recorded listing."""
+    expected = manifest["outputs"].get(name)
+    if rows is None or expected is None:
+        return []
+    recorded = kept_listing(expected)
+    if recorded is None:
+        return [("hint", f"{name}: no listing of the recorded tree is kept here; "
+                         "verify the recorded state once to name its files")]
+    column = 2 if name in manifest.get("identifiers", {}) else 1
+    before = {row[0]: row[column] for row in recorded}
+    after = {row[0]: row[column] for row in rows}
+    found = []
+    for file in sorted(before.keys() | after.keys()):
+        if file not in after:
+            found.append(("missing", f"{name}/{file}"))
+        elif file not in before:
+            found.append(("added", f"{name}/{file}"))
+        elif before[file] != after[file]:
+            found.append(("changed", f"{name}/{file}"))
+    return found
 
 
 def identifier_only(manifest: dict, outputs: dict[str, str]) -> list[str]:
@@ -222,13 +302,6 @@ def _run(args, command: list[str], runtime: dict | None = None) -> None:
     line("generated", " ".join(command[:2]))
 
 
-def _tree(outputs: dict[str, Path], name: str, path: Path) -> None:
-    path = Path(path)
-    for child in path.rglob("*"):
-        if child.is_file():
-            outputs[f"{name}/{child.relative_to(path).as_posix()}"] = child
-
-
 def snapshot_name(project) -> str:
     """The snapshot output, named by its project path."""
     return project.snapshot.relative_to(project.root).as_posix()
@@ -242,6 +315,7 @@ def sprites_name(project) -> str:
 
 
 def output_paths(args, work: Path) -> dict[str, Path]:
+    """Every output by its project path: a file, or a tree, the directory of its files."""
     from ..web.editorstore import PARTS
     from ..web.snapshotstore import paths as snapshot_paths
     project = args.project
@@ -254,29 +328,33 @@ def output_paths(args, work: Path) -> dict[str, Path]:
     }
     for name in ("inventory", "context", "reach"):
         outputs[f"build/{name}.json"] = work / "build" / f"{name}.json"
-    _tree(outputs, f"build/editor/{project.profile}/{project.language}",
-          work / "build/editor" / project.profile / project.language)
-    _tree(outputs, f"build/editor/{project.profile}/{PARTS}", work / "build/editor" / project.profile / PARTS)
-    _tree(outputs, f"build/pokedex/{project.profile}", work / "build/pokedex" / project.profile)
-    _tree(outputs, sprites_name(project), work / sprites_name(project))
+    for name in (f"build/editor/{project.profile}/{project.language}", f"build/editor/{project.profile}/{PARTS}",
+                 f"build/pokedex/{project.profile}", sprites_name(project)):
+        outputs[name] = work / name
     return outputs
 
 
-def output_hashes(args, work: Path) -> tuple[dict[str, str], dict[str, str]]:
-    """The file hashes and the canonical hashes of the outputs."""
+def output_hashes(args, work: Path) -> tuple[dict[str, str], dict[str, str], dict[str, list[list[str]]]]:
+    """The file or tree hashes, the canonical hashes and the tree listings of the outputs."""
     from ..catalog import keys
     from ..profile.profile import Profile
     paths = output_paths(args, work)
-    outputs = {}
     for name, path in paths.items():
-        if not path.is_file():
+        if not path.exists():
             raise GoldenError(f"{name}: generator did not write {path}")
-        outputs[name] = file_hash(path)
     aliases = keys.load(Profile.by_name(args.profile).sha1, args.project.registry_root)
-    return outputs, identifier_hashes(paths, aliases)
+    listings = {name: tree_listing(path, aliases) for name, path in paths.items() if path.is_dir()}
+    files = {name: path for name, path in paths.items() if name not in listings}
+    outputs = {name: file_hash(path) for name, path in files.items()}
+    identifiers = identifier_hashes(files, aliases)
+    for name, rows in listings.items():
+        outputs[name] = listing_digest(rows)
+        if any(file.endswith(".json") for file, _, _ in rows):
+            identifiers[name] = listing_digest(rows, 2)
+    return outputs, identifiers, listings
 
 
-def generate(args, work: Path) -> tuple[dict[str, str], dict[str, str]]:
+def generate(args, work: Path) -> tuple[dict[str, str], dict[str, str], dict[str, list[list[str]]]]:
     from ..web.editordata import pinned_toolkit_version
     from ..build.release import write_patch
     from ..project import build_scope
@@ -346,17 +424,20 @@ def run(args) -> int:
         current_identity = identity(args)
         manifest = None if args.record else load(manifest_path)
         with work_directory(args.work_dir) as work:
-            outputs, identifiers = generate(args, work)
+            outputs, identifiers, listings = generate(args, work)
+        keep_listings(listings)
+        files = len(outputs) - len(listings) + sum(map(len, listings.values()))
         if args.record:
             doc = {"schema": SCHEMA, "profile": project.profile, "language": project.language,
                    "inputs": current_identity, "outputs": outputs, "identifiers": identifiers}
             write(manifest_path, doc)
             line("outputs", f"{len(outputs)} outputs")
+            line("files", f"{files} files")
             line("wrote", manifest_path)
             return 0
-        differences = compare(manifest, outputs, identifiers)
+        found = differences(manifest, outputs, identifiers)
         notes = identity_notes(manifest, current_identity)
-        mapped = [] if differences else identifier_only(manifest, outputs)
+        mapped = [] if found else identifier_only(manifest, outputs)
     except (GoldenError, OSError, ValueError) as exc:
         line("error", exc)
         return 1
@@ -366,13 +447,16 @@ def run(args) -> int:
         line("input", key)
         line("recorded", manifest["inputs"][key])
         line("current", current_identity[key])
-    if differences:
+    if found:
         line("verified", "failed")
-        for difference in differences:
-            line("error", difference)
+        for name, reason in found.items():
+            line("error", f"{name}: {reason}")
+            for label, value in file_differences(manifest, name, listings.get(name)):
+                line(label, value)
         return 1
     line("manifest", manifest_path)
     line("outputs", f"{len(outputs)} outputs")
+    line("files", f"{files} files")
     line("verified", "passed")
     if mapped:
         line("mapped", f"{len(mapped)} outputs")
