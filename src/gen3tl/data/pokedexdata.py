@@ -11,7 +11,8 @@ from ..core.notes import has_prose
 from ..core.rom import field_spec, rom_offset, value_at
 
 FORMAT = "gen3tl-pokedex"
-SCHEMA = 1
+SCHEMA = "2.0.0"
+SCHEMAS = (1, SCHEMA)   # the first form stores its records written out
 LEARNSETS_FORMAT = "gen3tl-pokedex-learnsets"
 LEARNSETS_FILE = "learnsets.json"
 LEARNSET_COLUMNS = ("method", "move", "level", "index", "offset")
@@ -1058,7 +1059,8 @@ def inline_learnsets(doc: dict, learnsets: dict) -> None:
 
 
 def write(out: Path, doc: dict, split: bool = False) -> list[Path]:
-    """Write the dataset and companions; returns the index first."""
+    """Write the dataset and companions in their stored form; returns the index first."""
+    from .pokedexstore import encode
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     written = []
@@ -1067,12 +1069,12 @@ def write(out: Path, doc: dict, split: bool = False) -> list[Path]:
     trainer_ivs = doc.get("trainer_ivs") if isinstance(doc.get("trainer_ivs"), dict) else None
     if trainer_ivs:
         index["trainer_ivs"] = pokedextrainerivs.FILENAME
-        (out / pokedextrainerivs.FILENAME).write_text(dump(trainer_ivs), encoding="utf-8")
+        (out / pokedextrainerivs.FILENAME).write_text(dump(encode(trainer_ivs)), encoding="utf-8")
     learnsets = learnsets_doc(doc)   # the rows go to their own file
     if learnsets:
         index["species"] = [{k: v for k, v in record.items() if k != "learnset"} for record in index["species"]]
         index["learnsets"] = LEARNSETS_FILE
-        (out / LEARNSETS_FILE).write_text(dump(learnsets), encoding="utf-8")
+        (out / LEARNSETS_FILE).write_text(dump(encode(learnsets)), encoding="utf-8")
     if split:
         records, files = index.pop("species"), {}
         (out / "species").mkdir(parents=True, exist_ok=True)
@@ -1086,20 +1088,21 @@ def write(out: Path, doc: dict, split: bool = False) -> list[Path]:
     else:
         index["count"] = len(index["species"])
     path = out / "pokedex.json"
-    path.write_text(dump(index), encoding="utf-8")
+    path.write_text(dump(encode(index)), encoding="utf-8")
     return ([path] + written + ([out / pokedextrainerivs.FILENAME] if trainer_ivs else [])
             + ([out / LEARNSETS_FILE] if learnsets else []))
 
 
 def read(path: Path) -> dict:
     """Read the dataset with split records and companions inlined."""
+    from .pokedexstore import load
     path = Path(path)
-    doc = json.loads(path.read_text(encoding="utf-8"))
+    doc = load(path)
     if "files" in doc:
         doc["species"] = [json.loads((path.parent / name).read_text(encoding="utf-8"))
                           for name in doc["files"].values()]
     if isinstance(doc.get("learnsets"), str):
-        learnsets = json.loads((path.parent / doc["learnsets"]).read_text(encoding="utf-8"))
+        learnsets = load(path.parent / doc["learnsets"])
         if learnsets.get("format") != LEARNSETS_FORMAT or learnsets.get("profile_block") != doc.get("profile_block"):
             raise PokedexError(f"{doc['learnsets']}: not the learnsets of {path.name}")
         inline_learnsets(doc, learnsets)

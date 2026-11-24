@@ -1,4 +1,5 @@
 import { getJson } from "../data.js";
+import { decodeDataset } from "../pokedexstore.js";
 import { el, setText, updateChildren } from "../dom.js";
 import { effectName } from "../moveeffects.js";
 import { itemIcon } from "../pokedex/evolutions.js";
@@ -179,7 +180,7 @@ export class PokedexDataViewCore {
         this.trainerIvsFailed = true;
         return;
       }
-      const doc = await getJson(this.host.datasetFile(data.trainer_ivs), this.host.fetcher ?? fetch);
+      const doc = decodeDataset(await getJson(this.host.datasetFile(data.trainer_ivs), this.host.fetcher ?? fetch));
       if (!current()) return;
       inlineTrainerIvs(data, doc);
     } catch {

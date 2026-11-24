@@ -163,7 +163,7 @@ def _store(path: Path, data: bytes) -> None:
     os.replace(stream.name, path)
 
 
-def _part(directory: Path, doc: dict) -> str:
+def write_part(directory: Path, doc: dict) -> str:
     """Write a game part once, named by its content; its file name."""
     data = _json(doc).encode("utf-8")
     name = hashlib.sha256(data).hexdigest() + ".json"
@@ -212,7 +212,7 @@ def write(out, index: dict, chunks: list[dict], terms: dict | None = None, sourc
             game_entries.append(game)
             language_entries.append(language)
             at += 1
-        name = _part(parts, {"schema": SCHEMA, "part": "entries", "entries": game_entries})
+        name = write_part(parts, {"schema": SCHEMA, "part": "entries", "entries": game_entries})
         files[descriptor["path"]] = {"schema": SCHEMA, "entries": language_entries}
         descriptors.append({**descriptor, "part": f"../{PARTS}/{name}"})
     if at != len(index["list"]):
@@ -226,8 +226,8 @@ def write(out, index: dict, chunks: list[dict], terms: dict | None = None, sourc
             "list": game_rows, "reach": store.reach.rows, "notes": shared_notes,
             **({"fill_sources": {key: fills[key] for key in GAME_FILLS if key in fills}} if fills else {})}
     if source is not None:
-        game["source"] = _part(parts, {**source, "schema": SCHEMA, "part": "source"})
-    stored = {"schema": SCHEMA, "shared": f"../{PARTS}/{_part(parts, game)}",
+        game["source"] = write_part(parts, {**source, "schema": SCHEMA, "part": "source"})
+    stored = {"schema": SCHEMA, "shared": f"../{PARTS}/{write_part(parts, game)}",
               **{key: value for key, value in index.items() if key not in (*GAME_INDEX, *REBUILT, "schema")},
               **({"fill_sources": {key: value for key, value in fills.items() if key not in GAME_FILLS}
                   if fills is not None else None} if "fill_sources" in index else {}),
@@ -268,7 +268,8 @@ def referenced(index_path) -> set[Path]:
 
 
 def prune(root) -> list[Path]:
-    """Remove the game parts under `root` no language index names; the removed paths."""
+    """Remove the game parts under `root` no language index or texts file names; the removed paths."""
+    from ..data.pokedextexts import FILE, part_path
     root = Path(root)
     kept = set()
     for path in root.rglob("index.json"):
@@ -276,6 +277,9 @@ def prune(root) -> list[Path]:
             kept |= referenced(path)
         except (KeyError, TypeError, ValueError):   # not a stored language index
             continue
+    for path in root.rglob(FILE):   # the English of the Pokedex texts
+        if (part := part_path(path)) is not None:
+            kept.add(part.resolve())
     removed = []
     for path in root.glob(f"*/{PARTS}/*.json"):
         if PART_NAME.fullmatch(path.name) and path.resolve() not in kept:

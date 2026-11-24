@@ -1,4 +1,5 @@
 import { getJson } from "../data.js";
+import { decodeDataset } from "../pokedexstore.js";
 import { el, keepPosition, setText, updateChildren } from "../dom.js";
 import { EntryList } from "../listview.js";
 import { DATA_MODES } from "../pokedexdataview/items.js";
@@ -276,7 +277,7 @@ export class PokedexViewCore {
     const generation = this.generation;
     this.learnsets = getJson(this.host.datasetFile(data.learnsets), this.host.fetcher ?? fetch).then((doc) => {
       if (generation !== this.generation) return false;
-      inlineLearnsets(data, doc);
+      inlineLearnsets(data, decodeDataset(doc));
       this.dataView.learners = null;
       return true;
     }).catch((e) => {

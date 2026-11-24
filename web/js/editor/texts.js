@@ -18,6 +18,7 @@ import { pyRepr, TermsView } from "../terms.js";
 import { PicturesView } from "../pictures.js";
 import { KeyboardsView } from "../keyboards.js";
 import { FamiliesView } from "../families.js";
+import { decodeDataset } from "../pokedexstore.js";
 import { EngineRulesView } from "../enginerules.js";
 import { entryHash, entryKey } from "./catalog.js";
 import { dl, withSource, contextDisclosure, renderReachEvidence, renderNote, renderHistory } from "./context.js";
@@ -669,7 +670,8 @@ export const families = new FamiliesView({
   index: () => state.index,
   terms: () => state.termsData?.terms ?? null,
   loadTerms: () => terms.host.load(),
-  dataset: () => (state.profile?.pokedex ? getJson(new URL(state.profile.pokedex, DATA()).href) : Promise.resolve(null)),
+  dataset: () => (state.profile?.pokedex ? getJson(new URL(state.profile.pokedex, DATA()).href).then(decodeDataset)
+    : Promise.resolve(null)),
   edits: () => state.termEdits,
   typeName: (n) => state.rows[state.byId.get(tableKey(`types:${n}`))]?.source_text || t("Type {n}", { n }),
   openTerm: (id) => openPlace({ view: "terms", id }),

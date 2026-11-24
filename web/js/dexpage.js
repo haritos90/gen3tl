@@ -6,6 +6,7 @@ import { isDraft } from "./draft.js";
 import { DATA_MODES } from "./pokedexdataview/pokedexdataview.js";
 import { datasetPath, MODE_FILTERS, PokedexView, RECENT_MODES, speciesSort, spritePath } from "./pokedex/pokedex.js";
 import { pokedexRouteURL } from "./pokedexshareurl.js";
+import { decodeDataset, decodeTexts, TEXTS_SCHEMAS, textsPartUrl } from "./pokedexstore.js";
 import { FILTER_SETS, migrateFilters } from "./filters.js";
 import { chosenGame, gameHash, loadRegistry, pickerURL, pokedexTail, rememberGame, siteRoute } from "./registry.js";
 import { chosenLanguage, fillPage, languageName, plainText, prepareSiteLanguage, rememberSiteLanguage,
@@ -47,9 +48,26 @@ export const textsDraft = (doc) => !!doc?.draft;
 
 /** Reject text files belonging to another project. */
 export function verifyProjectTexts(doc, profile, language) {
-  if (doc?.schema !== 1 || doc.profile !== profile || doc.language !== language) {
+  if (!TEXTS_SCHEMAS.includes(doc?.schema) || doc.profile !== profile || doc.language !== language) {
     throw new Error(`Pokédex texts do not match ${profile}/${language}`);
   }
+}
+
+/** Read texts files, fetching each shared English part once. */
+export function textsLoader(fetchJson) {
+  const parts = new Map();
+  return async (url, check = () => {}) => {
+    const doc = await fetchJson(url);
+    check(doc);
+    const partUrl = textsPartUrl(doc, url);
+    if (!partUrl) return doc;
+    if (!parts.has(partUrl)) {
+      const part = Promise.resolve().then(() => fetchJson(partUrl));
+      parts.set(partUrl, part);
+      part.catch(() => parts.delete(partUrl));
+    }
+    return decodeTexts(doc, await parts.get(partUrl));
+  };
 }
 
 export const ENGLISH = "en";
@@ -212,11 +230,9 @@ if (typeof document !== "undefined") {
   const startupEvent = (name, detail) => window.dispatchEvent?.(detail === undefined
     ? new Event(name) : new CustomEvent(name, { detail }));
   // Shown and searched text share cached requests.
-  const textsFile = textsCache(async (lang) => {
-    const doc = await getJson(new URL(lang.texts, state.base).href);
-    verifyProjectTexts(doc, state.profile.id, lang.code);
-    return doc;
-  });
+  const readTexts = textsLoader((url) => getJson(url));
+  const textsFile = textsCache((lang) => readTexts(new URL(lang.texts, state.base).href,
+    (doc) => verifyProjectTexts(doc, state.profile.id, lang.code)));
 
   const banner = (text) => {
     $("banner").textContent = text;
@@ -229,7 +245,7 @@ if (typeof document !== "undefined") {
     load: async () => {
       if (!state.profile?.pokedex) return;
       const generation = state.generation;
-      const data = await getJson(new URL(state.profile.pokedex, state.base).href);
+      const data = decodeDataset(await getJson(new URL(state.profile.pokedex, state.base).href));
       if (generation === state.generation) {
         state.pokedex = data;
         startupEvent("pokedex-data-ready");

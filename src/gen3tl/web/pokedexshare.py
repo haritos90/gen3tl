@@ -13,6 +13,7 @@ import struct
 import zlib
 
 from .. import TOOLKIT_ROOT
+from ..data import pokedexdata, pokedexstore, pokedextexts
 from ..lang import language as language_metadata
 from ..core.lists import append_unique
 
@@ -336,7 +337,7 @@ class ShareGenerator:
         if self.profile_row is None:
             raise ValueError("Unknown share profile")
         self.dataset_path = self.data / self.profile_row["pokedex"]
-        self.dataset = read_json(self.dataset_path)
+        self.dataset = pokedexstore.load(self.dataset_path)
         self.validate_dataset()
         self.records = self.dataset["species"]
         self.types = {row["id"]: row for row in self.dataset.get("types", [])}
@@ -348,8 +349,9 @@ class ShareGenerator:
             code = row["code"]
             if not LANGUAGE.fullmatch(code) or not row.get("texts"):
                 raise ValueError(f"Invalid published text language: {code}")
-            document = read_json(self.data / row["texts"])
-            if document.get("schema") != 1 or document.get("profile") != profile or document.get("language") != code:
+            document = pokedextexts.read(self.data / row["texts"])
+            if (document.get("schema") not in pokedextexts.SCHEMAS or document.get("profile") != profile
+                    or document.get("language") != code):
                 raise ValueError(f"Text identity mismatch: {code}")
             if document.get("dataset") != self.profile_row["pokedex"]:
                 raise ValueError(f"Text dataset mismatch: {code}")
@@ -371,7 +373,7 @@ class ShareGenerator:
 
     def validate_dataset(self):
         expected = f"pokedex/{self.profile}/pokedex.json"
-        if self.dataset.get("format") != "gen3tl-pokedex" or self.dataset.get("schema") != 1:
+        if self.dataset.get("format") != pokedexdata.FORMAT or self.dataset.get("schema") not in pokedexdata.SCHEMAS:
             raise ValueError("Unknown Pokédex dataset format")
         if self.profile_row.get("pokedex") != expected or not self.profile_row.get("name"):
             raise ValueError("Dataset is not declared by the profile")

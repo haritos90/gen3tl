@@ -148,9 +148,9 @@ def pokedex_icons(args):
 @command("data pokedex")
 def pokedex_data(args):
     """Write a hack's language-neutral Pokedex dataset from its [pokedex] profile block."""
-    import json
     from pathlib import Path
     from ..data import pokedexdata, pokedexlabels
+    from ..data.pokedexstore import load
     prof = Profile.by_name(args.profile)
     block = pokedexlabels.resolve(prof.get("pokedex"), prof.name)
     if (path := verification_path(args, prof)) is not None:
@@ -158,7 +158,7 @@ def pokedex_data(args):
             path /= "pokedex.json"
         try:
             doc = (pokedexdata.read(path) if "forms" in (block or {}).get("species_browsing", {})
-                   else json.loads(path.read_text(encoding="utf-8")))
+                   else load(path))
         except (OSError, ValueError) as exc:
             line("file", path)
             line("error", exc)
@@ -204,7 +204,7 @@ def pokedex_data(args):
     doc = pokedexdata.build(block, rom.data, metadata)
     out = Path(args.out)
     written = pokedexdata.write(out, doc, split=args.split)
-    index = json.loads(written[0].read_text(encoding="utf-8"))
+    index = load(written[0])
     line("wrote", written[0])
     line("species", f"{index.get('count', 0)} species")
     line("records", f"{len(written) - 1} records")

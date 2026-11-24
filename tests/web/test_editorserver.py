@@ -24,6 +24,7 @@ from gen3tl.profile.profile import Profile
 from gen3tl import __version__
 from gen3tl.catalog import extract
 from gen3tl.catalog.po import KEY_ONLY, SOURCE_FIELD
+from gen3tl.data import pokedextexts
 from gen3tl.project import Manifest, Registry, registry_scope
 from gen3tl.web.editordata import write_languages
 from project_fixture import write_policy
@@ -264,7 +265,7 @@ class ServerFreshnessTest(unittest.TestCase):
         selected = self.data / first.key / "pokedex-texts.json"
         selected_time = selected.stat().st_mtime_ns
         key = "page:mechanics:flinch:hit"
-        self.assertNotIn(key, json.loads(exported.read_text()).get("page", {}))
+        self.assertNotIn(key, pokedextexts.read(exported).get("page", {}))
         for page in ("editor", "site"):
             with self.subTest(page=page):
                 label = f"Flinches after a hit ({page})."
@@ -275,7 +276,7 @@ class ServerFreshnessTest(unittest.TestCase):
                 self.assertLess(exported.stat().st_mtime_ns, catalog.stat().st_mtime_ns)
 
                 def verified():
-                    self.assertEqual(json.loads(exported.read_text())["page"][key], [label, ""])
+                    self.assertEqual(pokedextexts.read(exported)["page"][key], [label, ""])
                     self.assertEqual(selected.stat().st_mtime_ns, selected_time)
 
                 self.assertEqual(self.start(first.language, page, verified), (0, 1))

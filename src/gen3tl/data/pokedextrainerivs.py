@@ -14,7 +14,7 @@ from ..core.thumb import decode
 
 FORMAT = "gen3tl-pokedex-trainer-ivs"
 SCHEMA = 1
-DOC_SCHEMA = 3
+DOC_SCHEMA = "4.0.0"
 FILENAME = "trainer-ivs.json"
 OPERATIONS = ("base_uniform", "rival_spread", "spread_uniform", "speed_zero", "packed_masks")
 SPECIES_RULE_KINDS = ("trainer_level", "held_item_form", "minior_core", "scaled_evolution")
@@ -1852,6 +1852,6 @@ def verify_doc(doc: dict, block: dict, profile_name: str, rom_sha1: str, profile
 
 
 def read(path: Path) -> dict:
-    """Read one generated companion JSON document."""
-    import json
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    """Read one generated companion as its document."""
+    from .pokedexstore import load
+    return load(path)

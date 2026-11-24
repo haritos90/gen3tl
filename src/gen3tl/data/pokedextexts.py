@@ -1,4 +1,7 @@
-"""The Pokedex page's texts: the catalog strings a dataset names, per language."""
+"""The Pokedex page's texts: the catalog strings a dataset names, per language.
+
+A language file holds its translations; the English is a game part the languages share.
+"""
 
 from __future__ import annotations
 
@@ -8,8 +11,11 @@ import re
 import tomllib
 from pathlib import Path
 
-SCHEMA = 1
+SCHEMA = "2.0.0"
+SCHEMAS = (1, SCHEMA)   # the first form holds the English beside each translation
 FILE = "pokedex-texts.json"
+PART = "pokedex-texts"
+PART_PATH = re.compile(r"\.\./shared/[0-9a-f]{64}\.json")
 FAMILIES = ("species", "pokedex_categories", "types", "abilities", "moves", "items",
             "trainer_names", "trainer_classes")
 ID = re.compile(r"^(s[0-9A-F]{7}|[a-z_]+:\d+)$")
@@ -169,16 +175,73 @@ def tracked_dataset(profile: str) -> Path | None:
     return path if path.exists() else None
 
 
+def split(doc: dict) -> tuple[dict, dict]:
+    """The language file and the English part of a texts document."""
+    texts, page = doc["texts"], doc.get("page", {})
+    part = {"part": PART, "schema": doc["schema"], "texts": {sid: pair[0] for sid, pair in texts.items()}}
+    keyed = {key: value[0] for key, value in page.items() if isinstance(value, list)}
+    if keyed:
+        part["page"] = keyed
+    own = {key: value for key, value in doc.items() if key not in ("texts", "page")}
+    own["texts"] = {sid: pair[1] for sid, pair in texts.items() if pair[1]}
+    translated = {key: value[1] if isinstance(value, list) else value for key, value in page.items()}
+    if translated := {key: value for key, value in translated.items() if value}:
+        own["page"] = translated
+    return own, dict(sorted(part.items()))
+
+
+def decode(stored: dict, part: dict) -> dict:
+    """The texts document of a language file and its English part (web/js/pokedexstore.js)."""
+    if part.get("part") != PART or part.get("schema") != stored.get("schema"):
+        raise ValueError("Pokedex texts: not their English part")
+    own, own_page = stored.get("texts", {}), stored.get("page", {})
+    texts = {sid: [english, own.get(sid, "")] for sid, english in part["texts"].items()}
+    if set(own) - set(texts):
+        raise ValueError(f"Pokedex texts: {sorted(set(own) - set(texts))[0]} has no English")
+    page = {key: [english, own_page.get(key, "")] for key, english in part.get("page", {}).items()}
+    page.update({key: value for key, value in own_page.items() if key not in page})
+    doc = {key: value for key, value in stored.items() if key not in ("source", "texts", "page")}
+    doc["texts"] = texts
+    if page:
+        doc["page"] = dict(sorted(page.items()))
+    return dict(sorted(doc.items()))
+
+
+def part_path(path) -> Path | None:
+    """The English part a texts file names, or None."""
+    path = Path(path)
+    try:
+        source = json.loads(path.read_text(encoding="utf-8")).get("source")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return path.parent / source if isinstance(source, str) and PART_PATH.fullmatch(source) else None
+
+
+def read(path) -> dict:
+    """A texts file as its document; a language file reads its English part."""
+    path = Path(path)
+    stored = json.loads(path.read_text(encoding="utf-8"))
+    if "source" not in stored:
+        return stored
+    if not isinstance(stored["source"], str) or not PART_PATH.fullmatch(stored["source"]):
+        raise ValueError(f"{path}: invalid English part {stored['source']!r}")
+    return decode(stored, json.loads((path.parent / stored["source"]).read_text(encoding="utf-8")))
+
+
 def write(out, index: dict, dataset_source: Path | None = None, page_catalog: Path | None = None,
           aliases_file: Path | None = None) -> Path | None:
-    """Write out/pokedex-texts.json for the index's profile; None without a dataset."""
+    """Write out/pokedex-texts.json and its English part for the index's profile; None without a dataset."""
+    from ..web.editorstore import PARTS, write_part
+    from .pokedexstore import load
     source = dataset_source or tracked_dataset(index["profile"])
     if source is None:
         return None
-    dataset = json.loads(Path(source).read_text(encoding="utf-8"))
+    dataset = load(source)
     doc = document(index, dataset, f"pokedex/{index['profile']}/pokedex.json", page_labels(page_catalog),
                    search_aliases(aliases_file, index, dataset))
+    own, part = split(doc)
     path = Path(out) / FILE
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":"), sort_keys=True), encoding="utf-8")
+    own["source"] = f"../{PARTS}/{write_part(path.parent.parent / PARTS, part)}"
+    path.write_text(json.dumps(own, ensure_ascii=False, separators=(",", ":"), sort_keys=True), encoding="utf-8")
     return path

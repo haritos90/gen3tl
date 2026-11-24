@@ -89,7 +89,7 @@ class PokedexTextsTest(unittest.TestCase):
     def test_document_carries_identity_and_draft(self):
         doc = pokedextexts.document(INDEX, DATASET, "pokedex/test/pokedex.json")
         self.assertEqual((doc["schema"], doc["profile"], doc["language"], doc["dataset"], doc["draft"]),
-                         (1, "test", "ru", "pokedex/test/pokedex.json", False))
+                         (pokedextexts.SCHEMA, "test", "ru", "pokedex/test/pokedex.json", False))
         self.assertNotIn("stage", doc)
         draft = pokedextexts.document({**INDEX, "capabilities": {"check": "tokens"}},
                                       DATASET, "pokedex/test/pokedex.json")
@@ -105,9 +105,11 @@ class PokedexTextsTest(unittest.TestCase):
             self.assertEqual(first, out / "pokedex-texts.json")
             data = first.read_bytes()
             self.assertEqual(pokedextexts.write(out, INDEX, source).read_bytes(), data)
-            doc = json.loads(data.decode("utf-8"))
+            stored = json.loads(data.decode("utf-8"))
+            self.assertEqual(list(stored), sorted(stored))   # sorted keys, byte-identical rebuilds
+            doc = pokedextexts.read(first)
             self.assertEqual(doc["texts"]["s0720F5C"], ["Route 1", ""])
-            self.assertEqual(list(doc), sorted(doc))   # sorted keys, byte-identical rebuilds
+            self.assertEqual(list(doc), sorted(doc))
             self.assertNotIn("page", doc)
             # the Pokédex label catalog rides along as `page`
             from gen3tl.catalog.po import PoEntry, write as write_po
@@ -117,7 +119,7 @@ class PokedexTextsTest(unittest.TestCase):
                           PoEntry("page:power:flail", "Power from remaining HP", ""),
                           PoEntry("page:mechanics:demo:condition", "Current user type", ""),
                           PoEntry("page:mechanics:demo:effect", "User gains Attack", "Повышается атака")], {"Language": "ru"})
-            with_page = json.loads(pokedextexts.write(out, INDEX, source, page_catalog=po).read_text(encoding="utf-8"))
+            with_page = pokedextexts.read(pokedextexts.write(out, INDEX, source, page_catalog=po))
             self.assertEqual(with_page["page"], {"PP": "ОС",
                                                "page:power:return": ["Power from friendship", "Сила по дружбе"],
                                                "page:power:flail": ["Power from remaining HP", ""],
@@ -125,6 +127,58 @@ class PokedexTextsTest(unittest.TestCase):
                                                "page:mechanics:demo:effect": ["User gains Attack", "Повышается атака"]})
             self.assertEqual(pokedextexts.page_labels(Path(tmp) / "missing.po"), {})
             self.assertIsNone(pokedextexts.write(out, {**INDEX, "profile": "no-such-profile"}))
+
+    def test_a_language_file_holds_its_translations_beside_one_english_part(self):
+        from gen3tl.catalog.po import PoEntry, write as write_po
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            source = root / "pokedex.json"
+            source.write_text(json.dumps(DATASET), encoding="utf-8")
+            po = root / "pokedex-labels.po"
+            write_po(po, [PoEntry("page:PP", "PP", "ОС"), PoEntry("page:power:flail", "Power from remaining HP", "")],
+                     {"Language": "ru"})
+            empty = root / "de.po"
+            write_po(empty, [PoEntry("page:PP", "PP", ""), PoEntry("page:power:flail", "Power from remaining HP", "")],
+                     {"Language": "de"})
+            untranslated = {**INDEX, "language": "de", "list": [{**r, "translation": ""} for r in ROWS]}
+            ru = pokedextexts.write(root / "test" / "ru", INDEX, source, page_catalog=po)
+            de = pokedextexts.write(root / "test" / "de", untranslated, source, page_catalog=empty)
+            stored = {path.parent.name: json.loads(path.read_text(encoding="utf-8")) for path in (ru, de)}
+            self.assertEqual(stored["ru"]["texts"], {"items:5": "Зелье", "pokedex_categories:1": "Семя",
+                                                     "s0444CB2": "Запись", "species:1": "Бульбазавр",
+                                                     "types:12": "Трава"})
+            self.assertEqual(stored["ru"]["page"], {"PP": "ОС"})
+            # a language without translations ships no English
+            self.assertEqual(stored["de"]["texts"], {})
+            self.assertNotIn("page", stored["de"])
+            for english in ("Bulbasaur", "Ivysaur", "Route 1", "Power from remaining HP"):
+                self.assertNotIn(english, ru.read_text(encoding="utf-8") + de.read_text(encoding="utf-8"))
+            self.assertEqual(stored["ru"]["source"], stored["de"]["source"])   # one part per game English
+            ru_part = pokedextexts.part_path(ru)
+            self.assertEqual(ru_part.parent.resolve(), (root / "test" / "shared").resolve())
+            part = json.loads(ru_part.read_text(encoding="utf-8"))
+            self.assertEqual((part["schema"], part["part"]), (pokedextexts.SCHEMA, pokedextexts.PART))
+            self.assertEqual(part["texts"]["species:2"], "Ivysaur")
+            self.assertEqual(part["page"], {"page:power:flail": "Power from remaining HP"})
+            self.assertNotEqual(pokedextexts.part_path(ru), pokedextexts.part_path(
+                pokedextexts.write(root / "test" / "fr", INDEX, source)))   # other page labels, another part
+            doc = pokedextexts.read(ru)
+            self.assertEqual(doc, pokedextexts.document(INDEX, DATASET, "pokedex/test/pokedex.json",
+                                                        pokedextexts.page_labels(po)))
+            self.assertEqual(pokedextexts.read(de)["texts"]["species:1"], ["Bulbasaur", ""])
+
+    def test_a_previous_texts_file_reads_as_itself(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / pokedextexts.FILE
+            previous = {"schema": 1, "profile": "test", "language": "ru", "dataset": "pokedex/test/pokedex.json",
+                        "draft": False, "texts": {"species:1": ["Bulbasaur", "Бульбазавр"]}}
+            path.write_text(json.dumps(previous), encoding="utf-8")
+            self.assertEqual(pokedextexts.read(path), previous)
+            self.assertIsNone(pokedextexts.part_path(path))
+            self.assertIn(previous["schema"], pokedextexts.SCHEMAS)
+            path.write_text(json.dumps({**previous, "source": "../../elsewhere.json"}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "invalid English part"):
+                pokedextexts.read(path)
 
     def test_manifest_lists_the_texts_file(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -139,6 +193,10 @@ class PokedexTextsTest(unittest.TestCase):
             langs = {lang["code"]: lang for lang in doc["languages"]}
             self.assertEqual(langs["ru"]["texts"], "test/ru/pokedex-texts.json")
             self.assertNotIn("texts", langs["de"])
+            # pruning keeps the English part the texts name
+            self.assertTrue(pokedextexts.part_path(root / "test" / "ru" / pokedextexts.FILE).is_file())
+            self.assertEqual(pokedextexts.read(root / "test" / "ru" / pokedextexts.FILE)["texts"]["species:1"],
+                             ["Bulbasaur", "Бульбазавр"])
 
     def test_aliases_export_without_changing_names(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -159,7 +217,7 @@ aliases = ["Ивисаур"]
             source.write_text(json.dumps(dataset))
             out = root / "out"
             first = pokedextexts.write(out, INDEX, source, aliases_file=aliases).read_bytes()
-            doc = json.loads(first)
+            doc = pokedextexts.read(out / pokedextexts.FILE)
             self.assertEqual(doc["search_aliases"], {"species:1": ["Бульбасар", "Бульба"], "species:2": ["Ивисаур"]})
             self.assertEqual(doc["texts"]["species:1"], ["Bulbasaur", "Бульбазавр"])
             self.assertEqual(first, pokedextexts.write(out, INDEX, source, aliases_file=aliases).read_bytes())

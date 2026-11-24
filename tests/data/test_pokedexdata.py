@@ -12,6 +12,7 @@ from types import SimpleNamespace
 
 from gen3tl.cli import data as cli
 from gen3tl.data import pokedexdata as pd
+from gen3tl.data.pokedexstore import load
 from project_fixture import rom_evidence, with_profile_notes
 
 BASE = 0x100          # species table, stride 28
@@ -227,7 +228,7 @@ class DatasetTest(unittest.TestCase):
                 with tempfile.TemporaryDirectory() as tmp:
                     for split in (False, True):
                         path = pd.write(Path(tmp) / str(split), doc, split=split)[0]
-                        self.assertEqual(verify(json.loads(path.read_text())), [])
+                        self.assertEqual(verify(load(path)), [])
                         self.assertEqual(pd.read(path)[kind], raw[kind])
                         self.assertEqual(pd.read(path)[key], {"0": "unreleased"})
 
@@ -256,7 +257,7 @@ class DatasetTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             for split in (False, True):
                 path = pd.write(Path(tmp) / str(split), doc, split=split)[0]
-                index = json.loads(path.read_text())
+                index = load(path)
                 self.assertEqual(pd.verify_doc(index, configured, "test", doc["rom"]["sha1"]), [])
                 self.assertEqual(pd.read(path)["species"], doc["species"])
                 self.assertEqual(pd.read(path)["species_browsing"], {"1": "unreleased"})
@@ -570,7 +571,7 @@ class DatasetTest(unittest.TestCase):
                         if baseline is None:
                             baseline = content
                         self.assertEqual(content, baseline)
-                        index = json.loads((out / "pokedex.json").read_text(encoding="utf-8"))
+                        index = load(out / "pokedex.json")
                         self.assertEqual(index["toolkit"], __version__)
                         self.assertEqual(index["count"], 2)
                         back = pd.read(out / "pokedex.json")
@@ -597,10 +598,10 @@ class DatasetTest(unittest.TestCase):
             self.assertEqual([p.name for p in a], ["pokedex.json", "learnsets.json"])
             for left, right in zip(a, b):
                 self.assertEqual(left.read_bytes(), right.read_bytes(), left.name)
-            index = json.loads(a[0].read_text(encoding="utf-8"))
+            index = load(a[0])
             self.assertEqual(index["learnsets"], "learnsets.json")
             self.assertTrue(all("learnset" not in record for record in index["species"]))
-            learnsets = json.loads(a[1].read_text(encoding="utf-8"))
+            learnsets = load(a[1])
             self.assertEqual(learnsets["format"], "gen3tl-pokedex-learnsets")
             self.assertEqual(learnsets["profile_block"], index["profile_block"])
             self.assertEqual(learnsets["columns"], ["method", "move", "level", "index", "offset"])
@@ -618,7 +619,7 @@ class DatasetTest(unittest.TestCase):
             self.assertEqual(split[-1].name, "learnsets.json")
             self.assertEqual(pd.read(split[0])["species"][0]["learnset"], rows)
             # a learnsets file of another dataset is refused
-            other = json.loads(a[1].read_text(encoding="utf-8"))
+            other = load(a[1])
             other["profile_block"] = "0" * 64
             a[1].write_text(pd.dump(other), encoding="utf-8")
             with self.assertRaises(pd.PokedexError):
@@ -628,7 +629,7 @@ class DatasetTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             written = pd.write(Path(tmp), pd.build(block(FIXED), rom_bytes(), {"id": "demo"}))
             self.assertEqual(len(written), 1)
-            index = json.loads(written[0].read_text(encoding="utf-8"))
+            index = load(written[0])
             self.assertEqual((index["count"], len(index["species"])), (2, 2))
 
 class CommandTest(unittest.TestCase):

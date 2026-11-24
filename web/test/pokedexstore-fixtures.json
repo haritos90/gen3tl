@@ -1,0 +1,706 @@
+{
+ "dataset": {
+  "document": {
+   "format": "gen3tl-pokedex",
+   "learnsets": "learnsets.json",
+   "moves": [
+    {
+     "flags": false,
+     "id": 0,
+     "name": "moves:0",
+     "power": 40,
+     "script": "0x016CD3D"
+    },
+    {
+     "flags": false,
+     "id": 1,
+     "name": "moves:1",
+     "power": 40,
+     "script": "0x016CD41"
+    },
+    {
+     "flags": true,
+     "id": 2,
+     "name": "moves:2",
+     "power": 40,
+     "script": "0x016CD45"
+    }
+   ],
+   "profile_block": "abc",
+   "schema": "2.0.0",
+   "species": [
+    {
+     "dex": 1,
+     "evolution": [],
+     "form_name": null,
+     "height": 7,
+     "learnset_species": 1,
+     "name": "species:1",
+     "offset": "0x19e001c",
+     "slot": 1,
+     "sprite": {
+      "back": "sprites/1-back.png",
+      "front": "sprites/1-front.png"
+     },
+     "types": [
+      12,
+      3
+     ]
+    },
+    {
+     "dex": 2,
+     "evolution": [],
+     "form_name": null,
+     "height": 7,
+     "learnset_species": 2,
+     "name": "species:2",
+     "offset": "0x19e0038",
+     "slot": 2,
+     "sprite": {
+      "back": "sprites/2-back.png",
+      "front": "sprites/2-front.png"
+     },
+     "types": [
+      10
+     ]
+    },
+    {
+     "dex": 3,
+     "evolution": [],
+     "form_browsing": {
+      "separate": true
+     },
+     "form_name": null,
+     "height": 7,
+     "learnset_species": 3,
+     "name": "species:3",
+     "offset": "0x19e0054",
+     "slot": 3,
+     "sprite": {
+      "back": "sprites/3-back.png",
+      "front": "sprites/3-front.png"
+     },
+     "types": [
+      12,
+      3
+     ]
+    },
+    {
+     "dex": 4,
+     "evolution": [],
+     "form_name": null,
+     "height": 7,
+     "learnset_species": 4,
+     "name": "species:4",
+     "offset": "0x19e0070",
+     "slot": 4,
+     "sprite": {
+      "back": "sprites/4-back.png",
+      "front": "sprites/4-front.png"
+     },
+     "types": [
+      10
+     ]
+    }
+   ],
+   "trainer_ivs": "trainer-ivs.json",
+   "trainers": [
+    {
+     "id": 0,
+     "party": [
+      {
+       "index": 0,
+       "level": 5,
+       "offset": "0x7b0000"
+      },
+      {
+       "index": 1,
+       "level": 6,
+       "offset": "0x7b0008"
+      }
+     ]
+    },
+    {
+     "id": 1,
+     "party": [
+      {
+       "index": 0,
+       "level": 5,
+       "offset": "0x7b0010"
+      },
+      {
+       "index": 1,
+       "level": 6,
+       "offset": "0x7b0018"
+      }
+     ]
+    }
+   ]
+  },
+  "stored": {
+   "codec": {
+    "moves": {
+     "defaults": {
+      "flags": false,
+      "power": 40
+     },
+     "derived": {
+      "name": {
+       "of": "id",
+       "text": "moves:{}"
+      },
+      "script": {
+       "hex": "07X",
+       "step": 4
+      }
+     },
+     "keys": [
+      "flags",
+      "id",
+      "name",
+      "power",
+      "script"
+     ]
+    },
+    "species": {
+     "defaults": {
+      "evolution": [],
+      "form_name": null,
+      "height": 7,
+      "types": [
+       12,
+       3
+      ]
+     },
+     "derived": {
+      "name": {
+       "of": "dex",
+       "text": "species:{}"
+      },
+      "offset": {
+       "hex": "07x",
+       "step": 28
+      },
+      "sprite": {
+       "of": "dex",
+       "text": {
+        "back": "sprites/{}-back.png",
+        "front": "sprites/{}-front.png"
+       }
+      }
+     },
+     "keys": [
+      "dex",
+      "evolution",
+      "form_browsing",
+      "form_name",
+      "height",
+      "learnset_species",
+      "name",
+      "offset",
+      "slot",
+      "sprite",
+      "types"
+     ],
+     "tables": {
+      "types": [
+       [
+        10
+       ]
+      ]
+     }
+    },
+    "trainers": {
+     "keys": [
+      "id",
+      "party"
+     ]
+    },
+    "trainers/party": {
+     "defaults": {
+      "index": 0,
+      "level": 5
+     },
+     "derived": {
+      "offset": {
+       "hex": "06x",
+       "step": 8
+      }
+     },
+     "keys": [
+      "index",
+      "level",
+      "offset"
+     ]
+    }
+   },
+   "format": "gen3tl-pokedex",
+   "learnsets": "learnsets.json",
+   "moves": [
+    {
+     "b": 0,
+     "e": 1494333
+    },
+    {
+     "b": 1
+    },
+    {
+     "a": true,
+     "b": 2
+    }
+   ],
+   "profile_block": "abc",
+   "schema": "2.0.0",
+   "species": [
+    {
+     "a": 1,
+     "f": 1,
+     "h": 27131932,
+     "i": 1
+    },
+    {
+     "a": 2,
+     "f": 2,
+     "i": 2,
+     "k": 0
+    },
+    {
+     "a": 3,
+     "c": {
+      "separate": true
+     },
+     "f": 3,
+     "i": 3
+    },
+    {
+     "a": 4,
+     "f": 4,
+     "i": 4,
+     "k": 0
+    }
+   ],
+   "trainer_ivs": "trainer-ivs.json",
+   "trainers": [
+    {
+     "a": 0,
+     "b": [
+      {
+       "c": 8060928
+      },
+      {
+       "a": 1,
+       "b": 6
+      }
+     ]
+    },
+    {
+     "a": 1,
+     "b": [
+      {
+       "c": 8060944
+      },
+      {
+       "a": 1,
+       "b": 6
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "learnsets": {
+  "document": {
+   "columns": [
+    "method",
+    "move",
+    "level",
+    "index",
+    "offset"
+   ],
+   "format": "gen3tl-pokedex-learnsets",
+   "profile_block": "abc",
+   "schema": "2.0.0",
+   "species": {
+    "1": [
+     [
+      0,
+      33,
+      1,
+      null,
+      "0x00023b"
+     ],
+     [
+      0,
+      33,
+      2,
+      null,
+      "0x00023e"
+     ],
+     [
+      0,
+      33,
+      3,
+      null,
+      "0x000241"
+     ]
+    ],
+    "2": [
+     [
+      0,
+      33,
+      1,
+      null,
+      "0x000263"
+     ],
+     [
+      0,
+      33,
+      2,
+      null,
+      "0x000266"
+     ],
+     [
+      0,
+      33,
+      3,
+      null,
+      "0x000269"
+     ]
+    ],
+    "3": [
+     [
+      0,
+      33,
+      1,
+      null,
+      "0x00028b"
+     ],
+     [
+      0,
+      33,
+      2,
+      null,
+      "0x00028e"
+     ],
+     [
+      0,
+      33,
+      3,
+      null,
+      "0x000291"
+     ]
+    ],
+    "4": [
+     [
+      0,
+      33,
+      1,
+      null,
+      "0x0002b3"
+     ],
+     [
+      0,
+      33,
+      2,
+      null,
+      "0x0002b6"
+     ],
+     [
+      0,
+      33,
+      3,
+      null,
+      "0x0002b9"
+     ]
+    ]
+   }
+  },
+  "stored": {
+   "codec": {
+    "species/*": {
+     "columns": 5,
+     "defaults": {
+      "0": 0,
+      "1": 33,
+      "2": 1,
+      "3": null
+     },
+     "derived": {
+      "4": {
+       "hex": "06x",
+       "step": 3
+      }
+     },
+     "tables": {
+      "1": [
+       33
+      ],
+      "3": [
+       null
+      ]
+     }
+    }
+   },
+   "columns": [
+    "method",
+    "move",
+    "level",
+    "index",
+    "offset"
+   ],
+   "format": "gen3tl-pokedex-learnsets",
+   "profile_block": "abc",
+   "schema": "2.0.0",
+   "species": {
+    "1": [
+     [
+      0,
+      0,
+      1,
+      0,
+      571
+     ],
+     [
+      0,
+      0,
+      2
+     ],
+     [
+      0,
+      0,
+      3
+     ]
+    ],
+    "2": [
+     [
+      0,
+      0,
+      1,
+      0,
+      611
+     ],
+     [
+      0,
+      0,
+      2
+     ],
+     [
+      0,
+      0,
+      3
+     ]
+    ],
+    "3": [
+     [
+      0,
+      0,
+      1,
+      0,
+      651
+     ],
+     [
+      0,
+      0,
+      2
+     ],
+     [
+      0,
+      0,
+      3
+     ]
+    ],
+    "4": [
+     [
+      0,
+      0,
+      1,
+      0,
+      691
+     ],
+     [
+      0,
+      0,
+      2
+     ],
+     [
+      0,
+      0,
+      3
+     ]
+    ]
+   }
+  }
+ },
+ "texts": {
+  "document": {
+   "dataset": "pokedex/game/pokedex.json",
+   "draft": false,
+   "language": "ru",
+   "page": {
+    "PP": "ОС",
+    "page:power:flail": [
+     "Power from remaining HP",
+     ""
+    ]
+   },
+   "profile": "game",
+   "schema": "2.0.0",
+   "texts": {
+    "species:1": [
+     "Bulbasaur",
+     "Бульбазавр"
+    ],
+    "species:2": [
+     "Ivysaur",
+     ""
+    ]
+   }
+  },
+  "part": {
+   "page": {
+    "page:power:flail": "Power from remaining HP"
+   },
+   "part": "pokedex-texts",
+   "schema": "2.0.0",
+   "texts": {
+    "species:1": "Bulbasaur",
+    "species:2": "Ivysaur"
+   }
+  },
+  "stored": {
+   "dataset": "pokedex/game/pokedex.json",
+   "draft": false,
+   "language": "ru",
+   "page": {
+    "PP": "ОС"
+   },
+   "profile": "game",
+   "schema": "2.0.0",
+   "source": "../shared/0000000000000000000000000000000000000000000000000000000000000000.json",
+   "texts": {
+    "species:1": "Бульбазавр"
+   }
+  }
+ },
+ "trainer_ivs": {
+  "document": {
+   "format": "gen3tl-pokedex-trainer-ivs",
+   "members": [
+    {
+     "contexts": {
+      "0/0": [
+       31,
+       31,
+       31,
+       31,
+       31,
+       31
+      ],
+      "0/1": [
+       31,
+       31,
+       31,
+       31,
+       31,
+       31
+      ]
+     },
+     "slot": 0,
+     "trainer": 0
+    },
+    {
+     "contexts": {
+      "0/0": [
+       31,
+       31,
+       31,
+       31,
+       31,
+       31
+      ],
+      "0/1": [
+       31,
+       31,
+       31,
+       31,
+       31,
+       31
+      ]
+     },
+     "slot": 0,
+     "trainer": 1
+    },
+    {
+     "contexts": {
+      "0/0": [
+       31,
+       31,
+       31,
+       31,
+       31,
+       31
+      ],
+      "0/1": [
+       31,
+       31,
+       31,
+       31,
+       31,
+       31
+      ]
+     },
+     "slot": 0,
+     "trainer": 2
+    }
+   ],
+   "profile_block": "abc",
+   "schema": "4.0.0"
+  },
+  "stored": {
+   "codec": {
+    "members": {
+     "defaults": {
+      "contexts": {
+       "0/0": [
+        31,
+        31,
+        31,
+        31,
+        31,
+        31
+       ],
+       "0/1": [
+        31,
+        31,
+        31,
+        31,
+        31,
+        31
+       ]
+      },
+      "slot": 0
+     },
+     "keys": [
+      "contexts",
+      "slot",
+      "trainer"
+     ]
+    }
+   },
+   "format": "gen3tl-pokedex-trainer-ivs",
+   "members": [
+    {
+     "c": 0
+    },
+    {
+     "c": 1
+    },
+    {
+     "c": 2
+    }
+   ],
+   "profile_block": "abc",
+   "schema": "4.0.0"
+  }
+ }
+}

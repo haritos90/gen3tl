@@ -2,6 +2,7 @@ import { el } from "../dom.js";
 import { basePower, matchesEffect, resolvedEffects } from "../moveeffects.js";
 import { flagName, moveListName, targetName } from "../movelabels.js";
 import { edgeItems } from "../pokedex/evolutions.js";
+import { TRAINER_IV_SCHEMAS } from "../pokedexstore.js";
 import { t } from "../ui.js";
 import { TARGET_KEYS, LEARN_METHODS } from "./items.js";
 import { levels } from "./locations.js";
@@ -240,7 +241,7 @@ export const EV_LABELS = {
 
 /** Attach validated trainer IV contexts to the dataset. */
 export function inlineTrainerIvs(data, doc) {
-  if (doc?.format !== "gen3tl-pokedex-trainer-ivs" || doc?.schema !== 3 || !Array.isArray(doc.members)) {
+  if (doc?.format !== "gen3tl-pokedex-trainer-ivs" || !TRAINER_IV_SCHEMAS.includes(doc?.schema) || !Array.isArray(doc.members)) {
     throw new Error("trainer-ivs.json: unknown format");
   }
   if (doc.profile_block !== data.profile_block) throw new Error("trainer-ivs.json: not the contexts of this dataset");
