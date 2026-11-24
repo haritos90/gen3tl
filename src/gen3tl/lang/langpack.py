@@ -255,17 +255,3 @@ def style_problems(g: Glyph, cell_rows: int = 14, top: int = 0, max_width: int =
             if v == INK and y >= top + cell_rows - 1:
                 out.append(f"({x},{y}) ink on the last cell row")
     return out
-
-
-def style_warnings(g: Glyph, cell_rows: int = 14, top: int = 0) -> list[str]:
-    """Ink pixels without shadow directly right or below (allowed, as in the original)."""
-    p = g.pixels
-    out = []
-    for y in range(top, top + cell_rows):
-        for x in range(g.width):
-            if p[y][x] != INK:
-                continue
-            for a, b in ((x + 1, y), (x, y + 1)):
-                if a < g.width and b < top + cell_rows and p[b][a] not in (INK, SHADOW):
-                    out.append(f"({x},{y}) no shadow at ({a},{b})")
-    return out

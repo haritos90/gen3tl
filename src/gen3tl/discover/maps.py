@@ -39,8 +39,6 @@ CMD_LEN = {
 END_OPS = {0x02, 0x03, 0x05, 0x08, 0x0C, 0x0D, 0x24, 0xB9}  # flow does not fall through
 # command -> offset of a text pointer
 TEXT_PTR_AT = {0x0F: 2, 0x67: 1, 0x78: 1, 0x85: 2, 0x9B: 1, 0xBD: 1, 0xBF: 2, 0xC8: 1}
-# command -> offset of a script pointer to follow
-CODE_PTR_AT = {0x04: 1, 0x05: 1, 0x06: 2, 0x07: 2}
 STD_KIND = {2: "npc", 3: "sign", 4: "default", 5: "yesno", 6: "autoclose", 7: "getitem"}
 TRAINER_TEXT_ROLES = {
     0: ("intro", "defeat"), 1: ("intro", "defeat"), 2: ("intro", "defeat"),

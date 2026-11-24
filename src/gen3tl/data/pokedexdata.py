@@ -16,11 +16,8 @@ LEARNSETS_FORMAT = "gen3tl-pokedex-learnsets"
 LEARNSETS_FILE = "learnsets.json"
 LEARNSET_COLUMNS = ("method", "move", "level", "index", "offset")
 
-# Fields a fields table may name, in record order.
+# Stat fields, in record order.
 STAT_FIELDS = ("hp", "attack", "defense", "speed", "sp_attack", "sp_defense")
-RECORD_FIELDS = STAT_FIELDS + ("type1", "type2", "catch_rate", "base_exp", "growth", "gender_ratio",
-                               "ability1", "ability2", "hidden_ability", "height", "weight", "dex_number",
-                               "egg_group1", "egg_group2", "base_friendship")
 # Optional blocks: fields become null, the index names them.
 OPTIONAL = ("dex", "entries", "evolution")
 REQUIRED = ("species",)
@@ -111,10 +108,6 @@ def _browsing(block: dict, data: bytes, kind: str) -> dict:
                 raise PokedexError(f"{kind}_browsing {number}: ROM span differs at {at:#x}")
     return {str(number): rule if kind == "species" and number == "forms" else rule["status"]
             for number, rule in browsing.items()}
-
-
-def _species_browsing(block: dict, data: bytes) -> dict:
-    return _browsing(block, data, "species")
 
 
 def check(block: dict | None) -> list[str]:

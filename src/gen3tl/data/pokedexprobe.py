@@ -278,35 +278,6 @@ def probe(rom: Rom) -> dict:
     }
 
 
-def format_report(doc: dict) -> str:
-    """The probe report, one line per finding, as the command prints it."""
-    rom = doc["rom"]
-    lines = [
-        "Pokedex probe: structural candidates only, none proven",
-        "",
-        f"rom:    {rom['path']}",
-        f"sha1:   {rom['sha1']}",
-        f"header: {rom['game_code']} {rom['title']} ({rom['size']:#x} bytes)",
-        f"engine: {doc['engine']['family']} - {doc['engine']['evidence']}",
-        f"text:   {doc['charmap']['verdict']} - {doc['charmap']['evidence']}",
-        f"species count: {doc['species_count'] if doc['species_count'] is not None else 'unknown'}",
-        f"LZ77-shaped blocks: {doc['lz77_shapes']}",
-        "",
-        "Candidates:",
-    ]
-    if not doc["candidates"]:
-        lines.append("  (none)")
-    for c in doc["candidates"]:
-        lines.append(f"- {c['kind']}: base {c['base']:#x}, stride {c['stride']}, count {c['count']}")
-        lines.append(f"  confidence: {c['confidence']}")
-        lines.append(f"  evidence: {c['evidence']}")
-    lines += ["", "Unproven:", ]
-    for u in doc["unknown"]:
-        lines.append(f"- {u}")
-    lines += ["", "Next: gen3tl data profile writes a skeleton; each table needs its evidence line."]
-    return "\n".join(lines) + "\n"
-
-
 def _toml_str(value: str) -> str:
     return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 

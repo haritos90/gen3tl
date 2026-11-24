@@ -154,9 +154,6 @@ class KeyMap:
         new, counts = self.rewrite(text)
         return new, sum(counts.values())
 
-    def map_text(self, text: str) -> str:
-        return self.replace(text)[0]
-
 
 def _object(pairs):
     result = {}
@@ -206,17 +203,6 @@ def _validate_rewritten(path: Path, text: str) -> None:
                          f"{detail}") from None
 
 
-def remap_file(path: Path, keymap: KeyMap, dry_run: bool = False) -> tuple[bool, int]:
-    """Rewrite one key-named file; (changed, number of rewritten keys)."""
-    text = path.read_text(encoding="utf-8")
-    new, count = keymap.replace(text)
-    if new != text:
-        _validate_rewritten(path, new)
-        if not dry_run:
-            path.write_text(new, encoding="utf-8")
-    return new != text, count
-
-
 def _profile_text(text: str, keymap: KeyMap) -> tuple[str, Counter]:
     counts = Counter()
 
@@ -227,17 +213,6 @@ def _profile_text(text: str, keymap: KeyMap) -> tuple[str, Counter]:
 
     out = _profile_sections(text.split("\n"), rewrite)
     return "\n".join(out), counts
-
-
-def remap_profile(path: Path, keymap: KeyMap, dry_run: bool = False) -> bool:
-    """Rewrite the project sections of a profile file with the key map."""
-    text = path.read_text(encoding="utf-8")
-    new, _ = _profile_text(text, keymap)
-    if new != text:
-        _validate_rewritten(path, new)
-        if not dry_run:
-            path.write_text(new, encoding="utf-8")
-    return new != text
 
 
 def _scope_files(translations, references, profiles) -> list[tuple[Path, bool]]:

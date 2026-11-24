@@ -54,7 +54,6 @@ packages = [
 "gen3tl.share.web" = "web"
 
 [tool.setuptools.package-data]
-"gen3tl.verify" = ["emu_bridge.lua"]
 "gen3tl.share.families" = ["**/*"]
 "gen3tl.share.profiles" = ["**/*"]
 "gen3tl.share.assets.lang" = ["**/*"]

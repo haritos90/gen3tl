@@ -25,7 +25,7 @@ from .consumerproof import (COPIES, LZ77, consumer_paths, consumer_start, dma_tr
                             graphic_proofs, palette_proofs)
 from .graphicevidence import (adjacent_palette_records, descriptor_triples, literal_loads,
                               palette_evidence, palette_loads, raw_records, verified_descriptor_triples)
-from .scan import pointer_index, thumb_pool_loads
+from .scan import pointer_index
 
 SCHEMA = 2
 GENERATOR = "graphics-candidates/2.0.0"
@@ -166,19 +166,6 @@ class Candidate:
                 "palette_variants": self.palettes, "tilemap_associations": self.tilemaps,
                 "reference_kinds": self.reference_kinds(), "refs": refs,
                 "relocation_ambiguous": self.relocation_ambiguous()}
-
-
-def _classify_ref(rom: Rom, at: int) -> str:
-    """The reference kind of a pointer word at `at`: code pool, data table or bare word."""
-    if at % 4 != 0:
-        return "unaligned"
-    if thumb_pool_loads(rom, at):
-        return "pool"
-    prev = rom.ptr_at(at - 4) if at >= 4 else None
-    nxt = rom.ptr_at(at + 4) if at + 8 <= len(rom) else None
-    if prev is not None or nxt is not None:
-        return "table"
-    return "aligned"
 
 
 def _palette_site(record: dict) -> int | None:

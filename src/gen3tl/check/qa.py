@@ -188,12 +188,6 @@ def typography_without_english(rules: dict) -> tuple[dict[str, str], list[str]]:
     return independent, skipped
 
 
-def group_shapes(catalog) -> dict[Path, dict]:
-    """Per PO file: max original line width and max original lines per string."""
-    shapes: dict[Path, dict] = defaultdict(lambda: {"width": 0, "lines": 1, "multi": False})
-    return shapes
-
-
 @dataclass
 class SlotWidth:
     """Width of one placeholder slot of an entry."""

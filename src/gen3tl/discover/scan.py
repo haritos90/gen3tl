@@ -61,9 +61,6 @@ class Found:
     def verified_refs(self) -> list[Ref]:
         return [r for r in self.refs if r.kind in VERIFIED_KINDS]
 
-    def unverified_refs(self) -> list[Ref]:
-        return [r for r in self.refs if r.kind not in VERIFIED_KINDS]
-
 
 def tokens(data: bytes, start: int, end: int):
     """Yield (pos, kind, byte) over data[start:end]; kind is char/ctrl/ph/break."""

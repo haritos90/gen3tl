@@ -17,8 +17,6 @@ STATE_DIR = Path("verify") / "states"
 ENV_GET_CAN_DUPE = 3
 ENV_GET_SYSTEM_DIRECTORY = 9
 ENV_SET_PIXEL_FORMAT = 10
-ENV_GET_VARIABLE = 15
-ENV_GET_LOG_INTERFACE = 27
 ENV_GET_SAVE_DIRECTORY = 31
 PIXEL_0RGB1555, PIXEL_XRGB8888, PIXEL_RGB565 = 0, 1, 2
 MEMORY_SAVE_RAM, MEMORY_SYSTEM_RAM = 0, 2
@@ -33,19 +31,6 @@ JOYPAD = {"B": 0, "SELECT": 2, "START": 3, "UP": 4, "DOWN": 5, "LEFT": 6, "RIGHT
 
 class GameInfo(C.Structure):
     _fields_ = [("path", C.c_char_p), ("data", C.c_void_p), ("size", C.c_size_t), ("meta", C.c_char_p)]
-
-
-class GameGeometry(C.Structure):
-    _fields_ = [("base_width", C.c_uint), ("base_height", C.c_uint), ("max_width", C.c_uint),
-                ("max_height", C.c_uint), ("aspect_ratio", C.c_float)]
-
-
-class SystemTiming(C.Structure):
-    _fields_ = [("fps", C.c_double), ("sample_rate", C.c_double)]
-
-
-class AvInfo(C.Structure):
-    _fields_ = [("geometry", GameGeometry), ("timing", SystemTiming)]
 
 
 ENV_CB = C.CFUNCTYPE(C.c_bool, C.c_uint, C.c_void_p)
