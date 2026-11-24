@@ -4,8 +4,8 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { ENCODING, MESSAGES, NOTES, RULE_SOURCES, SLOT_ITEMS, WORDINGS, checkFailed, checkText, explanationText,
-  extractionFailed, findingText, glossaryMissing, layoutFailed, limitReferences, limitText, missingTerms, parseFinding,
-  sameExplanation, setMessages, setPlaces, setReasons, slotSource, unnoted, wordingText } from "../js/checktext.js";
+  extractionFailed, findingText, glossaryMissing, keepUnits, layoutFailed, limitReferences, limitText, missingTerms,
+  parseFinding, sameExplanation, setMessages, setPlaces, setReasons, slotSource, unnoted, wordingText } from "../js/checktext.js";
 import { slotRows } from "../js/slots.js";
 import { setCatalog, setUiLanguage, t } from "../js/ui.js";
 
@@ -224,6 +224,16 @@ test("slot measurements use the translated unit without a break", (context) => {
   assert.equal(slotSource(codeFill), "59 px, заполнение кодом");
   assert.equal(checkText({ code: "line_wide", width: 119, limit: 110, text: "'x'" }), "line too wide: 119 > 110 px: 'x'");
   assert.ok(!slotSource(codeFill).includes("59 px"));
+});
+
+test("only a whole unit word joins its number, a word that begins with one stays", (context) => {
+  context.after(() => setCatalog(null));
+  const text = "3 keys, keystone item; 8 px, pxfont glyph; 2 px_wide; 1 keys";
+  assert.equal(keepUnits(text), "3 keys, keystone item; 8 px, pxfont glyph; 2 px_wide; 1 keys");
+  setCatalog({ keys: "клавиши", px: "пкс" });
+  assert.equal(keepUnits(text), "3 клавиши, keystone item; 8 пкс, pxfont glyph; 2 px_wide; 1 клавиши");
+  assert.equal(keepUnits("4 клавиши (клавишиtone) 5 пкс"), "4 клавиши (клавишиtone) 5 пкс",
+    "the translated unit too");
 });
 
 test("a limit description in the site language, nested descriptions too", (ctx) => {

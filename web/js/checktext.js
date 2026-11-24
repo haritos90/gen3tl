@@ -148,6 +148,8 @@ const GFX_HOLES = {
   pixel: "\\d+,\\d+", area: "-?\\d+,-?\\d+,-?\\d+,-?\\d+", entries: "\\d+(?:, \\d+)+",
 };
 
+const literal = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const CODE_FILL = N_("code fill");
 const UNITS = { px: N_("px"), keys: N_("keys") };
 
@@ -158,8 +160,9 @@ export function keepUnits(text) {
   let out = String(text);
   for (const unit of Object.keys(UNITS)) {
     const name = unitName(unit);
-    out = out.replaceAll(` ${unit}`, `\u00a0${name}`);
-    if (name !== unit) out = out.replaceAll(` ${name}`, `\u00a0${name}`);
+    // whole words only, never the start of one
+    const word = new RegExp(` (?:${literal(unit)}|${literal(name)})(?![\\p{L}\\p{M}\\p{N}_])`, "gu");
+    out = out.replace(word, () => `\u00a0${name}`);
   }
   return out;
 }
@@ -232,8 +235,6 @@ export function sameExplanation(a, b) {
   const keys = Object.keys(a);
   return keys.length === Object.keys(b).length && keys.every((key) => sameExplanation(a[key], b[key]));
 }
-
-const literal = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** A graphics key as a pattern: holes as groups. */
 function compile(key, head = "", holes = GFX_HOLES) {
