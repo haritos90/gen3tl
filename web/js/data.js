@@ -83,21 +83,6 @@ export function projectProfiles(manifest, { readOnly = false } = {}) {
   return [...profiles.values()];
 }
 
-/** A project route, with support for older language-only links. */
-export function projectRoute(hash, profiles) {
-  let parts;
-  try {
-    parts = hash.replace(/^#/, "").split("/").map(decodeURIComponent);
-  } catch {
-    return { profile: null, language: null, tail: [] };
-  }
-  const profile = profiles.find((p) => p.id === parts[0]);
-  if (profile) return { profile: profile.id, language: parts[1], tail: parts.slice(2) };
-  const matches = profiles.filter((p) => p.languages.some((l) => l.code === parts[0]));
-  if (matches.length === 1) return { profile: matches[0].id, language: parts[0], tail: parts.slice(1) };
-  return { profile: null, language: null, tail: [] };
-}
-
 /** Reject a catalog fetched for another project. */
 export function verifyProjectIndex(index, profile, language) {
   if (index.profile !== profile || index.language !== language) {

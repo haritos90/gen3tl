@@ -41,11 +41,6 @@ def resolve(block: dict | None, profile: str) -> dict | None:
     return dict(block, labels=load(labels, template))
 
 
-def bare_id(value: str) -> str:
-    """The catalog id of a label value, without its fragment rule."""
-    return value.split("@", 1)[0]
-
-
 def check(block: dict) -> list[str]:
     """Problems of a [pokedex.labels] block: bad ids, empty reasons, keys in two tables."""
     problems = []

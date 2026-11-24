@@ -64,20 +64,6 @@ export function frameOf(kind, box) {
 }
 
 /**
- * Per box and line: whether a prompt arrow follows.
- * Scroll and page breaks need prompts; final lines do not.
- */
-export function waitingLines(text, window = null) {
-  if (window) return waitingWindows(text, window).map((box) => box.map(Boolean));
-  const pars = text.split("\\p");
-  return pars.map((par, i) => {
-    const seps = [...par.matchAll(/\\[nl]/g)].map((m) => m[0]);
-    if (i < pars.length - 1) seps.push("\\p");
-    return par.split(/\\[nl]/).map((_, j) => j < seps.length && seps[j] !== "\\n");
-  });
-}
-
-/**
  * Calculate box geometry without drawing the preview.
  * One-pixel overflow fits when only shadow is clipped.
  * Waiting lines reserve room for prompt arrows.

@@ -8,7 +8,6 @@ from pathlib import Path
 
 from ..core.rom import pointer_at
 
-POINTER_LOW = 0x08000000
 ALIAS_DIR = Path("source/keys")
 HEADER = ("key", "offset", "id")
 EVENTS = ("npc", "trigger", "sign", "mapscript")

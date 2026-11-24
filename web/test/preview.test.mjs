@@ -164,12 +164,7 @@ test("a redrawn glyph draws and measures at its new width before any import", ()
 });
 
 // The prompt arrow after a waiting line
-import { arrowCutOf, waitingLines } from "../js/preview.js";
-
-test("the arrow follows lines before a scroll or a new box, not the last line", () => {
-  assert.deepEqual(waitingLines("a\\nb\\lc\\pd\\ne"), [[false, true, true], [false, false]]);
-  assert.deepEqual(waitingLines("a"), [[false]]);
-});
+import { arrowCutOf } from "../js/preview.js";
 
 test("a waiting line leaves room for the arrow; the overlap is named", () => {
   const w = { kind: "dialogue", width: 60, lines: 2, arrow: 10 };

@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { Chunks, dirOf, filterRows, getJson, groupsOf, idParts, isOverflow, mapsOf, reachLabel, rulesOf, versionLabel }
   from "../js/data.js";
 import { fakeFetch, storedLanguage } from "./fixture.mjs";
-import { EDITOR_SCHEMA, loadIndex, verifyEditorSchema, projectProfiles, projectRoute, verifyProjectIndex } from "../js/data.js";
+import { EDITOR_SCHEMA, loadIndex, verifyEditorSchema, projectProfiles, verifyProjectIndex } from "../js/data.js";
 import { loadAliases, placeOf, tableKey, tailId } from "../js/data.js";
 import { checkDoc } from "../js/check.js";
 
@@ -49,21 +49,15 @@ test("projects separate identical language codes and reject identity mismatches"
   assert.equal(profiles[0].languages[0].index, "first/ru/index.json");
   assert.equal(profiles[1].languages[0].index, "second/ru/index.json");
   assert.deepEqual(profiles[2].languages, []);
-  assert.deepEqual(projectRoute("#second/ru/pictures/G01", profiles),
-    { profile: "second", language: "ru", tail: ["pictures", "G01"] });
-  assert.equal(projectRoute("#ru/s0000001", profiles).profile, null);
-  assert.equal(projectRoute("#%invalid", profiles).profile, null);
   assert.doesNotThrow(() => verifyProjectIndex({ schema: EDITOR_SCHEMA, profile: "first", language: "ru" }, "first", "ru"));
   assert.throws(() => verifyProjectIndex({ profile: "second", language: "ru" }, "first", "ru"), /identity/);
   assert.throws(() => verifyProjectIndex({ profile: "first", language: "fr" }, "first", "ru"), /identity/);
 });
 
-test("legacy manifests and unambiguous language links remain usable", () => {
+test("legacy manifests remain usable", () => {
   const language = { profile: "first", code: "ru", index: "ru/index.json" };
   const profiles = projectProfiles({ languages: [language] });
   assert.deepEqual(profiles, [{ id: "first", name: "first", support: "legacy", languages: [language] }]);
-  assert.deepEqual(projectRoute("#ru/s0000001", profiles),
-    { profile: "first", language: "ru", tail: ["s0000001"] });
   assert.throws(() => projectProfiles({ languages: [language, language] }), /Duplicate editor project/);
   assert.throws(() => projectProfiles({ languages: [{ code: "ru" }] }), /identity/);
 });

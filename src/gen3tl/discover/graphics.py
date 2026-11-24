@@ -819,21 +819,6 @@ def render_candidates(rom: Rom, result: dict, directory: Path, palettes: dict[in
     return rendered
 
 
-def catalog_palettes(rows: list[dict]) -> dict[int, dict]:
-    """Palette specs of a graphics document, by ROM offset, for rendering crossrefs only."""
-    out: dict[int, dict] = {}
-    for row in rows:
-        if not row.get("rom_offset"):
-            continue
-        m = _PALETTE.match(row.get("palette", "") or "")
-        if not m:
-            continue
-        bpp = 8 if "(8bpp)" in row.get("tiles", "") else 4
-        out[int(row["rom_offset"], 16)] = {"spec": m.group(0).strip(), "bpp": bpp,
-                                           "source": f"catalog:{row['id']}"}
-    return out
-
-
 def _palette_colour_key(rom: Rom, spec: str, bpp: int) -> tuple | None:
     try:
         colours, _ = palette_colours(rom, spec, bpp)

@@ -107,12 +107,6 @@ class RenderTest(unittest.TestCase):
             self.assertEqual(img.height, 1)
             self.assertEqual(img.palette, [(i, i, i) for i in range(256)])
 
-    def test_catalogue_palettes_are_not_inferred(self):
-        rows = [{"id": "G01", "rom_offset": "0x1000", "tiles": "4", "palette": "raw:0x2000 (as loaded)"},
-                {"id": "G02", "rom_offset": "0x3000", "tiles": "4", "palette": "not found in ROM"}]
-        palettes = gfx.catalog_palettes(rows)
-        self.assertEqual(palettes, {0x1000: {"spec": "raw:0x2000", "bpp": 4, "source": "catalog:G01"}})
-
 
 class PaletteChoiceTest(unittest.TestCase):
     def variant(self, spec, method, site, bpp=4, tier="candidate"):

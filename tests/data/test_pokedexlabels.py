@@ -153,7 +153,6 @@ class LabelsBlockTest(unittest.TestCase):
         self.assertEqual(pokedexlabels.check({"strings": specs, "symbols": {}, "unmapped": {}}), [])
         self.assertEqual(pokedexlabels.check({"strings": {"X": "s0416FC7@", "Y": "s0416FC7@x"}, "symbols": {}, "unmapped": {}}),
                          ["strings: 'X' is not a catalog id", "strings: 'Y' is not a catalog id"])
-        self.assertEqual(pokedexlabels.bare_id("s083001C@B_COPY_VAR_3"), "s083001C")
         self.assertEqual(pokedextexts.referenced({"labels": specs}), {"s0416FC7", "s083001C", "s03FB914"})
 
     def test_the_dataset_carries_the_labels_and_the_texts_pick_their_ids_up(self):

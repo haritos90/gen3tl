@@ -14,6 +14,7 @@ from gen3tl.catalog.catalog import build_entries, export, load_catalog  # noqa: 
 from gen3tl.catalog.po import PoEntry, read, write  # noqa: E402
 from gen3tl.catalog.rekey import migrate, rekey_comment, rekey_po, rekey_profile  # noqa: E402
 from gen3tl.core.charmap import Charmap  # noqa: E402
+from gen3tl.core.rom import ROM_BASE  # noqa: E402
 from gen3tl.catalog.batch import import_batch  # noqa: E402
 from gen3tl.profile.profile import EFFECTIVE_PROFILE, Profile  # noqa: E402
 from gen3tl.project import REGISTRY_ROOT  # noqa: E402
@@ -93,7 +94,7 @@ class AssignTest(unittest.TestCase):
     def test_rom_tables(self):
         data = bytearray(0x5000)
         for at, target in ((0x40, 0x1100), (0x48, 0x1200), (0x7C, 0x1000)):
-            data[at:at + 4] = (target + keys.POINTER_LOW).to_bytes(4, "little")
+            data[at:at + 4] = (target + ROM_BASE).to_bytes(4, "little")
         prof = {"pokedex": {"moves": {"name_table": "moves", "descriptions": {"base": 0x40, "count": 3}},
                             "items": {"name_table": "items", "base": 0x60, "stride": 8, "count": 4,
                                       "fields": {"description": {"offset": 4, "width": 4}}}},
