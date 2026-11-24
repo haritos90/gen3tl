@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { chunkPartUrl, decodeChunk, decodeIndex, decodeSource, decodeTerms, defaultStatus, messagesOf, sourceUrl }
   from "../js/editorstore.js";
 
-const SCHEMA = "10.0.0";
+const SCHEMA = "11.0.0";
 // a stored problem: its code, its notes around it
 const PROBLEM = { message: { code: "warning", message: { code: "box_wraps", box: 1, n: 3, lines: 2 } }, severity: "warning" };
 const URL_INDEX = "https://site.test/data/game/ru/index.json";
@@ -41,7 +41,7 @@ const stored = {
     { name: "battle menu", width: 200, arrow: 0, arrow_source: "declared", arrow_confirmed: true, source: 1 }],
   slot_details: [{ width: 40, state: "computed", dependencies: ["s2"] }],
   rules: [{ text: "Keep it short.", source: "review", evidence: "" },
-    { text: "One field.", source: { code: "rule_table", table: "items" }, evidence: "" }],
+    { text: { code: "wording_code_char_end_one", n: 1 }, source: { code: "rule_table", table: "items" }, evidence: "" }],
   progress: { approved: 1, nothing: 1 },
 };
 const part = { schema: SCHEMA, part: "entries", entries: [
@@ -101,8 +101,10 @@ test("entries join the list row, the game part and the language part in the gene
   assert.deepEqual(first.context.inserted, own.entries[0].inserted);
   assert.deepEqual(Object.keys(first.window.consumers[0]), ["name", "width", "arrow", "arrow_source", "arrow_confirmed", "source"]);
   assert.deepEqual(first.window.slot_details, { STR_VAR_1: { width: 40, state: "computed", dependencies: ["s2"] } });
-  assert.deepEqual(first.rules, [stored.rules[1], stored.rules[1]]); // a profile rule's source stays its code
+  // a profile rule's wording and source stay codes
+  assert.deepEqual(first.rules, [stored.rules[1], stored.rules[1]]);
   assert.notEqual(first.rules[0].source, first.rules[1].source); // each entry owns its records
+  assert.notEqual(first.rules[0].text, first.rules[1].text);
   assert.deepEqual(Object.keys(second), ["id", "file", "translation", "flags", "status", "context", "window", "terms",
     "approved", "reach", "rules", "source_text"]);
   assert.equal(second.window, null);

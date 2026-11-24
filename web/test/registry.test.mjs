@@ -107,15 +107,15 @@ test("unsupported game manifests show unavailability without hiding compatible g
     { ...game("new", "catalog", ["fr"]), data: "https://other.test/data/" }] }, BASE);
   const sources = await loadSources(registry, async (url) => ({ ok: true, json: async () =>
     url.includes("other.test") ? { schema: "99.0.0" } : url.endsWith("languages.json")
-      ? { schema: "10.0.0", profiles: [{ id: "old" }], languages: [{ profile: "old", code: "ru", index: "old/ru/index.json" }] }
+      ? { schema: "11.0.0", profiles: [{ id: "old" }], languages: [{ profile: "old", code: "ru", index: "old/ru/index.json" }] }
       : { schema: 1, releases: [] } }));
   const [old, future] = gamesModel(registry, sources);
   assert.ok(actionsOf(old).includes("editor"));
   assert.deepEqual(actionsOf(future), []);
   assert.equal(future.error, "This game's data format is not supported by this site.");
   assert.throws(() => projectProfiles({ schema: "99.0.0" }), /not supported/);
-  for (const schema of [undefined, 1, "9.0.0", "10.0.0"]) assert.doesNotThrow(() => verifyManifest({ schema }));
-  for (const schema of ["7.2.0", "8.0.0", "9.1.0", "11.0.0"]) {
+  for (const schema of [undefined, 1, "10.0.0", "11.0.0"]) assert.doesNotThrow(() => verifyManifest({ schema }));
+  for (const schema of ["7.2.0", "9.0.0", "10.1.0", "12.0.0"]) {
     assert.throws(() => verifyManifest({ schema }), /This game's data format is not supported by this site\./);
   }
 });
@@ -124,7 +124,7 @@ test("interface data is loaded without a release request", async () => {
   const asked = [];
   const sources = await loadSources({ games: [{ data: "https://example.org/data/" }] }, async (url) => {
     asked.push(url);
-    return { ok: true, json: async () => ({ schema: "10.0.0", profiles: [{ id: "site", support: "interface" }], languages: [] }) };
+    return { ok: true, json: async () => ({ schema: "11.0.0", profiles: [{ id: "site", support: "interface" }], languages: [] }) };
   });
   assert.deepEqual(asked, ["https://example.org/data/languages.json"]);
   assert.deepEqual(sources.get("https://example.org/data/").releases, []);

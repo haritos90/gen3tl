@@ -6,6 +6,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
+from ..check.provenance import code, formatted
 from ..core.notes import has_prose
 from ..core.charmap import Charmap
 from . import keys as keys_mod
@@ -17,6 +18,9 @@ from .source import digest
 # tag of text never shown
 NEVER_SHOWN = "reach: never shown"
 STUDY_GROUPS = ("script", "system")
+# the reasons of a tag: the study's, then each review
+REASON = re.compile(r"; (?=reach study: |review: )")
+UNREACHABLE = re.compile(r"reach study: unreachable (\S+) text(, build/reach\.json)?")
 
 
 def observed_entries(rules: list[dict]) -> dict[str, dict]:
@@ -44,8 +48,8 @@ def never_shown(reach: dict | None, rules: list[dict],
     for sid, r in ((reach or {}).get("strings") or {}).items():
         if r.get("class") == "unreachable":
             g = r.get("group", "script")
-            out.setdefault(sid, []).append(f"reach study: unreachable {g} text"
-                                           + ("" if g in STUDY_GROUPS else ", build/reach.json"))
+            out.setdefault(sid, []).append(formatted(code("reach_unreachable" if g in STUDY_GROUPS
+                                                          else "reach_unreachable_listed", group=g)))
     for rule in rules:
         if not rule.get("ids") or not has_prose(rule.get("evidence"), single_line=True):
             raise ValueError(f"[[reach.never_shown]] for {rule.get('ids')} needs ids and a one-line evidence")
@@ -53,7 +57,7 @@ def never_shown(reach: dict | None, rules: list[dict],
         for sid in rule["ids"]:
             if sid in seen:
                 raise ValueError(f"{sid} is both observed and never shown")
-            out.setdefault(sid, []).append(f"review: {ev}")
+            out.setdefault(sid, []).append(formatted(code("reach_review", text=ev)))
     for sid in seen:
         out.pop(sid, None)
     return {sid: "; ".join(evs) for sid, evs in out.items()}
@@ -65,6 +69,22 @@ def never_shown_tag(extracted: list[str]) -> str | None:
         if c.startswith(NEVER_SHOWN + " (") and c.endswith(")"):
             return c[len(NEVER_SHOWN) + 2:-1]
     return None
+
+
+def never_shown_reasons(evidence: str) -> str | dict:
+    """The evidence of a never-shown tag as its coded reasons; a text without them as written."""
+    reasons = []
+    for part in REASON.split(evidence):
+        study = UNREACHABLE.fullmatch(part)
+        if study:
+            reasons.append(code("reach_unreachable_listed" if study[2] else "reach_unreachable", group=study[1]))
+        elif part.startswith("review: "):
+            reasons.append(code("reach_review", text=part.removeprefix("review: ")))
+        else:
+            reasons.append(part)
+    if all(isinstance(reason, str) for reason in reasons):
+        return evidence
+    return reasons[0] if len(reasons) == 1 else code("reach_reasons", reasons=reasons)
 
 
 def never_shown_evidence(sid: str, extracted: list[str], study: dict | None) -> str | None:

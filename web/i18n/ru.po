@@ -10570,3 +10570,271 @@ msgstr "контекст каталога"
 msgctxt "site:reach study, review"
 msgid "reach study, review"
 msgstr "исследование достижимости, рецензия"
+
+#. js/checktext.js
+msgctxt ""
+"site:Copied into save or link data: translated like all other text; in "
+"trades and link play with the original ROM, unsupported glyphs may "
+"display incorrectly."
+msgid ""
+"Copied into save or link data: translated like all other text; in trades "
+"and link play with the original ROM, unsupported glyphs may display "
+"incorrectly."
+msgstr ""
+"Копируется в данные сохранения или связи: переводится, как и весь "
+"остальной текст; при обменах и игре по связи с оригинальным ROM "
+"неподдерживаемые глифы могут отображаться неправильно."
+
+#. js/checktext.js
+msgctxt ""
+"site:Moves with {others} as one block: code reaches the group by pointer "
+"arithmetic (pool word {pointer}). At most {bytes} bytes, the gap to "
+"{next} less the terminator; a longer translation stays English."
+msgid ""
+"Moves with {others} as one block: code reaches the group by pointer "
+"arithmetic (pool word {pointer}). At most {bytes} bytes, the gap to "
+"{next} less the terminator; a longer translation stays English."
+msgstr ""
+"Перемещается вместе с {others} одним блоком: код находит группу "
+"арифметикой указателей (слово литерального пула {pointer}). Не больше "
+"{bytes} байт — промежуток до {next} без терминатора; при более длинном "
+"переводе остаётся английский текст."
+
+#. js/checktext.js
+msgctxt ""
+"site:Moves with {others} as one block: code reaches the group by pointer "
+"arithmetic (pool word {pointer}). The last member: no byte gap binds it."
+msgid ""
+"Moves with {others} as one block: code reaches the group by pointer "
+"arithmetic (pool word {pointer}). The last member: no byte gap binds it."
+msgstr ""
+"Перемещается вместе с {others} одним блоком: код находит группу "
+"арифметикой указателей (слово литерального пула {pointer}). Последний в "
+"группе: промежуток в байтах его не ограничивает."
+
+#. js/checktext.js
+msgctxt ""
+"site:Begins with {head}, the first {offset} bytes of the English; code "
+"reads the text from byte {offset} (pool word {pointer}); kept in place: "
+"at most {bytes} bytes."
+msgid ""
+"Begins with {head}, the first {offset} bytes of the English; code reads "
+"the text from byte {offset} (pool word {pointer}); kept in place: at most "
+"{bytes} bytes."
+msgstr ""
+"Начинается с {head} — это первые {offset} байт английского текста; код "
+"читает текст с байта {offset} (слово литерального пула {pointer}); "
+"остаётся на месте: не больше {bytes} байт."
+
+#. js/checktext.js
+msgctxt ""
+"site:Character code written by game code: at most {n} characters; only "
+"that byte changes; empty writes {pad}."
+msgid ""
+"Character code written by game code: at most {n} characters; only that "
+"byte changes; empty writes {pad}."
+msgstr ""
+"Код символа записывает код игры: символов не больше {n}; меняется только "
+"этот байт; пустое значение записывает {pad}."
+
+#. js/checktext.js
+msgctxt ""
+"site:Character code written by game code: at most {n} character; only "
+"that byte changes; empty writes {pad}."
+msgid ""
+"Character code written by game code: at most {n} character; only that "
+"byte changes; empty writes {pad}."
+msgstr ""
+"Код символа записывает код игры: символов не больше {n}; меняется только "
+"этот байт; пустое значение записывает {pad}."
+
+#. js/checktext.js
+msgctxt ""
+"site:Character code written by game code: at most {n} characters; only "
+"that byte changes; empty writes 0xFF, the terminator."
+msgid ""
+"Character code written by game code: at most {n} characters; only that "
+"byte changes; empty writes 0xFF, the terminator."
+msgstr ""
+"Код символа записывает код игры: символов не больше {n}; меняется только "
+"этот байт; пустое значение записывает 0xFF — терминатор."
+
+#. js/checktext.js
+msgctxt ""
+"site:Character code written by game code: at most {n} character; only "
+"that byte changes; empty writes 0xFF, the terminator."
+msgid ""
+"Character code written by game code: at most {n} character; only that "
+"byte changes; empty writes 0xFF, the terminator."
+msgstr ""
+"Код символа записывает код игры: символов не больше {n}; меняется только "
+"этот байт; пустое значение записывает 0xFF — терминатор."
+
+#. js/checktext.js
+msgctxt "site:The code fills {slot} with {fill}."
+msgid "The code fills {slot} with {fill}."
+msgstr "Код заполняет {slot}: {fill}."
+
+#. js/checktext.js
+msgctxt "site:The code fills {slot} with {fill} ({where})."
+msgid "The code fills {slot} with {fill} ({where})."
+msgstr "Код заполняет {slot}: {fill} ({where})."
+
+#. js/checktext.js
+msgctxt "site:text measured from {measured}"
+msgid "text measured from {measured}"
+msgstr "текст, измеренный как {measured}"
+
+#. js/checktext.js
+msgctxt "site:one of {n} source strings, measured at their widest rendering"
+msgid "one of {n} source strings, measured at their widest rendering"
+msgstr ""
+"одна из исходных строк (всего {n}), измеренная по самому широкому "
+"отображению"
+
+#. js/checktext.js
+msgctxt "site:one of {n} source string, measured at their widest rendering"
+msgid "one of {n} source string, measured at their widest rendering"
+msgstr ""
+"одна из исходных строк (всего {n}), измеренная по самому широкому "
+"отображению"
+
+#. js/checktext.js
+msgctxt "site:a number of {n} digits"
+msgid "a number of {n} digits"
+msgstr "число из {n} цифр"
+
+#. js/checktext.js
+msgctxt "site:a number of {n} digit"
+msgid "a number of {n} digit"
+msgstr "число из {n} цифры"
+
+#. js/checktext.js
+msgctxt "site:text {width} px wide"
+msgid "text {width} px wide"
+msgstr "текст шириной {width} px"
+
+#. js/checktext.js
+msgctxt ""
+"site:May leave out {tokens}: the code fills it with text only the English "
+"needs."
+msgid ""
+"May leave out {tokens}: the code fills it with text only the English "
+"needs."
+msgstr ""
+"Можно опустить {tokens}: код заполняет это место текстом, который нужен "
+"только английскому."
+
+#. js/checktext.js
+msgctxt ""
+"site:The game never shows this text: it is not translated, and an "
+"approved translation stays."
+msgid ""
+"The game never shows this text: it is not translated, and an approved "
+"translation stays."
+msgstr ""
+"Игра никогда не показывает этот текст: он не переводится, а одобренный "
+"перевод сохраняется."
+
+#. js/checktext.js
+msgctxt ""
+"site:Inserted as {slot} into {n} texts ({entries}): one form serves every "
+"sentence it fills."
+msgid ""
+"Inserted as {slot} into {n} texts ({entries}): one form serves every "
+"sentence it fills."
+msgstr ""
+"Вставляется как {slot} в тексты, всего {n} ({entries}): одна форма служит "
+"каждому предложению, которое она заполняет."
+
+#. js/checktext.js
+msgctxt ""
+"site:Inserted as {slot} into {n} text ({entries}): one form serves every "
+"sentence it fills."
+msgid ""
+"Inserted as {slot} into {n} text ({entries}): one form serves every "
+"sentence it fills."
+msgstr ""
+"Вставляется как {slot} в {n} текст ({entries}): одна форма служит каждому "
+"предложению, которое она заполняет."
+
+#. js/checktext.js
+msgctxt ""
+"site:Inserted as {slot} into {n} texts ({entries} and {more} more): one "
+"form serves every sentence it fills."
+msgid ""
+"Inserted as {slot} into {n} texts ({entries} and {more} more): one form "
+"serves every sentence it fills."
+msgstr ""
+"Вставляется как {slot} в тексты, всего {n} ({entries} и ещё {more}): одна "
+"форма служит каждому предложению, которое она заполняет."
+
+#. js/checktext.js
+msgctxt ""
+"site:{slot} takes {n} inserted words ({entries}): the sentence is built "
+"around their fixed forms."
+msgid ""
+"{slot} takes {n} inserted words ({entries}): the sentence is built around "
+"their fixed forms."
+msgstr ""
+"В {slot} вставляются слова, всего {n} ({entries}): предложение строится "
+"вокруг их неизменных форм."
+
+#. js/checktext.js
+msgctxt ""
+"site:{slot} takes {n} inserted word ({entries}): the sentence is built "
+"around their fixed forms."
+msgid ""
+"{slot} takes {n} inserted word ({entries}): the sentence is built around "
+"their fixed forms."
+msgstr ""
+"В {slot} вставляется {n} слово ({entries}): предложение строится вокруг "
+"его неизменной формы."
+
+#. js/checktext.js
+msgctxt ""
+"site:{slot} takes {n} inserted words ({entries} and {more} more): the "
+"sentence is built around their fixed forms."
+msgid ""
+"{slot} takes {n} inserted words ({entries} and {more} more): the sentence "
+"is built around their fixed forms."
+msgstr ""
+"В {slot} вставляются слова, всего {n} ({entries} и ещё {more}): "
+"предложение строится вокруг их неизменных форм."
+
+#. js/data.js
+msgctxt "site:reach study: unreachable script text"
+msgid "reach study: unreachable script text"
+msgstr "исследование достижимости: недостижимый текст скрипта"
+
+#. js/data.js
+msgctxt "site:reach study: unreachable system text"
+msgid "reach study: unreachable system text"
+msgstr "исследование достижимости: недостижимый системный текст"
+
+#. js/data.js
+msgctxt "site:reach study: {class}"
+msgid "reach study: {class}"
+msgstr "исследование достижимости: {class}"
+
+#. js/data.js
+msgctxt "site:reach study: {class} ({root})"
+msgid "reach study: {class} ({root})"
+msgstr "исследование достижимости: {class} ({root})"
+
+#. js/data.js
+msgctxt "site:reach study: unreachable {group} text"
+msgid "reach study: unreachable {group} text"
+msgstr "исследование достижимости: недостижимый текст группы {group}"
+
+#. js/data.js
+msgctxt "site:reach study: unreachable {group} text, build/reach.json"
+msgid "reach study: unreachable {group} text, build/reach.json"
+msgstr ""
+"исследование достижимости: недостижимый текст группы {group}, "
+"build/reach.json"
+
+#. js/data.js
+msgctxt "site:review: {text}"
+msgid "review: {text}"
+msgstr "рецензия: {text}"

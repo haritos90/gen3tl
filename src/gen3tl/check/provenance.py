@@ -50,6 +50,11 @@ MESSAGES = {
     "host_default": "its host",
     "reach_study": "reach study: {class}",
     "reach_study_root": "reach study: {class} ({root})",
+    # the reasons of a never-shown tag
+    "reach_unreachable": "reach study: unreachable {group} text",
+    "reach_unreachable_listed": "reach study: unreachable {group} text, build/reach.json",
+    "reach_review": "review: {text}",
+    "reach_reasons": "{reasons}",
     "slot_profile": "profile width",
     "slot_profile_estimate": "profile width, unverified estimate",
     "slot_default": "default width",
@@ -90,6 +95,44 @@ MESSAGES = {
     "rule_code_fill_where": "profile [[layout.code_fill]] {name}: {where}",
     "rule_droppable": "profile [[qa.droppable]]",
     "rule_pointer_table": "profile [[strings.pointer_table]] {table}",
+    # the wordings of the toolkit's rules
+    "wording_save_link": "Copied into save or link data: translated like all other text; in trades and link play "
+                         "with the original ROM, unsupported glyphs may display incorrectly.",
+    "wording_computed": "Moves with {others} as one block: code reaches the group by pointer arithmetic (pool word "
+                        "{pointer}). At most {bytes} bytes, the gap to {next} less the terminator; a longer "
+                        "translation stays English.",
+    "wording_computed_last": "Moves with {others} as one block: code reaches the group by pointer arithmetic (pool "
+                             "word {pointer}). The last member: no byte gap binds it.",
+    "wording_interior": "Begins with {head}, the first {offset} bytes of the English; code reads the text from byte "
+                        "{offset} (pool word {pointer}); kept in place: at most {bytes} bytes.",
+    "wording_code_char": "Character code written by game code: at most {n} characters; only that byte changes; "
+                         "empty writes {pad}.",
+    "wording_code_char_one": "Character code written by game code: at most {n} character; only that byte changes; "
+                             "empty writes {pad}.",
+    "wording_code_char_end": "Character code written by game code: at most {n} characters; only that byte changes; "
+                             "empty writes 0xFF, the terminator.",
+    "wording_code_char_end_one": "Character code written by game code: at most {n} character; only that byte "
+                                 "changes; empty writes 0xFF, the terminator.",
+    "wording_code_fill": "The code fills {slot} with {fill}.",
+    "wording_code_fill_where": "The code fills {slot} with {fill} ({where}).",
+    "fill_measured": "text measured from {measured}",
+    "fill_strings": "one of {n} source strings, measured at their widest rendering",
+    "fill_strings_one": "one of {n} source string, measured at their widest rendering",
+    "fill_digits": "a number of {n} digits",
+    "fill_digits_one": "a number of {n} digit",
+    "fill_width": "text {width} px wide",
+    "wording_droppable": "May leave out {tokens}: the code fills it with text only the English needs.",
+    "wording_never_shown": "The game never shows this text: it is not translated, and an approved translation "
+                           "stays.",
+    "wording_hosts": "Inserted as {slot} into {n} texts ({entries}): one form serves every sentence it fills.",
+    "wording_hosts_one": "Inserted as {slot} into {n} text ({entries}): one form serves every sentence it fills.",
+    "wording_hosts_more": "Inserted as {slot} into {n} texts ({entries} and {more} more): one form serves every "
+                          "sentence it fills.",
+    "wording_words": "{slot} takes {n} inserted words ({entries}): the sentence is built around their fixed forms.",
+    "wording_words_one": "{slot} takes {n} inserted word ({entries}): the sentence is built around their fixed "
+                         "forms.",
+    "wording_words_more": "{slot} takes {n} inserted words ({entries} and {more} more): the sentence is built around "
+                          "their fixed forms.",
     # the check's problems; their templates are the page's keys
     "not_encodable": "not encodable: {error}",
     "field_overflow": "field overflow: {n} > {limit} characters",
@@ -146,7 +189,9 @@ MESSAGES = {
 }
 NESTED = frozenset({"rule", "via", "source", "word", "fill", "where", "error", "message"})
 # list arguments and their separators
-JOINED = {"reasons": "; ", "kinds": ", ", "ids": " + ", "slots": "; ", "parts": ", "}
+JOINED = {"reasons": "; ", "kinds": ", ", "ids": " + ", "slots": "; ", "parts": ", ", "entries": ", "}
+# a profile label inside a sentence
+LOWERED = frozenset({"measured"})
 NOTES = ("warning", "unmeasured_width", "unmeasured_lines", "unverified_width", "prefix_stripped")
 FIELD = re.compile(r"\{(\w+)\}")
 
@@ -177,6 +222,8 @@ def formatted(coded) -> str:
         item = coded[name]
         if name in JOINED:
             return JOINED[name].join(formatted(part) for part in item)
+        if name in LOWERED:
+            return str(item).lower()
         return formatted(item) if name in NESTED else str(item)
     return FIELD.sub(lambda m: value(m[1]), MESSAGES[coded["code"]])
 

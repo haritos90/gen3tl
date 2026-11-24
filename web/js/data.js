@@ -3,7 +3,7 @@
 // Every file decodes through editorstore.js.
 
 import { chunkPartUrl, decodeChunk, decodeIndex, decodeSource, decodeTerms, sourceUrl } from "./editorstore.js";
-import { explanationText, unnoted } from "./checktext.js";
+import { explanationText, isExplanation, unnoted } from "./checktext.js";
 import { searchable } from "./text.js";
 import { catalogCapabilities, EDITOR_SCHEMA, EDITOR_SCHEMAS, verifyManifest } from "./site-model.js";
 import { N_, t, uiError } from "./ui.js";
@@ -163,6 +163,27 @@ export const statusLabel = (status) => (STATUS_LABEL[status] ? t(STATUS_LABEL[st
 const REACH_LABEL = { reachable: N_("reachable"), "possibly reachable": N_("possibly reachable"),
   "never shown": N_("never shown"), unknown: N_("unknown") };
 const REACH_SOURCE = { "not studied": N_("not studied"), "reach study": N_("reach study"), review: N_("review") };
+const reachClass = (name) => (REACH_LABEL[name] ? t(REACH_LABEL[name]) : name);
+// the two groups the reach study names its texts by
+const UNREACHABLE = { script: N_("reach study: unreachable script text"), system: N_("reach study: unreachable system text") };
+
+/** Reach evidence in the site language: the study's class and root, the reasons a text is never shown. */
+export function reachText(evidence) {
+  if (!isExplanation(evidence)) return evidence ?? "";
+  switch (evidence.code) {
+    case "reach_study": return t(N_("reach study: {class}"), { class: reachClass(evidence.class) });
+    case "reach_study_root":
+      return t(N_("reach study: {class} ({root})"), { class: reachClass(evidence.class), root: evidence.root });
+    case "reach_unreachable":
+      return UNREACHABLE[evidence.group] ? t(UNREACHABLE[evidence.group])
+        : t(N_("reach study: unreachable {group} text"), { group: evidence.group });
+    case "reach_unreachable_listed":
+      return t(N_("reach study: unreachable {group} text, build/reach.json"), { group: evidence.group });
+    case "reach_review": return t(N_("review: {text}"), { text: evidence.text });
+    case "reach_reasons": return evidence.reasons.map(reachText).join("; ");
+    default: return explanationText(evidence);
+  }
+}
 
 /**
  * Reach of an entry as {text, title, never}.
@@ -170,9 +191,9 @@ const REACH_SOURCE = { "not studied": N_("not studied"), "reach study": N_("reac
  */
 export function reachLabel(reach) {
   const r = reach ?? { class: "reachable", source: "not studied", evidence: "" };
-  const name = REACH_LABEL[r.class] ? t(REACH_LABEL[r.class]) : r.class;
+  const name = reachClass(r.class);
   const source = r.source.split(", ").map((part) => REACH_SOURCE[part] ? t(REACH_SOURCE[part]) : part).join(", ");
-  return { text: `${name} (${source})`, title: explanationText(r.evidence) || name, never: r.class === "never shown" };
+  return { text: `${name} (${source})`, title: reachText(r.evidence) || name, never: r.class === "never shown" };
 }
 
 /** Indices of the rows the filters keep. */

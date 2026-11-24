@@ -16,19 +16,21 @@ LIST_COLUMNS = ("ids", "source_text", "rule", "source")
 HOSTS_SHOWN = 4   # ids named per inserted-word rule
 
 
-def rule(text: str, source: str | dict, evidence: str = "") -> dict:
-    """A rule as the editor shows it: the text, where it comes from (a text or a coded profile row), its evidence."""
+def rule(text: str | dict, source: str | dict, evidence: str | dict = "") -> dict:
+    """A rule as the editor shows it: its wording, where it comes from, its evidence; each a text or a code."""
     return {"text": text, "source": source, "evidence": evidence}
 
 
-def _ids(ids: list[str]) -> str:
-    """Ids for a rule's text: the first HOSTS_SHOWN, then the count of the rest."""
-    head = ", ".join(ids[:HOSTS_SHOWN])
-    return head if len(ids) <= HOSTS_SHOWN else f"{head} and {len(ids) - HOSTS_SHOWN} more"
+def _counted(name: str, n: int, /, **args) -> dict:
+    """The wording `name` of `n` things: its singular form for one."""
+    return coded(f"{name}_one" if n == 1 else name, n=n, **args)
 
 
-def _plural(n: int, word: str) -> str:
-    return f"{n} {word}" + ("" if n == 1 else "s")
+def _listed(name: str, slot: str, ids: list[str]) -> dict:
+    """The wording `name` naming the first HOSTS_SHOWN ids, then the count of the rest."""
+    if len(ids) > HOSTS_SHOWN:
+        return coded(f"{name}_more", slot=slot, n=len(ids), entries=ids[:HOSTS_SHOWN], more=len(ids) - HOSTS_SHOWN)
+    return _counted(name, len(ids), slot=slot, entries=ids)
 
 
 def save_link_rules(prof, inv: dict) -> dict[str, list[dict]]:
@@ -36,8 +38,7 @@ def save_link_rules(prof, inv: dict) -> dict[str, list[dict]]:
     tables = {t["name"]: t for t in prof.get("table", [])}
     keys = {sid: key for key in save_link_keys(getattr(prof, "language", None))
             for sid in prof.get("strings", {}).get(key, [])}
-    text = ("Copied into save or link data: translated like all other text; in trades and link play with "
-            "the original ROM, unsupported glyphs may display incorrectly.")
+    text = coded("wording_save_link")
     out = {}
     for e in inv["entries"]:
         if "save-link" not in e["flags"]:
@@ -58,16 +59,10 @@ def computed_rules(prof, inv: dict) -> dict[str, list[dict]]:
         members = sorted((by_id[s] for s in d["ids"] if s in by_id), key=lambda e: e["offset"])
         source = coded("rule_computed", pointer=f"0x{d['pointer']:X}")
         for e, nxt in zip(members, members[1:] + [None]):
-            others = ", ".join(m["id"] for m in members if m is not e)
-            head = (f"Moves with {others} as one block: code reaches the group by pointer arithmetic "
-                    f"(pool word 0x{d['pointer']:X}).")
-            if nxt is None:
-                tail = " The last member: no byte gap binds it."
-            else:
-                gap = nxt["offset"] - e["offset"]
-                tail = (f" At most {gap - 1} bytes, the gap to {nxt['id']} less the terminator; "
-                        f"a longer translation stays English.")
-            out.setdefault(e["id"], []).append(rule(head + tail, source, d.get("evidence", "")))
+            group = {"others": ", ".join(m["id"] for m in members if m is not e), "pointer": f"0x{d['pointer']:X}"}
+            text = (coded("wording_computed_last", **group) if nxt is None
+                    else coded("wording_computed", **group, bytes=nxt["offset"] - e["offset"] - 1, next=nxt["id"]))
+            out.setdefault(e["id"], []).append(rule(text, source, d.get("evidence", "")))
     return out
 
 
@@ -78,10 +73,9 @@ def interior_rules(prof, limits: dict) -> dict[str, list[dict]]:
         lim = limits.get(d["id"])
         if lim is None or lim.head is None:
             continue
-        out[d["id"]] = [rule(f"Begins with {lim.head}, the first {d['offset']} bytes of the English; code reads "
-                             f"the text from byte {d['offset']} (pool word 0x{d['pointer']:X}); "
-                             f"kept in place: at most {lim.bytes} bytes.",
-                             coded("rule_interior", pointer=f"0x{d['pointer']:X}"), d.get("evidence", ""))]
+        pointer = f"0x{d['pointer']:X}"
+        text = coded("wording_interior", head=lim.head, offset=d["offset"], pointer=pointer, bytes=lim.bytes)
+        out[d["id"]] = [rule(text, coded("rule_interior", pointer=pointer), d.get("evidence", ""))]
     return out
 
 
@@ -94,10 +88,9 @@ def code_char_rules(prof, inv: dict) -> dict[str, list[dict]]:
         if t is None:
             continue
         n, pad = t["field_length"], t["pad"]
-        end = ", the terminator" if pad == 0xFF else ""
-        out[e["id"]] = [rule(f"Character code written by game code: at most {_plural(n, 'character')}; only "
-                             f"that byte changes; empty writes 0x{pad:02X}{end}.",
-                             coded("rule_table", table=t["name"]), t.get("evidence", ""))]
+        text = (_counted("wording_code_char_end", n) if pad == 0xFF
+                else _counted("wording_code_char", n, pad=f"0x{pad:02X}"))
+        out[e["id"]] = [rule(text, coded("rule_table", table=t["name"]), t.get("evidence", ""))]
     return out
 
 
@@ -117,20 +110,22 @@ def code_fill_rules(prof, inv: dict, catalog: dict, tokens: dict | None = None) 
                     continue
                 source = prof.get("layout", {}).get("code_slot_source", {}).get(r.get("name"), {}).get(name)
                 if source:
-                    label = prof["layout"]["fill_source"][source]["label"]
-                    what = f"text measured from {label.lower()}"
+                    fill = coded("fill_measured", measured=prof["layout"]["fill_source"][source]["label"])
                 elif "strings" in s:   # bounded sources have no fixed width
-                    count = len(s["strings"]) + len(s.get("originals", []))
-                    what = f"one of {_plural(count, 'source string')}, measured at their widest rendering"
+                    fill = _counted("fill_strings", len(s["strings"]) + len(s.get("originals", [])))
+                elif "digits" in s:
+                    fill = _counted("fill_digits", int(s["digits"]))
                 else:
-                    what = (f"a number of {_plural(int(s['digits']), 'digit')}" if "digits" in s
-                            else f"text {s['width']} px wide")
-                where = f" ({r['where']})" if r.get("where") else ""
+                    fill = coded("fill_width", width=s["width"])
+                slot = "{%s}" % name
                 identity = r.get("name") or (f"0x{r['base']:X}" if "base" in r else r["ids"][0])
-                source = (coded("rule_code_fill_where", name=identity, where=r["where"]) if r.get("where")
-                          else coded("rule_code_fill", name=identity))
-                out.setdefault(e["id"], []).append(
-                    rule(f"The code fills {{{name}}} with {what}{where}.", source, r["evidence"]))
+                if r.get("where"):
+                    text = coded("wording_code_fill_where", slot=slot, fill=fill, where=r["where"])
+                    source = coded("rule_code_fill_where", name=identity, where=r["where"])
+                else:
+                    text = coded("wording_code_fill", slot=slot, fill=fill)
+                    source = coded("rule_code_fill", name=identity)
+                out.setdefault(e["id"], []).append(rule(text, source, r["evidence"]))
     return out
 
 
@@ -139,9 +134,8 @@ def droppable_rules(prof) -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {}
     for d in prof.get("qa", {}).get("droppable", []):
         for sid in d["ids"]:
-            out.setdefault(sid, []).append(rule(f"May leave out {' '.join(d['tokens'])}: the code fills it with "
-                                                "text only the English needs.", coded("rule_droppable"),
-                                                d.get("evidence", "")))
+            out.setdefault(sid, []).append(rule(coded("wording_droppable", tokens=" ".join(d["tokens"])),
+                                                coded("rule_droppable"), d.get("evidence", "")))
     return out
 
 
@@ -172,20 +166,12 @@ def context_rules(ctx: dict, reach: dict) -> tuple[list[dict], list[dict]]:
     """The rules of an entry's context and reach: the never-shown rule and those of the inserted words."""
     first, last = [], []
     if reach["class"] == "never shown":
-        first.append(rule("The game never shows this text: it is not translated, and an approved translation "
-                          "stays.", reach["source"], reach["evidence"]))
-    slots: dict[str, list[str]] = {}
-    for h in ctx["hosts"]:
-        slots.setdefault(h["slot"], []).append(h["id"])
-    for slot, ids in slots.items():
-        last.append(rule(f"Inserted as {slot} into {_plural(len(ids), 'text')} ({_ids(ids)}): one form serves "
-                         "every sentence it fills.", "catalog context"))
-    slots = {}
-    for w in ctx["words"]:
-        slots.setdefault(w["slot"], []).append(w["id"])
-    for slot, ids in slots.items():
-        last.append(rule(f"{slot} takes {_plural(len(ids), 'inserted word')} ({_ids(ids)}): the sentence is "
-                         "built around their fixed forms.", "catalog context"))
+        first.append(rule(coded("wording_never_shown"), reach["source"], reach["evidence"]))
+    for name, rows in (("wording_hosts", ctx["hosts"]), ("wording_words", ctx["words"])):
+        slots: dict[str, list[str]] = {}
+        for row in rows:
+            slots.setdefault(row["slot"], []).append(row["id"])
+        last.extend(rule(_listed(name, slot, ids), "catalog context") for slot, ids in slots.items())
     return first, last
 
 

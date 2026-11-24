@@ -8,7 +8,7 @@ import re
 
 from ..catalog import keys
 from ..catalog.batch import approved_by_english
-from ..catalog.catalog import never_shown_evidence, nothing_to_translate
+from ..catalog.catalog import never_shown_evidence, never_shown_reasons, nothing_to_translate
 from ..catalog.po import catalog_name, comment_kind
 from ..catalog.source import digest as text_digest
 from ..core.charmap import PLACEHOLDER, CharmapError
@@ -22,7 +22,7 @@ from .editorrules import SOURCE_TEXT_FIELDS, rules_data
 from ..check.layout import Limit, entry_measure
 from ..check.provenance import code as coded
 
-SCHEMA = "10.0.0"
+SCHEMA = "11.0.0"
 NEVER = "never shown"   # the reach class progress leaves out
 BLANK = text_digest("")   # an empty English
 BRACE = re.compile(r"\{[^}]*\}")
@@ -332,7 +332,8 @@ def reach_data(sid: str, comments: list[str], study: dict | None) -> dict:
     evidence = never_shown_evidence(sid, comments, study)
     if evidence is not None:
         parts = [x.split(":")[0] for x in evidence.split("; ") if x.startswith(("reach study:", "review:"))]
-        return {"class": NEVER, "source": ", ".join(dict.fromkeys(parts)) or "review", "evidence": evidence}
+        return {"class": NEVER, "source": ", ".join(dict.fromkeys(parts)) or "review",
+                "evidence": never_shown_reasons(evidence)}
     r = ((study or {}).get("strings") or {}).get(sid)
     if r is None:
         return {"class": "reachable", "source": "not studied", "evidence": ""}
@@ -1190,7 +1191,7 @@ def build(lang: str, prof, catalog: dict, limits: dict, measure, cm, packs: dict
                                    aliases), "terms": ids,
             "approved": [x for x in same if x["ids"]], "note": e.source_note, "reach": where,
             "translator_notes": guidance.get(sid, []),
-            "rules": [{**r, "text": aliases.rekey_text(r["text"])} for r in listed],
+            "rules": [{**r, "text": rekeyed(r["text"], aliases)} for r in listed],
         })
     doc = {
         "schema": SCHEMA, "toolkit": toolkit or toolkit_version(),   # version and commit

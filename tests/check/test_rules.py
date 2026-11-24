@@ -66,31 +66,46 @@ class ProfileRulesTest(unittest.TestCase):
         [low] = self.out["s0000300"]
         self.assertEqual(low["source"], code("rule_computed", pointer="0x9BDE20"))
         self.assertEqual(formatted(low["source"]), "profile [[strings.computed]] 0x9BDE20")
-        self.assertIn("Moves with s0000340 as one block", low["text"])
-        self.assertIn("At most 63 bytes, the gap to s0000340 less the terminator", low["text"])
+        self.assertEqual(low["text"], code("wording_computed", others="s0000340", pointer="0x9BDE20", bytes=63,
+                                           next="s0000340"))
+        self.assertEqual(formatted(low["text"]), "Moves with s0000340 as one block: code reaches the group by pointer "
+                         "arithmetic (pool word 0x9BDE20). At most 63 bytes, the gap to s0000340 less the terminator; "
+                         "a longer translation stays English.")
         self.assertEqual(low["evidence"], "ldr r2 at 0x89BDD40")
         [last] = self.out["s0000340"]
-        self.assertIn("The last member: no byte gap binds it.", last["text"])
+        self.assertEqual(formatted(last["text"]), "Moves with s0000300 as one block: code reaches the group by pointer "
+                         "arithmetic (pool word 0x9BDE20). The last member: no byte gap binds it.")
 
     def test_interior_head(self):
         [r] = self.out["s0000700"]
-        self.assertEqual(r["text"], "Begins with {STR_VAR_1}, the first 2 bytes of the English; code reads the text "
-                                    "from byte 2 (pool word 0x13255C); kept in place: at most 21 bytes.")
+        self.assertEqual(r["text"], code("wording_interior", head="{STR_VAR_1}", offset=2, pointer="0x13255C",
+                                         bytes=21))
+        self.assertEqual(formatted(r["text"]), "Begins with {STR_VAR_1}, the first 2 bytes of the English; code reads "
+                         "the text from byte 2 (pool word 0x13255C); kept in place: at most 21 bytes.")
         self.assertEqual((formatted(r["source"]), r["evidence"]), ("profile [[strings.interior]] 0x13255C", "StringAppend + 2"))
 
     def test_code_characters(self):
         # unterminated code table with a pad byte
         [r] = self.out["possessive:0"]
-        self.assertEqual(r["text"], "Character code written by game code: at most 1 character; only that byte "
-                                    "changes; empty writes 0xFF, the terminator.")
+        self.assertEqual(r["text"], code("wording_code_char_end_one", n=1))
+        self.assertEqual(formatted(r["text"]), "Character code written by game code: at most 1 character; only that "
+                                               "byte changes; empty writes 0xFF, the terminator.")
         self.assertEqual(r["source"], code("rule_table", table="possessive"))
         self.assertNotIn("keys:0", self.out)
+        # a pad byte other than the terminator, more than one character
+        prof = copy.deepcopy(PROF)
+        prof["table"][1].update(field_length=2, pad=0x00)
+        [r] = rules.code_char_rules(prof, INV)["possessive:0"]
+        self.assertEqual(r["text"], code("wording_code_char", n=2, pad="0x00"))
+        self.assertEqual(formatted(r["text"]), "Character code written by game code: at most 2 characters; only that "
+                                               "byte changes; empty writes 0x00.")
 
     def test_save_link(self):
         [table] = self.out["species:1"]
         self.assertEqual((formatted(table["source"]), table["evidence"]),
                          ("profile [[table]] species save_link", "names at stride 11"))
-        self.assertTrue(table["text"].startswith("Copied into save or link data"))
+        self.assertEqual(table["text"], code("wording_save_link"))
+        self.assertTrue(formatted(table["text"]).startswith("Copied into save or link data"))
         [listed] = self.out["s0000600"]
         self.assertEqual((formatted(listed["source"]), listed["evidence"]),
                          ("profile [strings] save_link_defaults", ""))
@@ -102,16 +117,31 @@ class ProfileRulesTest(unittest.TestCase):
         prof["layout"].update(code_slot_source={"reader": {"STR_VAR_1": "name"}},
                               fill_source={"name": {"label": "Species name"}})
         out = rules.code_fill_rules(prof, INV, CATALOG)
-        self.assertIn("text measured from species name", out["s0000100"][0]["text"])
+        # the label as the profile writes it, shown in lower case
+        self.assertEqual(out["s0000100"][0]["text"]["fill"], code("fill_measured", measured="Species name"))
+        self.assertEqual(formatted(out["s0000100"][0]["text"]),
+                         "The code fills {STR_VAR_1} with text measured from species name (count).")
 
     def test_code_fill_droppable_and_order(self):
-        got = [(r["text"], formatted(r["source"])) for r in self.out["s0000100"]]
+        got = [(formatted(r["text"]), formatted(r["source"])) for r in self.out["s0000100"]]
         self.assertEqual(got, [
             ("The code fills {STR_VAR_1} with a number of 2 digits (count).",
              "profile [[layout.code_fill]] s0000100: count"),
             ("The code fills {STR_VAR_2} with text 30 px wide.", "profile [[layout.code_fill]] 0x20"),
             ("May leave out {B_COPY_VAR_2}: the code fills it with text only the English needs.",
              "profile [[qa.droppable]]")])
+        self.assertEqual([r["text"]["code"] for r in self.out["s0000100"]],
+                         ["wording_code_fill_where", "wording_code_fill", "wording_droppable"])
+        prof = copy.deepcopy(PROF)
+        prof["layout"]["code_fill"][0]["slots"]["STR_VAR_1"] = {"digits": 1}
+        prof["layout"]["code_fill"][1]["slots"]["STR_VAR_2"] = {"strings": ["s0000300", "s0000340"], "font": "normal"}
+        out = rules.code_fill_rules(prof, INV, CATALOG)
+        self.assertEqual([formatted(r["text"]) for r in out["s0000100"]], [
+            "The code fills {STR_VAR_1} with a number of 1 digit (count).",
+            "The code fills {STR_VAR_2} with one of 2 source strings, measured at their widest rendering."])
+        prof["layout"]["code_fill"][1]["slots"]["STR_VAR_2"] = {"strings": ["s0000300"], "font": "normal"}
+        self.assertEqual(formatted(rules.code_fill_rules(prof, INV, CATALOG)["s0000100"][1]["text"]["fill"]),
+                         "one of 1 source string, measured at their widest rendering")
 
     def test_pointer_table_note(self):
         [r] = self.out["s0000800"]
@@ -131,13 +161,24 @@ class ContextRulesTest(unittest.TestCase):
         ctx = {"hosts": [{"slot": "{STR_VAR_1}", "id": f"s000{n}000"} for n in range(1, 7)],
                "words": [{"slot": "{STR_VAR_2}", "id": "s0000200"}]}
         first, last = rules.context_rules(ctx, reach)
-        self.assertEqual(first, [{"text": "The game never shows this text: it is not translated, and an approved "
-                                          "translation stays.", "source": "review",
+        self.assertEqual(first, [{"text": code("wording_never_shown"), "source": "review",
                                   "evidence": "review: no caller"}])
+        self.assertEqual(formatted(first[0]["text"]), "The game never shows this text: it is not translated, and an "
+                                                      "approved translation stays.")
         self.assertEqual([r["text"] for r in last], [
+            code("wording_hosts_more", slot="{STR_VAR_1}", n=6,
+                 entries=["s0001000", "s0002000", "s0003000", "s0004000"], more=2),
+            code("wording_words_one", slot="{STR_VAR_2}", n=1, entries=["s0000200"])])
+        self.assertEqual([formatted(r["text"]) for r in last], [
             "Inserted as {STR_VAR_1} into 6 texts (s0001000, s0002000, s0003000, s0004000 and 2 more): one form "
             "serves every sentence it fills.",
             "{STR_VAR_2} takes 1 inserted word (s0000200): the sentence is built around their fixed forms."])
+        ctx = {"hosts": [{"slot": "{STR_VAR_1}", "id": "s0001000"}],
+               "words": [{"slot": "{STR_VAR_2}", "id": f"s000{n}000"} for n in range(1, 5)]}
+        self.assertEqual([formatted(r["text"]) for r in rules.context_rules(ctx, {"class": "reachable"})[1]], [
+            "Inserted as {STR_VAR_1} into 1 text (s0001000): one form serves every sentence it fills.",
+            "{STR_VAR_2} takes 4 inserted words (s0001000, s0002000, s0003000, s0004000): the sentence is built "
+            "around their fixed forms."])
         self.assertEqual(rules.context_rules({"hosts": [], "words": []}, {"class": "reachable"}), ([], []))
 
 class RuleListTest(unittest.TestCase):

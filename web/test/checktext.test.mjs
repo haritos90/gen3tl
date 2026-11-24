@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { ENCODING, MESSAGES, NOTES, RULE_SOURCES, SLOT_ITEMS, checkFailed, checkText, explanationText, extractionFailed,
-  findingText, glossaryMissing, layoutFailed, limitReferences, limitText, missingTerms, parseFinding, sameExplanation,
-  setMessages, setPlaces, setReasons, slotSource, unnoted, wordingText } from "../js/checktext.js";
+import { ENCODING, MESSAGES, NOTES, RULE_SOURCES, SLOT_ITEMS, WORDINGS, checkFailed, checkText, explanationText,
+  extractionFailed, findingText, glossaryMissing, layoutFailed, limitReferences, limitText, missingTerms, parseFinding,
+  sameExplanation, setMessages, setPlaces, setReasons, slotSource, unnoted, wordingText } from "../js/checktext.js";
 import { slotRows } from "../js/slots.js";
 import { setCatalog, setUiLanguage, t } from "../js/ui.js";
 
@@ -25,6 +25,10 @@ const RU = {
 // the site catalog's one-line entries
 const SITE_RU = Object.fromEntries([...readFileSync(new URL("../i18n/ru.po", import.meta.url), "utf8")
   .matchAll(/^msgid (".*")\nmsgstr (".*")$/gm)].map(([, key, text]) => [JSON.parse(key), JSON.parse(text)]));
+// every entry, its continued lines joined
+const joined = (lines) => lines.trim().split("\n").map((line) => JSON.parse(line)).join("");
+const SITE_ALL = Object.fromEntries([...readFileSync(new URL("../i18n/ru.po", import.meta.url), "utf8")
+  .matchAll(/^msgid ((?:".*"\n)+)msgstr ((?:".*"(?:\n|$))+)/gm)].map(([, key, text]) => [joined(key), joined(text)]));
 
 // the data's problem templates (gen3tl.check.provenance.MESSAGES)
 const PROBLEMS = {
@@ -273,6 +277,90 @@ test("a rule's wording names its profile keys in words", (ctx) => {
   assert.equal(wordingText("[[qa.droppable]] and [[unknown.key]]"), "Droppable placeholders and [[unknown.key]]");
   setCatalog({ "Pokedex species map": "карта видов Покедекса" });
   assert.equal(wordingText("See [pokedex.dex.map]"), "See карта видов Покедекса");
+});
+
+// the data's wording templates (gen3tl.check.provenance.MESSAGES)
+const WORDING_TEMPLATES = {
+  wording_save_link: "Copied into save or link data: translated like all other text; in trades and link play with the "
+    + "original ROM, unsupported glyphs may display incorrectly.",
+  wording_computed: "Moves with {others} as one block: code reaches the group by pointer arithmetic (pool word "
+    + "{pointer}). At most {bytes} bytes, the gap to {next} less the terminator; a longer translation stays English.",
+  wording_computed_last: "Moves with {others} as one block: code reaches the group by pointer arithmetic (pool word "
+    + "{pointer}). The last member: no byte gap binds it.",
+  wording_interior: "Begins with {head}, the first {offset} bytes of the English; code reads the text from byte "
+    + "{offset} (pool word {pointer}); kept in place: at most {bytes} bytes.",
+  wording_code_char: "Character code written by game code: at most {n} characters; only that byte changes; empty "
+    + "writes {pad}.",
+  wording_code_char_one: "Character code written by game code: at most {n} character; only that byte changes; empty "
+    + "writes {pad}.",
+  wording_code_char_end: "Character code written by game code: at most {n} characters; only that byte changes; empty "
+    + "writes 0xFF, the terminator.",
+  wording_code_char_end_one: "Character code written by game code: at most {n} character; only that byte changes; "
+    + "empty writes 0xFF, the terminator.",
+  wording_code_fill: "The code fills {slot} with {fill}.",
+  wording_code_fill_where: "The code fills {slot} with {fill} ({where}).",
+  fill_measured: "text measured from {measured}",
+  fill_strings: "one of {n} source strings, measured at their widest rendering",
+  fill_strings_one: "one of {n} source string, measured at their widest rendering",
+  fill_digits: "a number of {n} digits", fill_digits_one: "a number of {n} digit", fill_width: "text {width} px wide",
+  wording_droppable: "May leave out {tokens}: the code fills it with text only the English needs.",
+  wording_never_shown: "The game never shows this text: it is not translated, and an approved translation stays.",
+  wording_hosts: "Inserted as {slot} into {n} texts ({entries}): one form serves every sentence it fills.",
+  wording_hosts_one: "Inserted as {slot} into {n} text ({entries}): one form serves every sentence it fills.",
+  wording_hosts_more: "Inserted as {slot} into {n} texts ({entries} and {more} more): one form serves every sentence "
+    + "it fills.",
+  wording_words: "{slot} takes {n} inserted words ({entries}): the sentence is built around their fixed forms.",
+  wording_words_one: "{slot} takes {n} inserted word ({entries}): the sentence is built around their fixed forms.",
+  wording_words_more: "{slot} takes {n} inserted words ({entries} and {more} more): the sentence is built around "
+    + "their fixed forms.",
+};
+const FILL_WHERE = "battle text, name of the opposing trainer";
+// a wording of each kind: English, Russian
+const WORDING_TEXTS = [
+  [{ code: "wording_save_link" }, WORDING_TEMPLATES.wording_save_link,
+    "Копируется в данные сохранения или связи: переводится, как и весь остальной текст; при обменах и игре по связи "
+    + "с оригинальным ROM неподдерживаемые глифы могут отображаться неправильно."],
+  [{ code: "wording_computed", others: "s0000340", pointer: "0x9BDE20", bytes: 63, next: "s0000340" },
+    "Moves with s0000340 as one block: code reaches the group by pointer arithmetic (pool word 0x9BDE20). At most 63 "
+    + "bytes, the gap to s0000340 less the terminator; a longer translation stays English.",
+    "Перемещается вместе с s0000340 одним блоком: код находит группу арифметикой указателей (слово литерального пула "
+    + "0x9BDE20). Не больше 63 байт — промежуток до s0000340 без терминатора; при более длинном переводе остаётся "
+    + "английский текст."],
+  [{ code: "wording_code_char_end_one", n: 1 }, "Character code written by game code: at most 1 character; only that "
+    + "byte changes; empty writes 0xFF, the terminator.", "Код символа записывает код игры: символов не больше 1; "
+    + "меняется только этот байт; пустое значение записывает 0xFF — терминатор."],
+  [{ code: "wording_code_fill_where", slot: "{B_TRAINER1_NAME}", fill: { code: "fill_measured", measured: "Trainer name" },
+    where: FILL_WHERE }, `The code fills {B_TRAINER1_NAME} with text measured from trainer name (${FILL_WHERE}).`,
+  "Код заполняет {B_TRAINER1_NAME}: текст, измеренный как имя тренера (боевой текст, имя тренера противника)."],
+  [{ code: "wording_code_fill", slot: "{STR_VAR_2}", fill: { code: "fill_digits", n: 3 } },
+    "The code fills {STR_VAR_2} with a number of 3 digits.", "Код заполняет {STR_VAR_2}: число из 3 цифр."],
+  [{ code: "wording_never_shown" }, WORDING_TEMPLATES.wording_never_shown,
+    "Игра никогда не показывает этот текст: он не переводится, а одобренный перевод сохраняется."],
+  [{ code: "wording_hosts_more", slot: "{STR_VAR_1}", n: 6, entries: ["s0001000", "s0002000", "s0003000", "s0004000"],
+    more: 2 }, "Inserted as {STR_VAR_1} into 6 texts (s0001000, s0002000, s0003000, s0004000 and 2 more): one form "
+    + "serves every sentence it fills.", "Вставляется как {STR_VAR_1} в тексты, всего 6 (s0001000, s0002000, "
+    + "s0003000, s0004000 и ещё 2): одна форма служит каждому предложению, которое она заполняет."],
+  [{ code: "wording_words_one", slot: "{STR_VAR_2}", n: 1, entries: ["s0000200"] },
+    "{STR_VAR_2} takes 1 inserted word (s0000200): the sentence is built around their fixed forms.",
+    "В {STR_VAR_2} вставляется 1 слово (s0000200): предложение строится вокруг его неизменной формы."],
+];
+
+test("a toolkit rule's wording is its code: English from the message table, the site language from the catalog", (ctx) => {
+  ctx.after(() => { setMessages(null); setCatalog(null); setPlaces(null); setUiLanguage("en"); });
+  assert.deepEqual([...WORDINGS].sort(), Object.values(WORDING_TEMPLATES).sort());
+  assert.deepEqual(WORDINGS.filter((key) => !SITE_ALL[key]), [], "a wording without a Russian entry");
+  for (const key of WORDINGS) assert.match(key, /^(?:[^{}]|\{\w+\})*$/, key);
+  setMessages(WORDING_TEMPLATES);
+  setPlaces({ [FILL_WHERE]: { ru: "боевой текст, имя тренера противника" }, "Trainer name": { ru: "Имя тренера" } });
+  for (const [wording, english] of WORDING_TEXTS) {
+    assert.equal(wordingText(wording), english);
+    assert.equal(explanationText(wording), english);
+  }
+  setUiLanguage("ru");
+  setCatalog(SITE_ALL);
+  for (const [wording, , russian] of WORDING_TEXTS) assert.equal(wordingText(wording), russian);
+  // a text keeps its profile keys in words
+  assert.equal(wordingText("Keep [[qa.droppable]]."), "Keep Пропускаемые подстановки.");
 });
 
 test("window references survive nested bases separately from their descriptions", () => {

@@ -167,3 +167,15 @@ class ExplanationTest(unittest.TestCase):
                          {"code": "reach_study", "class": "possibly reachable"})
         self.assertEqual(editordata.reach_data("s0000300", [], study),
                          {"class": "reachable", "source": "not studied", "evidence": ""})
+
+    def test_never_shown_evidence_is_coded_by_its_reasons(self):
+        from gen3tl.check.provenance import code
+        study = {"strings": {"s0000100": {"class": "unreachable", "group": "system"}}}
+        both = "reach study: unreachable script text; review: dead code; never called"
+        self.assertEqual(editordata.reach_data("s0000100", [f"reach: never shown ({both})"], study), {
+            "class": "never shown", "source": "reach study, review", "evidence": code("reach_reasons", reasons=[
+                code("reach_unreachable", group="script"), code("reach_review", text="dead code; never called")])})
+        self.assertEqual(editordata.reach_data("s0000100", [], study)["evidence"],
+                         code("reach_unreachable", group="system"))
+        self.assertEqual(editordata.reach_data("s1", ["reach: never shown (probe)"], None),
+                         {"class": "never shown", "source": "review", "evidence": "probe"})

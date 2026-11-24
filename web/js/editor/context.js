@@ -1,6 +1,6 @@
 import { el, renderChildren, updateChildren } from "../dom.js";
 import { t } from "../ui.js";
-import { statusLabel, shortFile } from "../data.js";
+import { reachText, statusLabel, shortFile } from "../data.js";
 import { explanationText, keepUnits } from "../checktext.js";
 import { renderEntryNotes, renderNoteDrafts } from "../guidance.js";
 import { UNMEASURED_ADVICE, UNVERIFIED_ADVICE } from "../limits.js";
@@ -48,7 +48,7 @@ export function contextDisclosure(label, content, className = "") {
 
 /** Estimate wrapped lines before the panel is mounted. */
 export function renderReachEvidence(evidence) {
-  const shown = explanationText(evidence);
+  const shown = reachText(evidence);
   if (!shown) return null;
   const lines = shown.split(/\r?\n/);
   const text = el("div", { class: "muted reach-text", textContent: shown });

@@ -72,6 +72,34 @@ export const SLOT_ITEMS = [
   N_("no prefix 0 px"),
 ];
 
+/** The wordings of the toolkit's rules and their fills, the keys they show with. */
+export const WORDINGS = [
+  N_("Copied into save or link data: translated like all other text; in trades and link play with the original ROM, unsupported glyphs may display incorrectly."),
+  N_("Moves with {others} as one block: code reaches the group by pointer arithmetic (pool word {pointer}). At most {bytes} bytes, the gap to {next} less the terminator; a longer translation stays English."),
+  N_("Moves with {others} as one block: code reaches the group by pointer arithmetic (pool word {pointer}). The last member: no byte gap binds it."),
+  N_("Begins with {head}, the first {offset} bytes of the English; code reads the text from byte {offset} (pool word {pointer}); kept in place: at most {bytes} bytes."),
+  N_("Character code written by game code: at most {n} characters; only that byte changes; empty writes {pad}."),
+  N_("Character code written by game code: at most {n} character; only that byte changes; empty writes {pad}."),
+  N_("Character code written by game code: at most {n} characters; only that byte changes; empty writes 0xFF, the terminator."),
+  N_("Character code written by game code: at most {n} character; only that byte changes; empty writes 0xFF, the terminator."),
+  N_("The code fills {slot} with {fill}."),
+  N_("The code fills {slot} with {fill} ({where})."),
+  N_("text measured from {measured}"),
+  N_("one of {n} source strings, measured at their widest rendering"),
+  N_("one of {n} source string, measured at their widest rendering"),
+  N_("a number of {n} digits"),
+  N_("a number of {n} digit"),
+  N_("text {width} px wide"),
+  N_("May leave out {tokens}: the code fills it with text only the English needs."),
+  N_("The game never shows this text: it is not translated, and an approved translation stays."),
+  N_("Inserted as {slot} into {n} texts ({entries}): one form serves every sentence it fills."),
+  N_("Inserted as {slot} into {n} text ({entries}): one form serves every sentence it fills."),
+  N_("Inserted as {slot} into {n} texts ({entries} and {more} more): one form serves every sentence it fills."),
+  N_("{slot} takes {n} inserted words ({entries}): the sentence is built around their fixed forms."),
+  N_("{slot} takes {n} inserted word ({entries}): the sentence is built around their fixed forms."),
+  N_("{slot} takes {n} inserted words ({entries} and {more} more): the sentence is built around their fixed forms."),
+];
+
 /** The graphics check's findings. */
 export const FINDINGS = [
   N_("{tiles} tiles is below the original {original}; tiles can only be appended"),
@@ -181,7 +209,9 @@ const templateOf = (code) => messages[code] ?? OWN[code] ?? code;
 
 // arguments holding explanations; lists and their separators
 const NESTED = new Set(["rule", "via", "source", "word", "fill", "where", "error", "message"]);
-const JOINED = { reasons: "; ", kinds: ", ", ids: " + ", slots: "; ", parts: ", " };
+const JOINED = { reasons: "; ", kinds: ", ", ids: " + ", slots: "; ", parts: ", ", entries: ", " };
+// a profile label inside a sentence
+const LOWERED = new Set(["measured"]);
 
 /** Whether a value is an explanation: a code with its arguments. */
 export const isExplanation = (value) => typeof value?.code === "string";
@@ -191,7 +221,8 @@ export function explanationText(value) {
   if (!isExplanation(value)) return value ?? "";
   return templateOf(value.code).replace(/\{(\w+)\}/g, (_, name) => (name in JOINED
     ? value[name].map(explanationText).join(JOINED[name])
-    : NESTED.has(name) ? explanationText(value[name]) : String(value[name])));
+    : LOWERED.has(name) ? String(value[name]).toLowerCase()
+      : NESTED.has(name) ? explanationText(value[name]) : String(value[name])));
 }
 
 /** Whether two explanations or texts are the same, in any key order. */
@@ -419,8 +450,27 @@ export function limitText(rule, sources = []) {
   return isExplanation(rule) ? ruleText(rule, sources) : whereText(t(String(rule)));
 }
 
-/** A rule's wording with its profile keys in words. */
+// a wording's argument in the site language
+function wordingArgument(name, value) {
+  switch (name) {
+    case "fill": return codedWording(value);
+    case "where": return whereText(value);
+    case "measured": return whereText(value).toLowerCase();
+    case "entries": return value.join(JOINED.entries);
+    default: return value;
+  }
+}
+
+/** A coded wording in the site language: its template from the message table. */
+function codedWording(wording) {
+  const vars = {};
+  for (const [name, value] of Object.entries(wording)) if (name !== "code") vars[name] = wordingArgument(name, value);
+  return t(templateOf(wording.code), vars);
+}
+
+/** A rule's wording in the site language; a text shows its profile keys in words. */
 export function wordingText(text) {
+  if (isExplanation(text)) return codedWording(text);
   return text.replace(/\[\[?[^\[\]\n]+\]\]?/g, (key) => {
     const bare = PROFILE_KEY.exec(key);
     return bare && Object.hasOwn(WINDOW_KINDS, bare[1]) ? t(WINDOW_KINDS[bare[1]]) : whereText(t(key));

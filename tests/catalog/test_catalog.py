@@ -9,7 +9,9 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from gen3tl.catalog.catalog import export, load_catalog, never_shown, never_shown_evidence, never_shown_tag, tm_report
+from gen3tl.catalog.catalog import (export, load_catalog, never_shown, never_shown_evidence, never_shown_reasons,
+                                    never_shown_tag, tm_report)
+from gen3tl.check.provenance import code, formatted
 from gen3tl.core.charmap import Charmap
 from gen3tl.core.notes import BoundProse
 from gen3tl.catalog.po import PoEntry, read, render, write
@@ -284,6 +286,27 @@ class NeverShownTest(unittest.TestCase):
         self.assertEqual(never_shown_evidence("s1", [], study), "reach study: unreachable system text")
         self.assertIsNone(never_shown_evidence("s2", [], study))
         self.assertIsNone(never_shown_evidence("s1", [], None))
+
+    def test_reasons_are_codes_with_the_tag_as_their_english(self):
+        review = code("reach_review", text="no caller; the table is 0x10")
+        cases = {
+            "reach study: unreachable script text": code("reach_unreachable", group="script"),
+            "reach study: unreachable battle text, build/reach.json": code("reach_unreachable_listed", group="battle"),
+            "review: no caller; the table is 0x10": review,
+            "reach study: unreachable system text; review: no caller; the table is 0x10; review: dead": code(
+                "reach_reasons", reasons=[code("reach_unreachable", group="system"), review,
+                                          code("reach_review", text="dead")]),
+            "no map starts the script; review: dead": code("reach_reasons", reasons=[
+                "no map starts the script", code("reach_review", text="dead")]),
+            "no map starts the script": "no map starts the script",
+            "reach study": "reach study",
+        }
+        for evidence, reasons in cases.items():
+            with self.subTest(evidence=evidence):
+                self.assertEqual(never_shown_reasons(evidence), reasons)
+                self.assertEqual(formatted(reasons), evidence)
+        for evidence in never_shown(REACH, [{"ids": ["s0003000"], "evidence": "dead; unused"}]).values():
+            self.assertEqual(formatted(never_shown_reasons(evidence)), evidence)
 
     def test_observed_dialogue_survives_stale_reach_export(self):
         rules = [{"ids": ["s0001000"], "at": 0x100, "evidence": "native defeat recovery"}]

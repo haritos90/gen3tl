@@ -3,13 +3,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { Chunks, dirOf, filterRows, getJson, groupsOf, idParts, isOverflow, mapsOf, reachLabel, rulesOf, versionLabel }
-  from "../js/data.js";
+import { Chunks, dirOf, filterRows, getJson, groupsOf, idParts, isOverflow, mapsOf, reachLabel, reachText, rulesOf,
+  versionLabel } from "../js/data.js";
 import { fakeFetch, storedLanguage } from "./fixture.mjs";
 import { EDITOR_SCHEMA, loadIndex, verifyEditorSchema, projectProfiles, verifyProjectIndex } from "../js/data.js";
 import { loadAliases, placeOf, tableKey, tailId } from "../js/data.js";
 import { checkDoc } from "../js/check.js";
-import { glossaryMissing } from "../js/checktext.js";
+import { explanationText, glossaryMissing, setMessages } from "../js/checktext.js";
+import { setCatalog, setUiLanguage } from "../js/ui.js";
 
 test("keyboard routes retain their target kind and decoded identity", () => {
   for (const kind of ["page", "chat"]) {
@@ -122,7 +123,7 @@ test("decoded rows and entries take their defaults from the format", async () =>
 });
 
 test("old indexes, term files and chunks cannot mix with current data", async () => {
-  for (const schema of [undefined, 1, "1.0.0", "2.0.0", "2.1.0", "7.4.0", "8.0.0", "9.1.0", "11.0.0"]) {
+  for (const schema of [undefined, 1, "1.0.0", "2.0.0", "2.1.0", "7.4.0", "9.0.0", "10.1.0", "12.0.0"]) {
     assert.throws(() => verifyProjectIndex({ schema, profile: "fixture", language: "xx" }, "fixture", "xx"), /schema/);
     assert.throws(() => verifyEditorSchema({ schema, terms: [] }), /schema/);
     assert.throws(() => new Chunks("", { schema, chunks: [] }), /schema/);
@@ -138,15 +139,15 @@ test("old indexes, term files and chunks cannot mix with current data", async ()
     await assert.rejects(loadIndex(`${DATA}index.json`, fakeFetch({ ...files, [`${DATA}index.json`]:
       { ...files[`${DATA}index.json`], schema } })), /schema/);
   }
-  assert.equal(EDITOR_SCHEMA, "10.0.0");
+  assert.equal(EDITOR_SCHEMA, "11.0.0");
   // the data of the previous schema still loads
   const previous = storedLanguage(`${DATA}index.json`, { language: "ru", list: [{ id: "s1", status: "approved" }] });
-  for (const doc of Object.values(previous)) if (doc.schema === EDITOR_SCHEMA) doc.schema = "9.0.0";
+  for (const doc of Object.values(previous)) if (doc.schema === EDITOR_SCHEMA) doc.schema = "10.0.0";
   const index = await loadIndex(`${DATA}index.json`, fakeFetch(previous));
-  assert.equal(index.schema, "9.0.0");
+  assert.equal(index.schema, "10.0.0");
   assert.equal((await new Chunks(DATA, index, fakeFetch(previous)).get(0)).byId.get("s1").id, "s1");
-  for (const schema of ["9.0.0", "10.0.0"]) assert.doesNotThrow(() => verifyEditorSchema({ schema, terms: [] }));
-  assert.throws(() => verifyEditorSchema({ schema: "8.0.0", terms: [] }), /Catalog schema does not match 10\.0\.0/);
+  for (const schema of ["10.0.0", "11.0.0"]) assert.doesNotThrow(() => verifyEditorSchema({ schema, terms: [] }));
+  assert.throws(() => verifyEditorSchema({ schema: "9.0.0", terms: [] }), /Catalog schema does not match 11\.0\.0/);
 });
 
 test("JSON and paths", async () => {
@@ -229,6 +230,56 @@ test("reach label: class, source and evidence", () => {
   assert.deepEqual(reachLabel({ class: "reachable", source: "not studied", evidence: "" }),
     { text: "reachable (not studied)", title: "reachable", never: false });
   assert.deepEqual(reachLabel(undefined), reachLabel({ class: "reachable", source: "not studied", evidence: "" }));
+});
+
+// the data's reach templates (gen3tl.check.provenance.MESSAGES)
+const REACH_TEMPLATES = {
+  reach_study: "reach study: {class}", reach_study_root: "reach study: {class} ({root})",
+  reach_unreachable: "reach study: unreachable {group} text",
+  reach_unreachable_listed: "reach study: unreachable {group} text, build/reach.json",
+  reach_review: "review: {text}", reach_reasons: "{reasons}",
+};
+// every entry of the site catalog, its continued lines joined
+const joined = (lines) => lines.trim().split("\n").map((line) => JSON.parse(line)).join("");
+const SITE_RU = Object.fromEntries([...readFileSync(new URL("../i18n/ru.po", import.meta.url), "utf8")
+  .matchAll(/^msgid ((?:".*"\n)+)msgstr ((?:".*"(?:\n|$))+)/gm)].map(([, key, text]) => [joined(key), joined(text)]));
+
+test("reach evidence in the site language: the study's class and root, the reasons a text is never shown", (ctx) => {
+  ctx.after(() => { setMessages(null); setCatalog(null); setUiLanguage("en"); });
+  const study = { code: "reach_unreachable", group: "system" };
+  const review = { code: "reach_review", text: "no caller; the table is 0x10" };
+  const cases = [
+    [{ code: "reach_study", class: "possibly reachable" }, "reach study: possibly reachable",
+      "исследование достижимости: возможно достижимо"],
+    [{ code: "reach_study_root", class: "reachable", root: "pool 0x6cedc" }, "reach study: reachable (pool 0x6cedc)",
+      "исследование достижимости: достижимо (pool 0x6cedc)"],
+    [{ code: "reach_unreachable", group: "script" }, "reach study: unreachable script text",
+      "исследование достижимости: недостижимый текст скрипта"],
+    [study, "reach study: unreachable system text", "исследование достижимости: недостижимый системный текст"],
+    [{ code: "reach_unreachable", group: "battle" }, "reach study: unreachable battle text",
+      "исследование достижимости: недостижимый текст группы battle"],
+    [{ code: "reach_unreachable_listed", group: "battle" }, "reach study: unreachable battle text, build/reach.json",
+      "исследование достижимости: недостижимый текст группы battle, build/reach.json"],
+    [review, "review: no caller; the table is 0x10", "рецензия: no caller; the table is 0x10"],
+    [{ code: "reach_reasons", reasons: [study, review, "no map starts it"] },
+      "reach study: unreachable system text; review: no caller; the table is 0x10; no map starts it",
+      "исследование достижимости: недостижимый системный текст; рецензия: no caller; the table is 0x10; no map starts it"],
+    ["review: by hand", "review: by hand", "review: by hand"],
+    ["", "", ""],
+  ];
+  setMessages(REACH_TEMPLATES);
+  for (const [evidence, english] of cases) {
+    assert.equal(reachText(evidence), english);
+    assert.equal(explanationText(evidence), english);
+  }
+  assert.equal(reachText(undefined), "");
+  setUiLanguage("ru");
+  setCatalog(SITE_RU);
+  for (const [evidence, , russian] of cases) assert.equal(reachText(evidence), russian);
+  assert.deepEqual(reachLabel({ class: "never shown", source: "reach study, review",
+    evidence: { code: "reach_reasons", reasons: [study, review] } }), { text: "не показывается (исследование "
+    + "достижимости, рецензия)", title: "исследование достижимости: недостижимый системный текст; рецензия: no caller; "
+    + "the table is 0x10", never: true });
 });
 
 test("search: English, translation or id, across breaks", () => {

@@ -10,7 +10,7 @@ import { EDITOR_SCHEMA, groupsOf, loadIndex } from "../js/data.js";
 import { joinRows } from "../js/gametext.js";
 import { joinedValue } from "../js/editor-cache.js";
 import { chosenLanguage, onSiteLanguage, setCatalog, setLabelSource, setUiLanguage, SITE_LANG_KEY, startSite, t, useSiteLanguage } from "../js/ui.js";
-import { missingTerms, setPlaces } from "../js/checktext.js";
+import { missingTerms, setMessages, setPlaces } from "../js/checktext.js";
 import { CODEC, domPage, fakeFetch, NEEDS_DOM, noteCollection, observeRemovals, PACK, STYLE, storedLanguage, stubPage } from "./fixture.mjs";
 
 const PAGE = "../editor.html";
@@ -751,6 +751,44 @@ test("never-shown entries keep short reach evidence visible once and preserve ot
   assert.ok($("note").textContent.includes(evidence));
   assert.ok($("rules").textContent.includes(evidence));
   assert.ok($("note").textContent.includes("PO comments (2)"));
+});
+
+test("coded wordings and never-shown evidence show in the site language, the catalog duplicate left out", async (context) => {
+  const { $, state, openRow, entries } = await referenceWorkspace(context);
+  context.after(() => { setMessages(null); setPlaces(null); setCatalog(null); setUiLanguage("en"); });
+  const where = "battle text, name of the opposing trainer";
+  const never = "The game never shows this text: it is not translated, and an approved translation stays.";
+  setMessages({ reach_unreachable: "reach study: unreachable {group} text", reach_review: "review: {text}",
+    reach_reasons: "{reasons}", wording_never_shown: never,
+    wording_code_fill_where: "The code fills {slot} with {fill} ({where}).", fill_width: "text {width} px wide" });
+  const evidence = { code: "reach_reasons", reasons: [{ code: "reach_unreachable", group: "system" },
+    { code: "reach_review", text: "no caller" }] };
+  const english = "reach study: unreachable system text; review: no caller";
+  const entry = { ...entries[0], reach: { class: "never shown", source: "reach study, review", evidence },
+    rules: [{ text: { code: "wording_never_shown" }, source: "reach study, review", evidence },
+      { text: { code: "wording_code_fill_where", slot: "{STR_VAR_1}", fill: { code: "fill_width", width: 30 }, where },
+        source: { code: "rule_code_fill_where", name: "fill-20", where }, evidence: "Measured code fill." }],
+    context: { ...entries[0].context, comments: [`reach: never shown (${english})`] } };
+  state.chunks = { entry: async () => structuredClone(entry) };
+  await openRow(0);
+  assert.equal($("context").textContent.split(english).length, 2);
+  assert.ok(!$("note").textContent.includes("PO comments"));
+  assert.ok(!$("rules").textContent.includes(english));
+  assert.ok($("rules").textContent.includes(never));
+  assert.ok($("rules").textContent.includes(`The code fills {STR_VAR_1} with text 30\u00a0px wide (${where}).`));
+  setPlaces({ [where]: { ru: "боевой текст, имя тренера противника" } });
+  setUiLanguage("ru");
+  setCatalog({ px: "px", "reach study: unreachable system text": "исследование достижимости: недостижимый системный текст",
+    "review: {text}": "рецензия: {text}", "The code fills {slot} with {fill} ({where}).": "Код заполняет {slot}: {fill} ({where}).",
+    "text {width} px wide": "текст шириной {width} px",
+    [never]: "Игра никогда не показывает этот текст: он не переводится, а одобренный перевод сохраняется." });
+  await openRow(0);
+  assert.ok($("context").textContent.includes("исследование достижимости: недостижимый системный текст; рецензия: no caller"));
+  assert.ok(!$("note").textContent.includes("PO comments"));
+  assert.ok($("rules").textContent.includes("Игра никогда не показывает этот текст"));
+  assert.ok(!$("rules").textContent.includes("рецензия: no caller"));
+  assert.ok($("rules").textContent.includes("Код заполняет {STR_VAR_1}: текст шириной 30\u00a0px (боевой текст, имя тренера противника)."));
+  assert.equal($("e-reach").title, "исследование достижимости: недостижимый системный текст; рецензия: no caller");
 });
 
 test("entry note drafts survive navigation without changing translation drafts", async (context) => {

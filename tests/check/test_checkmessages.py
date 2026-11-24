@@ -21,7 +21,7 @@ from gen3tl.build.graphics import (GraphicsConfig, GraphicsError, append_problem
                                    check_report, parse_area, pixel_check)
 from gen3tl.check.entrycheck import entry_problems  # noqa: E402
 from gen3tl.check.layout import Limit, Measure, SpriteMeasure, check, slot_rewraps, wrapped_dash_lines  # noqa: E402
-from gen3tl.check.provenance import MESSAGES as TEMPLATES, NOTES  # noqa: E402
+from gen3tl.check.provenance import MESSAGES as TEMPLATES, NOTES, formatted  # noqa: E402
 from gen3tl.check.render import PngImage, indexed_png  # noqa: E402
 from gen3tl.check.rules import context_rules  # noqa: E402
 from gen3tl.core.charmap import Charmap  # noqa: E402
@@ -41,6 +41,12 @@ KEYS = '''
 import fs from "node:fs";
 import { ENCODING, MESSAGES, NOTES, SLOT_ITEMS } from "%s";
 fs.writeFileSync(process.argv[3], JSON.stringify({ keys: [...MESSAGES, ...ENCODING, ...SLOT_ITEMS], notes: NOTES }));
+'''
+
+WORDINGS = '''
+import fs from "node:fs";
+import { WORDINGS } from "%s";
+fs.writeFileSync(process.argv[3], JSON.stringify(WORDINGS));
 '''
 
 PARSE_FINDINGS = '''
@@ -260,6 +266,25 @@ class CheckMessagesTest(unittest.TestCase):
         self.assertEqual(sorted(sources), ["catalog context", "reach study", "reach study, review", "review"])
         ru = sitecatalog.strings(sitecatalog.load(sitecatalog.CATALOGS / "ru.po"))
         self.assertEqual([s for s in sorted(sources) if s not in ru], [])
+
+    def test_every_rule_wording_and_reach_evidence_has_a_key_and_a_russian_entry(self):
+        ctx = {"hosts": [{"slot": "{STR_VAR_1}", "id": f"s000{n}000"} for n in range(1, 7)],
+               "words": [{"slot": "{STR_VAR_2}", "id": "s0000200"}]}
+        never = reach_data("s0000300", ["reach: never shown (reach study: unreachable script text; review: dead)"], None)
+        first, last = context_rules(ctx, never)
+        written = [r["text"]["code"] for r in first + last]
+        self.assertEqual(written, ["wording_never_shown", "wording_hosts_more", "wording_words_one"])
+        # the page shows a wording by its template, a fill too
+        wordings = {code: key for code, key in TEMPLATES.items() if code.startswith(("wording_", "fill_"))}
+        self.assertLessEqual(set(written), set(wordings))
+        keys = node_parse(WORDINGS, [])
+        self.assertEqual(sorted(keys), sorted(wordings.values()))
+        # reach evidence by its template, the study's own groups by their texts
+        self.assertEqual([part["code"] for part in never["evidence"]["reasons"]], ["reach_unreachable", "reach_review"])
+        reach = [key for code, key in TEMPLATES.items() if code.startswith("reach_") and code != "reach_reasons"]
+        groups = [formatted({"code": "reach_unreachable", "group": group}) for group in ("script", "system")]
+        ru = sitecatalog.strings(sitecatalog.load(sitecatalog.CATALOGS / "ru.po"))
+        self.assertEqual([k for k in [*keys, *reach, *groups] if k not in ru], [])
 
     def test_every_graphics_finding_has_a_key_and_a_russian_entry(self):
         found = findings()

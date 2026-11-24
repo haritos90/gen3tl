@@ -1,8 +1,8 @@
 import { el, renderChildren, setText } from "../dom.js";
 import { t, errorText, formatNumber, N_, showText, plainText } from "../ui.js";
-import { tableKey, statusLabel, shortFile, getJson, dirOf, idParts, reachLabel, rulesOf, isOverflow, loadTerms } from "../data.js";
+import { tableKey, statusLabel, shortFile, getJson, dirOf, idParts, reachLabel, reachText, rulesOf, isOverflow, loadTerms } from "../data.js";
 import { gameHash } from "../registry.js";
-import { explanationText, keepUnits, limitText, limitReferences, slotSource, checkFailed, wordingText } from "../checktext.js";
+import { keepUnits, limitText, limitReferences, sameExplanation, slotSource, checkFailed, wordingText } from "../checktext.js";
 import { renderNotes } from "../guidance.js";
 import { consumerSource, sourceOf, pairLabel } from "../limits.js";
 import { translationState, isDraft, draftCheck, sourceTokens } from "../draft.js";
@@ -327,7 +327,7 @@ export function renderRules(entry) {
     for (const r of rules) {
       const text = idParts(keepUnits(wordingText(r.text)), (id) => state.byId.has(id)).map((p) => (p.id ? idLink(p.id) : p.text));
       const references = limitReferences(r.source);
-      const evidence = r.evidence && r.evidence !== explanationText(entry.reach?.evidence) ? r.evidence : "";
+      const evidence = r.evidence && !sameExplanation(r.evidence, entry.reach?.evidence) ? reachText(r.evidence) : "";
       ul.append(el("li", {}, el("div", {}, ...text), el("div", { class: "source", textContent: limitText(r.source) }),
         references.length || evidence ? contextDisclosure(t("evidence"), el("div", {},
           ...references.map((reference) => el("div", { textContent: reference })),
