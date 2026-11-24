@@ -8,6 +8,7 @@ import struct
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+from ..core.rom import ROM_BASE
 from .batch import approved_by_english, prefill
 from .catalog import load_catalog
 
@@ -32,7 +33,7 @@ def trainer_levels(rom: bytes, table: dict) -> dict[int, float]:
         rec = table["base"] + tid * table["stride"]
         flags = rom[rec + table.get("party_flags_offset", 0)]
         n = rom[rec + table.get("party_count_offset", 32)]
-        ptr = struct.unpack_from("<I", rom, rec + table.get("party_pointer_offset", 36))[0] - 0x08000000
+        ptr = struct.unpack_from("<I", rom, rec + table.get("party_pointer_offset", 36))[0] - ROM_BASE
         if not 0 < n <= 6 or not 0 <= ptr < len(rom) - 16 * n:
             continue
         stride = 16 if flags & 1 else 8      # custom moves make a party record 16 bytes

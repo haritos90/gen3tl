@@ -6,6 +6,7 @@ import re
 
 from ..core.notes import has_prose
 from ..core.rom import ROM_BASE, pointer_at, value_at
+from ..discover.maps import map_headers, runtime_banks, runtime_headers
 
 VARIANTS = ("day", "morning", "evening", "night")
 
@@ -204,73 +205,26 @@ def _legacy_headers(data: bytes, context: dict) -> dict[int, str]:
     return headers
 
 
-def _runtime_banks(data: bytes, context: dict) -> tuple[list[int], list[int]]:
-    table = int(context["engine_groups"])
-    banks = []
-    for group in range(int(context["engine_count"])):
-        encoded = value_at(data, table + group * 4)
-        if encoded is None:
-            raise ValueError("runtime map table exceeds ROM")
-        bank = (encoded ^ int(context.get("bank_xor", 0))) - ROM_BASE
-        if not 0 <= bank <= len(data) - 4 or bank % 4:
-            raise ValueError(f"invalid runtime map bank {group}")
-        banks.append(bank)
-    return banks, sorted(set(banks) | {table, int(context["groups"]), len(data)})
+def _runtime_banks(data: bytes, context: dict) -> list[tuple[int, int]]:
+    return runtime_banks(data, int(context["engine_groups"]), int(context["engine_count"]),
+                         int(context.get("bank_xor", 0)), int(context["groups"]))
 
 
 def _runtime_word(data: bytes, context: dict, runtime: str) -> int | None:
     group, number = (int(part) for part in runtime.split("."))
-    banks, ends = _runtime_banks(data, context)
-    if not 0 <= group < len(banks) or number < 0:
+    banks = _runtime_banks(data, context)
+    if not 0 <= group < len(banks) or not 0 <= number < banks[group][1]:
         return None
-    bank = banks[group]
-    end = next(end for end in ends if end > bank)
-    if number >= min(256, (end - bank) // 4):
-        return None
-    return value_at(data, bank + number * 4)
+    return value_at(data, banks[group][0] + number * 4)
 
 
 def _runtime_headers(data: bytes, context: dict) -> dict[str, int]:
-    banks, ends = _runtime_banks(data, context)
-    headers = {}
-    for group, bank in enumerate(banks):
-        end = next(end for end in ends if end > bank)
-        for number in range(min(256, (end - bank) // 4)):
-            header = pointer_at(data, bank + number * 4)
-            if header is None:
-                continue
-            headers[f"{group}.{number}"] = header
-    return headers
+    return runtime_headers(data, _runtime_banks(data, context))
 
 
 def _structural_headers(data: bytes, known: set[int]) -> dict[int, str]:
     """Context ids for headers no bank table names."""
-    def layout_ok(at):
-        if at is None or at % 4:
-            return False
-        width = value_at(data, at)
-        height = value_at(data, at + 4)
-        return (width is not None and height is not None and 1 <= width <= 512 and 1 <= height <= 512
-                and all(pointer_at(data, at + 8 + 4 * i) is not None for i in range(4)))
-
-    def events_ok(at):
-        if at is None or at % 4:
-            return False
-        for i in range(4):
-            count = value_at(data, at + i, 1)
-            pointer = value_at(data, at + 4 + i * 4)
-            if (count or pointer) and pointer_at(data, at + 4 + i * 4) is None:
-                return False
-        return True
-
-    headers = {}
-    for match in re.finditer(rb"[\x08\x09]", data):
-        at = match.start() - 3
-        if (at >= 0 and at % 4 == 0 and at not in known and layout_ok(pointer_at(data, at))
-                and events_ok(pointer_at(data, at + 4))
-                and (pointer_at(data, at + 8) is not None or data[at + 8:at + 12] == b"\0\0\0\0")):
-            headers[at] = f"h{at:07X}"
-    return headers
+    return {at: f"h{at:07X}" for at in map_headers(data) if at not in known}
 
 
 def _context_maps(data: bytes, context: dict) -> dict[str, dict]:

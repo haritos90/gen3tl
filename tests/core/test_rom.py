@@ -54,6 +54,15 @@ class RomTest(unittest.TestCase):
         with self.assertRaises(IndexError):
             rom.read(4, -2)   # a negative size reads from the end too
 
+    def test_word_writes_stay_inside_the_image(self):
+        rom = Rom(bytes(8))
+        rom.put_u32(4, 0x04030201)
+        self.assertEqual(bytes(rom.data), b"\0\0\0\0\x01\x02\x03\x04")
+        for off in (-1, -4, 5, 8):   # from the end, cut off, past the image
+            with self.subTest(off=off), self.assertRaisesRegex(IndexError, "leaves the ROM"):
+                rom.put_u32(off, 0xFFFFFFFF)
+        self.assertEqual(bytes(rom.data), b"\0\0\0\0\x01\x02\x03\x04")
+
     def test_bounded_values_and_pointers(self):
         data = b"\xfe\xff" + ptr_bytes(8) + (0x08000000 + 64).to_bytes(4, "little") + b"\x00" * 6
         self.assertEqual((value_at(data, 0, 2), value_at(data, 0, 2, signed=True)), (0xFFFE, -2))

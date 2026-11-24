@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 
 from ..core.notes import BoundProse, has_prose
-from ..core.rom import RomEvidence
+from ..core.rom import ROM_BASE, RomEvidence
 
 
 def original_limits(profile):
@@ -79,7 +79,7 @@ def apply(base, rom, plans: list[dict], occupied: set[int]) -> list[tuple[int, i
             raise ValueError("text prefix: pointer or source outside ROM")
         if span & (occupied | claimed):
             raise ValueError("text prefix: overlapping pointer mutation")
-        if base.u32(pointer) != 0x08000000 + source.offset or rom.u32(pointer) != base.u32(pointer):
+        if base.u32(pointer) != ROM_BASE + source.offset or rom.u32(pointer) != base.u32(pointer):
             raise ValueError("text prefix: source pointer changed")
         if not source.matches(base.data) or not source.matches(rom.data):
             raise ValueError("text prefix: original bytes changed")
@@ -89,5 +89,5 @@ def apply(base, rom, plans: list[dict], occupied: set[int]) -> list[tuple[int, i
         changes.append((pointer, source.offset + source.size - 1))
         claimed.update(span)
     for pointer, target in changes:
-        rom.write(pointer, (0x08000000 + target).to_bytes(4, "little"))
+        rom.write(pointer, (ROM_BASE + target).to_bytes(4, "little"))
     return changes

@@ -7,6 +7,7 @@ import struct
 from pathlib import Path
 
 from ..check.render import write_png
+from ..core.rom import ROM_BASE
 
 # machine-local, under the project the command runs in
 TOOLS = Path("build") / "tools"
@@ -353,7 +354,7 @@ def run_scenario(rom: Path, script: str, outdir: Path, prefix: str, states: dict
         elif op == "special":
             g.run_script(b"\x25" + struct.pack("<H", int(args[0], 0)) + b"\x02")
         elif op == "goto":
-            g.run_script(b"\x05" + struct.pack("<I", int(args[0], 0) | 0x08000000))
+            g.run_script(b"\x05" + struct.pack("<I", int(args[0], 0) | ROM_BASE))
         elif op == "wallegg":
             hatch = (layout or {}).get("egg_hatch")
             if not hatch or "eggs_waiting" not in hatch:

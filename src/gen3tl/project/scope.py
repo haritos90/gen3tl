@@ -5,8 +5,12 @@ from __future__ import annotations
 from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .manifest import MANIFEST, Manifest, REGISTRY
+
+if TYPE_CHECKING:   # the registry imports this module
+    from .registry import Project
 
 ACTIVE_PROJECT = ContextVar("active_project", default=None)
 REGISTRY_ROOT = ContextVar("registry_root", default=None)   # the running command's registry

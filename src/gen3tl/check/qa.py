@@ -23,7 +23,7 @@ from .entrycheck import (BRACE, SPACING, Source, addable_tokens, droppable_token
 from .layout import (Limit, Measure, arrow_overflows, check, dropped_breaks, entry_measure, fits, layout, line_width,
                      lines_of, paragraphs, short_line_ends, slot_items, slot_rewraps, split_names, wrapped_dash_lines)
 from ..build.release import expand
-from ..core.rom import Rom
+from ..core.rom import ROM_BASE, Rom
 from ..discover.scan import INPLACE_ONLY_KINDS, table_base_lengths
 from .provenance import code as coded, formatted
 
@@ -768,7 +768,7 @@ def interior_heads(prof, inv: dict, cm: Charmap, rom: Rom | None = None) -> dict
         e = by_id.get(d["id"])
         if e is None:
             continue
-        if rom is not None and rom.u32(d["pointer"]) != 0x08000000 + e["offset"] + d["offset"]:
+        if rom is not None and rom.u32(d["pointer"]) != ROM_BASE + e["offset"] + d["offset"]:
             raise ValueError(f"[[strings.interior]] {d['id']}: the word at {d['pointer']:#x} does not point "
                              f"{d['offset']} bytes into it")
         head = cm.encode(e["text"], terminate=False)[:d["offset"]]

@@ -264,7 +264,7 @@ class Result:
     failures: list[str] = field(default_factory=list)
     written: bool = False
 
-    def register(self, guard: "DiffRegistry") -> None:
+    def register(self, guard) -> None:
         """Add this class to the diff-guard registry."""
         guard.add("easy-chat alphabet", self.allowed, "exclusive")
 

@@ -403,7 +403,7 @@ def register(sub):
     obs.add_argument("--out", required=True, help="new observation JSON file")
     regen = add(sub, "regenerate", regenerate)
     regen.add_argument("--work-dir", help="scratch parent for temporary regenerated studies and profiles")
-    iv = add(sub, "inventory", inventory)
+    add(sub, "inventory", inventory)
     gx = add(sub, "graphics", graphics)
     gx.add_argument("--out", help="output directory (default: build/discovery/<profile>/graphics)")
     gx.add_argument("--catalog-graphics", help="graphics document for comparison and recall")

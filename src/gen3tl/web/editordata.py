@@ -5,6 +5,7 @@ from __future__ import annotations
 from ..lang import language
 
 import re
+from typing import TYPE_CHECKING
 
 from ..catalog import keys
 from ..catalog.batch import approved_by_english
@@ -21,6 +22,9 @@ from .editorkeyboard import keyboard_data
 from .editorrules import SOURCE_TEXT_FIELDS, rules_data
 from ..check.layout import Limit, entry_measure
 from ..check.provenance import code as coded
+
+if TYPE_CHECKING:   # functions import it when they run
+    from pathlib import Path
 
 SCHEMA = "11.0.0"
 NEVER = "never shown"   # the reach class progress leaves out

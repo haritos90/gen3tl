@@ -4,8 +4,12 @@ from __future__ import annotations
 
 import struct
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from .savefile import EOS, NAME_LEN, Layout
+
+if TYPE_CHECKING:   # functions import it when they run
+    from pathlib import Path
 
 STATE_EWRAM = 0x21000
 EWRAM = 0x02000000

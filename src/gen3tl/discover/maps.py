@@ -8,7 +8,7 @@ import re
 
 from ..core.notes import has_prose
 from ..core.charmap import Charmap, CharmapError
-from ..core.rom import ROM_BASE, Rom, pointer_at
+from ..core.rom import ROM_BASE, Rom, pointer_at, value_at
 from ..families.knowledge import load_script
 
 # total command length (opcode included) for fixed-size FRLG commands
@@ -110,6 +110,64 @@ def native_fill_sources(rule, inv) -> list[tuple[str, ...]]:
     if any(sid not in ids for row in variants for sid in row):
         raise ValueError(f"{rule['name']}: missing native-fill source")
     return list(dict.fromkeys(variants))
+
+
+def runtime_bank(data, at: int, xor: int = 0) -> int | None:
+    """The aligned ROM offset that the XOR-encoded runtime bank word at `at` names, or None."""
+    word = value_at(data, at)
+    bank = None if word is None else (word ^ xor) - ROM_BASE
+    return bank if bank is not None and 0 <= bank <= len(data) - 4 and bank % 4 == 0 else None
+
+
+def runtime_banks(data, table: int, count: int, xor: int, groups: int) -> list[tuple[int, int]]:
+    """(offset, entries) of the `count` runtime map banks of the table at `table`.
+
+    A bank ends at the next bank, at either bank table or at the image end, after at most 256 entries."""
+    banks = []
+    for group in range(count):
+        at = table + 4 * group
+        if value_at(data, at) is None:
+            raise ValueError("runtime map table exceeds ROM")
+        bank = runtime_bank(data, at, xor)
+        if bank is None:
+            raise ValueError(f"invalid runtime map bank {group}")
+        banks.append(bank)
+    ends = sorted(set(banks) | {table, groups, len(data)})
+    return [(bank, min(256, (next(end for end in ends if end > bank) - bank) // 4)) for bank in banks]
+
+
+def runtime_headers(data, banks: list[tuple[int, int]]) -> dict[str, int]:
+    """Runtime map id -> map header of every runtime bank entry that holds a pointer."""
+    return {f"{group}.{number}": header for group, (bank, entries) in enumerate(banks)
+            for number in range(entries) if (header := pointer_at(data, bank + 4 * number)) is not None}
+
+
+def map_headers(data) -> list[int]:
+    """Map headers found by structure: layout, events block and map script list pointer."""
+    def layout_ok(at):
+        if at is None or at % 4:
+            return False
+        width, height = value_at(data, at), value_at(data, at + 4)
+        return (width is not None and height is not None and 1 <= width <= 512 and 1 <= height <= 512
+                and all(pointer_at(data, at + 8 + 4 * k) is not None for k in range(4)))
+
+    def events_ok(at):
+        if at is None or at % 4:
+            return False
+        for k in range(4):
+            count, pointer = value_at(data, at + k, 1), value_at(data, at + 4 + 4 * k)
+            if (count or pointer) and pointer_at(data, at + 4 + 4 * k) is None:
+                return False
+        return True
+
+    heads = []
+    for m in re.finditer(rb"[\x08\x09]", data):
+        q = m.start() - 3
+        # a header may have no map script list
+        if q % 4 == 0 and layout_ok(pointer_at(data, q)) and events_ok(pointer_at(data, q + 4)) and (
+                pointer_at(data, q + 8) is not None or data[q + 8:q + 12] == b"\0\0\0\0"):
+            heads.append(q)
+    return heads
 
 
 @dataclass
@@ -266,25 +324,10 @@ class Walker:
         cfg = self.prof["maps"].get("engine")
         if cfg is None:
             return None
-        table = cfg["groups"]
-        banks = []
-        for g in range(cfg["count"]):
-            at = table + 4 * g
-            if not 0 <= at <= len(self.d) - 4:
-                raise ValueError("runtime map table exceeds ROM")
-            bank = (int.from_bytes(self.d[at:at + 4], "little") ^ cfg.get("bank_xor", 0)) - ROM_BASE
-            if not 0 <= bank <= len(self.d) - 4 or bank % 4:
-                raise ValueError(f"invalid runtime map bank {g}")
-            banks.append(bank)
-        ends = sorted(set(banks) | {table, self.prof["maps"]["groups"], len(self.d)})
+        banks = runtime_banks(self.d, cfg["groups"], cfg["count"], cfg.get("bank_xor", 0), self.prof["maps"]["groups"])
         out: dict[int, list[str]] = defaultdict(list)
-        for g, bank in enumerate(banks):
-            end = next(e for e in ends if e > bank)
-            for n in range(min(256, (end - bank) // 4)):
-                header = self.ptr(bank + 4 * n)
-                if header is None:
-                    continue
-                out[header].append(f"{g}.{n}")
+        for runtime, header in runtime_headers(self.d, banks).items():
+            out[header].append(runtime)
         return dict(out)
 
     def walk_all(self) -> MapContext:
@@ -321,31 +364,8 @@ class Walker:
         return self.ctx
 
     def find_headers(self) -> list[int]:
-        """Map headers found by structure: layout, events block and map script list pointer."""
-        import re
-        d = self.d
-        def layout_ok(L):
-            if L is None or L % 4:
-                return False
-            w = int.from_bytes(d[L:L + 4], "little"); h = int.from_bytes(d[L + 4:L + 8], "little")
-            return 1 <= w <= 512 and 1 <= h <= 512 and all(self.ptr(L + 8 + 4 * k) is not None for k in range(4))
-        def events_ok(E):
-            if E is None or E % 4:
-                return False
-            c = d[E:E + 4]
-            for k in range(4):
-                v = int.from_bytes(d[E + 4 + 4 * k:E + 8 + 4 * k], "little")
-                if (c[k] or v) and self.ptr(E + 4 + 4 * k) is None:
-                    return False
-            return True
-        heads = []
-        for m in re.finditer(rb"[\x08\x09]", d):
-            q = m.start() - 3
-            # a header may have no map script list
-            if q % 4 == 0 and layout_ok(self.ptr(q)) and events_ok(self.ptr(q + 4)) and (
-                    self.ptr(q + 8) is not None or d[q + 8:q + 12] == b"\0\0\0\0"):
-                heads.append(q)
-        return heads
+        """Map headers found by structure."""
+        return map_headers(self.d)
 
     def walk_structural(self) -> MapContext:
         """Walk every map header found by structure that the bank walk did not reach."""
@@ -370,7 +390,7 @@ class Walker:
         d = self.d
         out = []
         ev = self.ptr(h + 4)
-        n_obj, n_warp, n_coord, n_bg = d[ev], d[ev + 1], d[ev + 2], d[ev + 3]
+        n_obj, n_coord, n_bg = d[ev], d[ev + 2], d[ev + 3]
         objs, coords, bgs = self.ptr(ev + 4), self.ptr(ev + 12), self.ptr(ev + 16)
         if objs is not None:
             for i in range(n_obj):

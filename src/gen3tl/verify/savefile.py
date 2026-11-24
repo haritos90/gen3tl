@@ -11,6 +11,8 @@ import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from ..core.rom import ROM_BASE
+
 EOS = 0xFF
 DIGIT_ZERO = 0xA1   # the game's '0'
 NAME_LEN = 10
@@ -652,7 +654,7 @@ class Change:
 
 def pointed_name(rom: bytes, pointer: int) -> bytes:
     """The name a ROM word at `pointer` points to."""
-    at = struct.unpack_from("<I", rom, pointer)[0] - 0x08000000
+    at = struct.unpack_from("<I", rom, pointer)[0] - ROM_BASE
     return name_of(rom[at:at + NAME_LEN + 1])
 
 
@@ -676,7 +678,7 @@ def rom_names(rom: bytes, L: Layout) -> tuple[list[bytes], bytes]:
     for i in range(n["species_count"]):
         o = n["species_table"] + i * n["species_stride"]
         names.append(name_of(rom[o:o + n["species_stride"]]))
-    egg_ptr = struct.unpack_from("<I", rom, n["egg_pointer"])[0] - 0x08000000
+    egg_ptr = struct.unpack_from("<I", rom, n["egg_pointer"])[0] - ROM_BASE
     egg = name_of(rom[egg_ptr:egg_ptr + NAME_LEN + 1])
     return names, egg
 
@@ -1366,6 +1368,7 @@ def standalone_source(layout: dict, charmap: dict[int, str], charmap_target: dic
     src = Path(__file__).read_text(encoding="utf-8")
     src = src.replace("    from ..core.terminal import StatusParser, line\n", "")
     src = src.replace("    from ..core.terminal import line\n", "")
+    src = src.replace("from ..core.rom import ROM_BASE\n", f"ROM_BASE = {ROM_BASE:#010x}\n", 1)
     # the whole module: line() reaches its error helpers
     definitions = inspect.getsource(terminal).replace("from __future__ import annotations\n", "", 1)
     src = src.replace("EOS = 0xFF", definitions + "\nEOS = 0xFF", 1)

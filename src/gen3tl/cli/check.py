@@ -227,7 +227,6 @@ def unmeasured(args):
 def batch_check(args):
     """Check <batches>/<name>/translation.json with the QA rules."""
     import json
-    import re as _re
     from collections import Counter
     from pathlib import Path
     from ..check.entrycheck import entry_problems
@@ -263,7 +262,6 @@ def batch_check(args):
                              _window_measures(prof, rom, args.lang))
     from ..build.release import expand, load as load_version
     version = load_version()   # checks see the version the game shows
-    brace = _re.compile(r"\{[^}]*\}")
     droppable = qa_mod.droppable_tokens(prof.get("qa", {}))   # per entry
     addable = qa_mod.addable_tokens(prof.get("qa", {}))   # per entry
     # the catalog's never-shown tags

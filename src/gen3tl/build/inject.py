@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from ..core.rom import Rom, ptr_bytes
+from ..core.rom import ROM_BASE, Rom, ptr_bytes
 from ..core.fields import long_name_fields
 from ..discover.scan import INPLACE_ONLY_KINDS, VERIFIED_KINDS, table_base_lengths, table_base_members, table_base_problems
 
@@ -141,7 +141,7 @@ def _computed_groups(base: Rom, by_id: dict, texts: dict[str, bytes], groups: li
         if not set(ids) & set(texts):
             continue   # nothing translated, nothing moves
         members = [by_id.get(sid) for sid in ids]
-        anchor = base.u32(at) - 0x08000000
+        anchor = base.u32(at) - ROM_BASE
         if (None in members or any(e["kind"] != "pointer" for e in members)
                 or anchor not in {e["offset"] for e in members} or seen & set(ids)):
             res.failures.append(f"computed group at {at:#x}: {', '.join(ids)} must be pointer strings "
@@ -282,7 +282,7 @@ def inject(rom: Rom, base: Rom, inv: dict, texts: dict[str, bytes], tables: dict
                 if e["id"] in texts:
                     _hold(res, e["id"], unknown)
             continue
-        lo, anchor = members[0]["offset"], base.u32(at) - 0x08000000
+        lo, anchor = members[0]["offset"], base.u32(at) - ROM_BASE
         body, translated = {}, set()
         for e, nxt in zip(members, members[1:] + [None]):
             sid = e["id"]
@@ -318,8 +318,8 @@ def inject(rom: Rom, base: Rom, inv: dict, texts: dict[str, bytes], tables: dict
             others = [pos for pos in others if pos != at]
             ptrs = []
             for q in vpos:
-                if base.u32(q) != 0x08000000 + old:
-                    res.failures.append(f"{sid}: reference at {q:#x} does not hold {0x08000000 + old:#x}")
+                if base.u32(q) != ROM_BASE + old:
+                    res.failures.append(f"{sid}: reference at {q:#x} does not hold {ROM_BASE + old:#x}")
                     continue
                 rom.write(q, ptr_bytes(pos))
                 res.allowed.update(range(q, q + 4))
@@ -355,8 +355,8 @@ def inject(rom: Rom, base: Rom, inv: dict, texts: dict[str, bytes], tables: dict
             mode = "relocated"
         ptrs = []
         for at in vpos:
-            if base.u32(at) != 0x08000000 + old:
-                res.failures.append(f"{sid}: reference at {at:#x} does not hold {0x08000000 + old:#x}")
+            if base.u32(at) != ROM_BASE + old:
+                res.failures.append(f"{sid}: reference at {at:#x} does not hold {ROM_BASE + old:#x}")
                 continue
             rom.write(at, ptr_bytes(new))
             res.allowed.update(range(at, at + 4))
@@ -419,19 +419,19 @@ def verify(rom: Rom, base: Rom, res: BuildResult, texts: dict[str, bytes], extra
         if bytes(rom.data[p.new:p.new + len(blob)]) != blob:
             fails.append(f"{p.id}: bytes at {p.new:#x} do not match the encoded translation")
         for at in p.pointers:
-            if rom.u32(at) != 0x08000000 + p.new:
+            if rom.u32(at) != ROM_BASE + p.new:
                 fails.append(f"{p.id}: pointer at {at:#x} does not point to {p.new:#x}")
         for at in p.kept_refs:
-            if rom.u32(at) != 0x08000000 + p.old:
+            if rom.u32(at) != ROM_BASE + p.old:
                 fails.append(f"{p.id}: retained word at {at:#x} was changed")
     for at, target in res.computed:
-        if rom.u32(at) != 0x08000000 + target:
+        if rom.u32(at) != ROM_BASE + target:
             fails.append(f"computed group: pointer at {at:#x} does not point to {target:#x}")
     for at, word in res.table_bases:
         if rom.u32(at) != word:
             fails.append(f"table base: pool word at {at:#x} no longer holds {word:#x}")
     for at, target in res.text_prefixes:
-        if rom.u32(at) != 0x08000000 + target or rom.u8(target) != 255:
+        if rom.u32(at) != ROM_BASE + target or rom.u8(target) != 255:
             fails.append(f"text prefix: pointer at {at:#x} does not select its terminator")
     allowed = res.allowed | extra_allowed
     prior: list[tuple[str, set[int]]] = [("text", res.allowed), ("font", extra_allowed)]

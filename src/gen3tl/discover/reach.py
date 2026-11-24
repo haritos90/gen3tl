@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from ..core.notes import has_prose
 from ..catalog.catalog import observed_entries, pointer_runs
-from .maps import CMD_LEN, END_OPS, TEXT_PTR_AT, Walker
+from .maps import CMD_LEN, END_OPS, TEXT_PTR_AT, Walker, map_headers
 from ..core.rom import ROM_BASE, Rom, pointer_at
 from .scan import TRAINERBATTLE_TEXT_OFFSETS, pointer_index, table_base_members
 
@@ -459,29 +459,7 @@ def ref_command(data, ref: dict, tb: dict[int, tuple[int, ...]]) -> int | None:
 def map_event_fields(walker: Walker) -> dict[int, tuple[int, str]]:
     """Pointer position -> (map header, event kind) for the event and script fields of every map header found by structure."""
     d, ptr = walker.d, walker.ptr
-
-    def layout_ok(lay):
-        if lay is None or lay % 4:
-            return False
-        w = int.from_bytes(d[lay:lay + 4], "little")
-        h = int.from_bytes(d[lay + 4:lay + 8], "little")
-        return 1 <= w <= 512 and 1 <= h <= 512 and all(ptr(lay + 8 + 4 * k) is not None for k in range(4))
-
-    def events_ok(ev):
-        if ev is None or ev % 4:
-            return False
-        for k in range(4):
-            v = int.from_bytes(d[ev + 4 + 4 * k:ev + 8 + 4 * k], "little")
-            if (d[ev + k] or v) and ptr(ev + 4 + 4 * k) is None:
-                return False
-        return True
-
-    heads = set(walker.walked)
-    for m in re.finditer(rb"[\x08\x09]", d):
-        q = m.start() - 3
-        if q % 4 == 0 and layout_ok(ptr(q)) and events_ok(ptr(q + 4)) and (
-                ptr(q + 8) is not None or d[q + 8:q + 12] == b"\0\0\0\0"):
-            heads.add(q)
+    heads = set(walker.walked) | set(map_headers(d))
     out: dict[int, tuple[int, str]] = {}
     data: set[tuple[int, int]] = set()
     for h in sorted(heads):

@@ -229,7 +229,6 @@ def _analyze_context(rom: Rom, prof, inv: dict, window: int = 0x4000) -> dict:
 
     for walk, items in events.items():
         items.sort(key=lambda x: x[0])
-        keys = [k for k, _, _ in items]
         values: dict[int, list] = {}   # slot -> fills the path may hold
         stack: list[dict] = []
         left: dict[tuple, dict] = {}   # called script (its first event) -> slot values it returned with

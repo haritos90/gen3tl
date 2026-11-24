@@ -28,6 +28,21 @@ def _table(block: dict, name: str) -> dict[int, str]:
             if number != "evidence"}
 
 
+def _check_fields(table: dict, keys, widths: tuple[int, ...], bad_stride: bool) -> list[str]:
+    """The fields of `keys` that are no unsigned value of `widths` bytes inside one record."""
+    fields = table.get("fields")
+    problems = []
+    for key in keys:
+        spec = fields.get(key) if isinstance(fields, dict) else None
+        offset = spec.get("offset") if isinstance(spec, dict) else spec
+        width = spec.get("width", 1) if isinstance(spec, dict) else 1
+        if (type(offset) is not int or offset < 0 or type(width) is not int or width not in widths
+                or bad_stride or offset + width > table["stride"]
+                or isinstance(spec, dict) and spec.get("signed", False)):
+            problems.append(f"fields {key}")
+    return problems
+
+
 def _check_item_tiers(table: dict) -> list[str]:
     if not isinstance(table, dict):
         return ["table"]
@@ -35,15 +50,7 @@ def _check_item_tiers(table: dict) -> list[str]:
                 if type(table.get(key)) is not int or table[key] < (1 if key in ("count", "stride") else 0)]
     if not re.fullmatch(r"[0-9a-f]{64}", str(table.get("sha256", ""))):
         problems.append("sha256")
-    fields = table.get("fields")
-    for key in ("item", "type", "power"):
-        spec = fields.get(key) if isinstance(fields, dict) else None
-        offset = spec.get("offset") if isinstance(spec, dict) else spec
-        width = spec.get("width", 1) if isinstance(spec, dict) else 1
-        if (type(offset) is not int or offset < 0 or type(width) is not int or width not in (1, 2, 4)
-                or "stride" in problems or offset + width > table["stride"]
-                or isinstance(spec, dict) and spec.get("signed", False)):
-            problems.append(f"fields {key}")
+    problems += _check_fields(table, ("item", "type", "power"), (1, 2, 4), "stride" in problems)
     excluded = table.get("exclude", [])
     if (not isinstance(excluded, list) or any(type(value) is not int or value < 0 for value in excluded)
             or len(set(excluded)) != len(excluded)):
@@ -138,10 +145,6 @@ def flinch_fields(rule: dict, record: dict) -> dict:
     return {"flinch_chance": chance, "flinch_conditions": conditions}
 
 
-def check(block: dict) -> list[str]:
-    """Problems in a move block; an empty list means it can be extracted."""
-
-
 def _valid_proofs(proofs) -> bool:
     if not isinstance(proofs, list) or not proofs:
         return False
@@ -155,15 +158,7 @@ def _check_environments(table) -> list[str]:
                 if type(table.get(key)) is not int or table[key] < (1 if key in ("count", "stride") else 0)]
     if not re.fullmatch(r"[0-9a-f]{64}", str(table.get("sha256", ""))):
         problems.append("sha256")
-    fields = table.get("fields")
-    for key in ENVIRONMENT_COLUMNS:
-        spec = fields.get(key) if isinstance(fields, dict) else None
-        offset = spec.get("offset") if isinstance(spec, dict) else spec
-        width = spec.get("width", 1) if isinstance(spec, dict) else 1
-        if (type(offset) is not int or offset < 0 or type(width) is not int or width not in (1, 2)
-                or "stride" in problems or offset + width > table["stride"]
-                or isinstance(spec, dict) and spec.get("signed", False)):
-            problems.append(f"fields {key}")
+    problems += _check_fields(table, ENVIRONMENT_COLUMNS, (1, 2), "stride" in problems)
     effects = table.get("effects")
     if (not isinstance(effects, dict) or not effects
             or any(not re.fullmatch(r"0|[1-9][0-9]*", str(value)) or not isinstance(key, str)

@@ -277,7 +277,7 @@ class Result:
     allowed: set[int] = field(default_factory=set)
     failures: list[str] = field(default_factory=list)
 
-    def register(self, guard: "DiffRegistry") -> None:
+    def register(self, guard) -> None:
         """Add this class to the diff-guard registry."""
         guard.add("code replacement", self.allowed, "exclusive")
 

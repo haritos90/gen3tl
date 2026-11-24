@@ -868,7 +868,7 @@ def register(sub):
     bh.add_argument("--status", choices=["launched", "issues-reported", "checked"],
                     help="gameplay observation status for --mark")
     bh.add_argument("--note", help="what was launched, checked or found")
-    fb = add(sub, "font", font_build)
+    add(sub, "font", font_build)
     add(sub, "font-check", font_check)
     fp = add(sub, "font-preview", font_preview)
     fp.add_argument("--scale", type=int, default=4, help="pixels per rendered pixel")

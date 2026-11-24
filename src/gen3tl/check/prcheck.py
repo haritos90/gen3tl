@@ -455,7 +455,6 @@ def render_box(path: Path, text: str, result: dict, lim, glyphs: StandInGlyphs, 
     draw_text(canvas, glyphs, 4, 18, cm.encode(WARNING))
     y = 36
     for par, height in zip(paragraphs, heights):
-        lines = re.split(r"\\[nl]", par)
         canvas.rect(4, y, box_w + 4, y + height - 3, PALETTE["frame"])
         try:
             data = cm.encode(par.replace("\\l", "\\n"))

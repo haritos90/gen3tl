@@ -89,6 +89,9 @@ class Rom:
         return int.from_bytes(self.read(off, 4), "little")
 
     def put_u32(self, off: int, value: int) -> None:
+        # a negative offset would write at the end
+        if off < 0 or off + 4 > len(self.data):
+            raise IndexError(f"write of 4 bytes at {off:#x} leaves the ROM")
         self.data[off:off + 4] = value.to_bytes(4, "little")
 
     def read(self, off: int, n: int) -> bytes:

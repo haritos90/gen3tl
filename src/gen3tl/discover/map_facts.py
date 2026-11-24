@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from ..core.rom import ROM_BASE
 from ..core.thumb import decode
 from ..families.fingerprints import Fingerprint, find
-from .maps import Walker
+from .maps import Walker, runtime_bank
 from .scan import pointer_index
 
 
@@ -42,8 +41,8 @@ def reader_tables(rom, knowledge):
             mask = rom.u32(mask_load.literal)
             banks = []
             for at in range(table, min(len(rom) - 3, table + 256 * 4), 4):
-                bank = (rom.u32(at) ^ mask) - ROM_BASE
-                if not 0 <= bank <= len(rom) - 4 or bank % 4 or rom.ptr_at(bank) is None:
+                bank = runtime_bank(rom.data, at, mask)
+                if bank is None or rom.ptr_at(bank) is None:
                     break
                 banks.append(bank)
             if banks:
