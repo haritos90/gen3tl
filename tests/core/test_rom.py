@@ -32,6 +32,11 @@ class RomTest(unittest.TestCase):
         self.assertIsNone(rom.ptr_at(0))
         rom.write(8, (0x08000000 + 64).to_bytes(4, "little"))
         self.assertIsNone(rom.ptr_at(8))  # outside the 16-byte image
+        rom.write(8, ptr_bytes(12))
+        self.assertEqual(rom.ptr_at(8), 12)
+        for off in (-8, 13, 16):   # the same bytes from the end, cut off, past the image
+            with self.subTest(off=off):
+                self.assertIsNone(rom.ptr_at(off))
         with self.assertRaises(RomError):
             rom.write(14, b"\x00\x00\x00")
 

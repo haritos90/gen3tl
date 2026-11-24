@@ -104,8 +104,7 @@ class Rom:
 
     def ptr_at(self, off: int) -> int | None:
         """The ROM offset a pointer at `off` refers to, or None."""
-        v = self.u32(off)
-        return v - ROM_BASE if self.is_ptr(v) else None
+        return pointer_at(self.data, off)
 
 
 def to_ptr(offset: int) -> int:
