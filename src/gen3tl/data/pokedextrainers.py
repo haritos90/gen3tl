@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 
 from ..core.notes import has_prose
-from ..core.rom import Rom
+from ..core.rom import Rom, pointer_at, value_at
 from ..discover.maps import Walker
 from .pokedexsprites import check_trainers, trainer_file
 
@@ -17,19 +17,6 @@ TRAINERBATTLE = 0x5C
 VARIABLES = 0x4000   # a trainer operand from here on names a variable
 RUNTIME_MAP = re.compile(r"\d+\.\d+")
 KINDS = ("league", "story", "special", "partners", "paired", "world")
-
-
-def _value(data: bytes, at: int, width: int) -> int | None:
-    if at < 0 or at + width > len(data):
-        return None
-    return int.from_bytes(data[at:at + width], "little")
-
-
-def _pointer(data: bytes, at: int) -> int | None:
-    value = _value(data, at, 4)
-    if value is None or not ROM_BASE <= value < ROM_BASE + len(data):
-        return None
-    return value - ROM_BASE
 
 
 def check(block: dict | None) -> list[str]:
@@ -757,10 +744,10 @@ def build(block: dict, data: bytes, species_count: int, item_count: int, move_co
     class_ids = []
     for trainer_id in range(int(block["count"])):
         header = int(block["base"]) + trainer_id * int(block["stride"])
-        flags = _value(data, header + int(fields["party_flags"]), 1)
-        class_id = _value(data, header + int(fields["class"]), 1)
-        ai_flags = _value(data, header + int(fields["ai_flags"]), 4)
-        size = _value(data, header + int(fields["party_size"]), 1)
+        flags = value_at(data, header + int(fields["party_flags"]), 1)
+        class_id = value_at(data, header + int(fields["class"]), 1)
+        ai_flags = value_at(data, header + int(fields["ai_flags"]), 4)
+        size = value_at(data, header + int(fields["party_size"]), 1)
         if flags is None or class_id is None or ai_flags is None or size is None:
             raise ValueError(f"trainer {trainer_id}: header exceeds ROM")
         if flags & ~(custom | held):
@@ -773,23 +760,23 @@ def build(block: dict, data: bytes, species_count: int, item_count: int, move_co
             classes = block["class_names"]
             if class_id >= int(classes["count"]):
                 raise ValueError(f"trainer {trainer_id}: invalid class {class_id}")
-            name_pointer = _value(data, int(classes["base"]) + class_id * int(classes["stride"])
-                                  + int(classes["pointer"]), 4)
+            name_pointer = value_at(data, int(classes["base"]) + class_id * int(classes["stride"])
+                                    + int(classes["pointer"]), 4)
             if name_pointer is not None and ROM_BASE <= name_pointer < ROM_BASE + len(data):
                 class_name = f"s{name_pointer - ROM_BASE:07X}"
-        pointer = _pointer(data, header + int(fields["party"])) if size else None
+        pointer = pointer_at(data, header + int(fields["party"])) if size else None
         if size and pointer is None:
             raise ValueError(f"trainer {trainer_id}: invalid party pointer")
         stride = int(party["custom_stride"] if flags & custom else party["default_stride"])
         members = []
         for index in range(size):
             at = pointer + index * stride
-            iv = _value(data, at + int(party["iv"]), 2)
-            level = _value(data, at + int(party["level"]), 2)
-            species = _value(data, at + int(party["species"]), 2)
-            item = _value(data, at + int(party["held_item"]), 2) if flags & held else None
+            iv = value_at(data, at + int(party["iv"]), 2)
+            level = value_at(data, at + int(party["level"]), 2)
+            species = value_at(data, at + int(party["species"]), 2)
+            item = value_at(data, at + int(party["held_item"]), 2) if flags & held else None
             move_at = int(party["moves_with_item"] if flags & held else party["moves"])
-            moves = [_value(data, at + move_at + 2 * i, 2) for i in range(int(party["move_count"]))] \
+            moves = [value_at(data, at + move_at + 2 * i, 2) for i in range(int(party["move_count"]))] \
                 if flags & custom else None
             if iv is None or level is None or species is None or flags & held and item is None \
                     or moves is not None and any(move is None for move in moves):
@@ -823,7 +810,7 @@ def build(block: dict, data: bytes, species_count: int, item_count: int, move_co
             "average_level": sum(levels) / len(levels) if levels else None,
         })
         if pictures := block.get("pictures"):
-            picture = _value(data, header + int(fields["picture"]), 1)
+            picture = value_at(data, header + int(fields["picture"]), 1)
             if picture is None or picture >= int(pictures["front"]["count"]):
                 raise ValueError(f"trainer {trainer_id}: invalid picture {picture}")
             out[-1].update(picture=picture, sprite=trainer_file(picture))

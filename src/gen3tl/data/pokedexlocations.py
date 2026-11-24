@@ -5,10 +5,9 @@ from __future__ import annotations
 import re
 
 from ..core.notes import has_prose
-from ..core.rom import Rom
+from ..core.rom import Rom, pointer_at, value_at
 from ..discover.maps import Walker
 
-ROM_BASE = 0x08000000
 RUNTIME_MAP = re.compile(r"\d+\.\d+")
 CONTEXT_MAP = re.compile(r"(?:\d+\.\d+|h[0-9A-F]{7})")
 NAME_KINDS = {"area", "interior", "underground"}
@@ -55,19 +54,6 @@ def check_names(block: dict | None) -> list[str]:
             problems.append(f"{prefix} duplicate")
         seen.add(key)
     return problems
-
-
-def _value(data: bytes, at: int, width: int = 4, signed: bool = False) -> int | None:
-    if at < 0 or at + width > len(data):
-        return None
-    return int.from_bytes(data[at:at + width], "little", signed=signed)
-
-
-def _pointer(data: bytes, at: int) -> int | None:
-    value = _value(data, at)
-    if value is None or not ROM_BASE <= value < ROM_BASE + len(data):
-        return None
-    return value - ROM_BASE
 
 
 def check(block: dict | None) -> list[str]:
@@ -134,11 +120,11 @@ def _point(data: bytes, point: dict, objects: int, count: int) -> dict:
     at = int(point["offset"])
     if not objects <= at < objects + 24 * count or (at - objects) % 24:
         raise ValueError(f"point 0x{at:06x}: outside the map objects")
-    x, y = _value(data, at + 4, 2, True), _value(data, at + 6, 2, True)
-    script = _pointer(data, at + 16)
+    x, y = value_at(data, at + 4, 2, True), value_at(data, at + 6, 2, True)
+    script = pointer_at(data, at + 16)
     if (x, y, script) != (point["x"], point["y"], point["script"]):
         raise ValueError(f"point 0x{at:06x}: coordinates or script differ")
-    if _value(data, at + 2, 1) == 255:
+    if value_at(data, at + 2, 1) == 255:
         raise ValueError(f"point 0x{at:06x}: borrowed connected-map object")
     return {
         "kind": point["kind"], "x": x, "y": y,
@@ -149,26 +135,26 @@ def _point(data: bytes, point: dict, objects: int, count: int) -> dict:
 
 
 def _exits(block: dict, data: bytes, header: int, found: dict) -> list[dict]:
-    connections = _pointer(data, header + 12)
+    connections = pointer_at(data, header + 12)
     if connections is None:
         return []
-    count = _value(data, connections)
-    rows = _pointer(data, connections + 4)
+    count = value_at(data, connections)
+    rows = pointer_at(data, connections + 4)
     if count is None or count > 64 or rows is None or rows + 12 * count > len(data):
         raise ValueError(f"map header 0x{header:06x}: invalid connections")
     exits = []
     for index in range(count):
         at = rows + 12 * index
-        direction_id = _value(data, at)
+        direction_id = value_at(data, at)
         direction = block["directions"].get(str(direction_id))
-        group, number = _value(data, at + 8, 1), _value(data, at + 9, 1)
+        group, number = value_at(data, at + 8, 1), value_at(data, at + 9, 1)
         runtime = f"{group}.{number}"
         destination = found.get(runtime)
         if direction is None or destination is None:
             raise ValueError(f"connection 0x{at:06x}: unverified direction or destination")
         exits.append({
             "to_runtime_map": runtime, "to_map": destination["map"], "to_section": destination["map_section"],
-            "direction": direction, "alignment": _value(data, at + 4, 4, True), "offset": f"0x{at:06x}",
+            "direction": direction, "alignment": value_at(data, at + 4, 4, True), "offset": f"0x{at:06x}",
         })
     return exits
 
@@ -186,11 +172,11 @@ def build(block: dict, data: bytes, encounter_context: dict, found: dict | None 
         runtime = selected["runtime_map"]
         header_info = _map_info(found, runtime)
         header = int(header_info["map_header"], 16)
-        events = _pointer(data, header + 4)
+        events = pointer_at(data, header + 4)
         if events is None:
             raise ValueError(f"location map {runtime}: invalid events")
-        count = _value(data, events, 1)
-        objects = _pointer(data, events + 4)
+        count = value_at(data, events, 1)
+        objects = pointer_at(data, events + 4)
         if count is None or objects is None and selected.get("points"):
             raise ValueError(f"location map {runtime}: invalid objects")
         records.append({
@@ -206,7 +192,7 @@ def _named_section(profile: dict, data: bytes, section: int) -> bool:
     maps = profile["maps"]
     index = section - int(maps["mapsec_first"])
     return 0 <= index < int(maps.get("mapsec_count", 255)) \
-        and _pointer(data, int(maps["mapsec_names"]) + 4 * index) is not None
+        and pointer_at(data, int(maps["mapsec_names"]) + 4 * index) is not None
 
 
 def _warp_parents(walker: Walker, engine: dict[int, list[str]]) -> dict[str, list[tuple[int, int]]]:

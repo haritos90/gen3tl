@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from ..core.notes import has_prose
 from ..catalog.catalog import observed_entries, pointer_runs
 from .maps import CMD_LEN, END_OPS, TEXT_PTR_AT, Walker
-from ..core.rom import Rom
+from ..core.rom import Rom, pointer_at
 from .scan import TRAINERBATTLE_TEXT_OFFSETS, pointer_index, table_base_members
 
 SCRIPT_REACH_DESCRIPTION = """Reachability of the script text no map walk reaches.
@@ -275,8 +275,7 @@ class Code:
 def _in_pointer_run(data, position: int) -> bool:
     """Whether an aligned pointer has another beside it."""
     def pointer(at):
-        return (0 <= at <= len(data) - 4 and
-                0 <= int.from_bytes(data[at:at + 4], "little") - 0x08000000 < len(data))
+        return pointer_at(data, at) is not None
 
     word = position & ~3
     return pointer(word) and (pointer(word - 4) or pointer(word + 4))
@@ -599,10 +598,7 @@ class Study:
         self._referenced: dict[tuple[int, int, int], dict | None] = {}
 
     def ptr(self, q: int) -> int | None:
-        if not 0 <= q <= len(self.d) - 4:
-            return None
-        v = int.from_bytes(self.d[q:q + 4], "little") - 0x08000000
-        return v if 0 <= v < len(self.d) else None
+        return pointer_at(self.d, q)
 
     def live_pool(self, q: int) -> bool:
         """Whether reached code loads the pool word q."""

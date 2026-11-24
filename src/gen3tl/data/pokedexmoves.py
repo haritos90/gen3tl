@@ -7,7 +7,7 @@ import re
 from collections import defaultdict
 
 from ..core.notes import has_prose
-from ..core.rom import Rom, RomEvidence
+from ..core.rom import Rom, RomEvidence, value_at
 from ..discover.maps import VAR_FIRST, Walker
 
 FIELDS = ("effect", "power", "type", "accuracy", "pp", "secondary_chance",
@@ -25,11 +25,9 @@ def _field(spec) -> tuple[int, int, bool]:
     return int(spec), 1, False
 
 
-def _value(data: bytes, at: int, spec) -> int | None:
+def _field_value(data: bytes, at: int, spec) -> int | None:
     offset, width, signed = _field(spec)
-    if at + offset < 0 or at + offset + width > len(data):
-        return None
-    return int.from_bytes(data[at + offset:at + offset + width], "little", signed=signed)
+    return value_at(data, at + offset, width, signed)
 
 
 def _table(block: dict, name: str) -> dict[int, str]:
@@ -68,9 +66,9 @@ def _item_tiers(table: dict, data: bytes) -> list[dict]:
     if hashlib.sha256(data[start:end]).hexdigest() != table["sha256"]:
         raise ValueError(f"item power table evidence differs at 0x{start:x}")
     fields = table["fields"]
-    if _value(data, end - stride, fields["item"]) != table["terminator"]:
+    if _field_value(data, end - stride, fields["item"]) != table["terminator"]:
         raise ValueError(f"item power table terminator differs at 0x{end - stride:x}")
-    rows = [{key: _value(data, start + index * stride, fields[key]) for key in ("item", "type", "power")}
+    rows = [{key: _field_value(data, start + index * stride, fields[key]) for key in ("item", "type", "power")}
             for index in range(count)]
     ids = {row["item"] for row in rows}
     if len(ids) != count or table["terminator"] in ids or any(row["power"] <= 0 for row in rows):
@@ -334,7 +332,7 @@ def _environments(table: dict, column: str, data: bytes, moves: int, places: dic
     effects = {int(value): key for value, key in table["effects"].items()}
     out = []
     for row in table["rows"]:
-        value = _value(data, start + row["index"] * stride, table["fields"][column])
+        value = _field_value(data, start + row["index"] * stride, table["fields"][column])
         if column == "effect":
             if value not in effects:
                 raise ValueError(f"environment {row['index']} effect {value} has no key")
@@ -591,7 +589,7 @@ def build(block: dict, data: bytes, places: dict[int, dict] | None = None) -> li
             pointer = int.from_bytes(data[at:at + 4], "little")
             if POINTER_LOW <= pointer < POINTER_HIGH:
                 description = f"s{pointer - POINTER_LOW:07X}"
-        record = {name: _value(data, start, fields[name]) for name in FIELDS}
+        record = {name: _field_value(data, start, fields[name]) for name in FIELDS}
         record.update({
             "id": move,
             "offset": f"0x{start:06x}",

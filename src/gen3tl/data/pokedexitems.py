@@ -6,7 +6,7 @@ import math
 import re
 
 from ..core.notes import has_prose
-from ..core.rom import RomEvidence
+from ..core.rom import RomEvidence, value_at
 
 FIELDS = ("price", "held_effect", "hold_effect_param", "pocket", "battle_usage")
 POINTER_LOW, POINTER_HIGH = 0x08000000, 0x0A000000
@@ -73,11 +73,9 @@ def _field(spec) -> tuple[int, int]:
     return int(spec), 1
 
 
-def _value(data: bytes, at: int, spec) -> int | None:
+def _field_value(data: bytes, at: int, spec) -> int | None:
     offset, width = _field(spec)
-    if at + offset < 0 or at + offset + width > len(data):
-        return None
-    return int.from_bytes(data[at + offset:at + offset + width], "little")
+    return value_at(data, at + offset, width)
 
 
 def check(block: dict) -> list[str]:
@@ -354,7 +352,7 @@ def _mining_records(block: dict, data: bytes, count: int) -> dict[int, list[dict
                 chances[target] = chances.get(target, 0) + share
         for index, chance in chances.items():
             start = int(block["base"]) + index * int(block["stride"])
-            item = _value(data, start, block["item"])
+            item = _field_value(data, start, block["item"])
             if not 0 < item < count:
                 raise ValueError(f"mining source: invalid item {item}")
             source = {"kind": "mining", "chance": round(chance, 1)}
@@ -385,7 +383,7 @@ def _effect_names(block: dict, record: dict, data: bytes, start: int, item: int)
             record["held_effect_amount"] = amount_record(amount)
     battle = block.get("battle_usages")
     if battle:
-        pointer = _value(data, start, battle["field"])
+        pointer = _field_value(data, start, battle["field"])
         record["battle_use_function"] = pointer
         names = {int(address, 0): key for address, key in battle["names"].items()}
         if record["battle_usage"] and pointer in names:
@@ -423,7 +421,7 @@ def build(block: dict, data: bytes) -> list[dict]:
         start = int(block["base"]) + item * int(block["stride"])
         description = None
         desc_offset, desc_width = _field(fields["description"])
-        pointer = _value(data, start, {"offset": desc_offset, "width": desc_width})
+        pointer = _field_value(data, start, {"offset": desc_offset, "width": desc_width})
         if pointer and POINTER_LOW <= pointer < POINTER_HIGH:
             description = f"s{pointer - POINTER_LOW:07X}"
         tm_index = _tm_index(tm, item) if tm else None
@@ -431,7 +429,7 @@ def build(block: dict, data: bytes) -> list[dict]:
         if tm_index is not None:
             at = int(tm["base"]) + tm_index * int(tm.get("stride", 2))
             taught_move = int.from_bytes(data[at:at + int(tm.get("stride", 2))], "little")
-        record = {name: _value(data, start, fields[name]) for name in FIELDS}
+        record = {name: _field_value(data, start, fields[name]) for name in FIELDS}
         if "sell_price" in block:
             record["sell_price"] = sell_price(block["sell_price"], record)
         _effect_names(block, record, data, start, item)

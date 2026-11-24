@@ -5,22 +5,10 @@ from __future__ import annotations
 import re
 
 from ..core.notes import has_prose
+from ..core.rom import pointer_at, value_at
 
 VARIANTS = ("day", "morning", "evening", "night")
 ROM_BASE = 0x08000000
-
-
-def _value(data: bytes, at: int, width: int = 4) -> int | None:
-    if at < 0 or at + width > len(data):
-        return None
-    return int.from_bytes(data[at:at + width], "little")
-
-
-def _pointer(data: bytes, at: int) -> int | None:
-    value = _value(data, at)
-    if value is None or not ROM_BASE <= value < ROM_BASE + len(data):
-        return None
-    return value - ROM_BASE
 
 
 def check(block: dict | None) -> list[str]:
@@ -164,15 +152,15 @@ def _validate_triggers(block: dict, data: bytes, context_maps: dict, tables: set
                 raise ValueError(f"{prefix}: trigger map is unresolved")
             if runtime not in layouts:
                 lay = layout(data, int(context_maps[runtime]["map_header"], 16))
-                attributes = [_pointer(data, lay[key] + 20) for key in ("primary", "secondary")]
+                attributes = [pointer_at(data, lay[key] + 20) for key in ("primary", "secondary")]
                 if None in attributes:
                     raise ValueError(f"{prefix}: invalid metatile attribute pointer")
                 primary = block["trigger_tiles"]["primary_metatiles"]
                 found = set()
                 for index in range(lay["width"] * lay["height"]):
-                    tile = _value(data, lay["blocks"] + index * 2, 2) & 0x3FF
+                    tile = value_at(data, lay["blocks"] + index * 2, 2) & 0x3FF
                     bank, slot = (0, tile) if tile < primary else (1, tile - primary)
-                    value = _value(data, attributes[bank] + slot * 4)
+                    value = value_at(data, attributes[bank] + slot * 4)
                     if value is None:
                         raise ValueError(f"{prefix}: metatile attributes exceed ROM")
                     found.add((value & 0x1FF, value >> 24 & 7))
@@ -196,7 +184,7 @@ def _legacy_headers(data: bytes, context: dict) -> dict[int, str]:
     groups = int(context["groups"])
     starts = []
     at = groups
-    while (start := _pointer(data, at)) is not None:
+    while (start := pointer_at(data, at)) is not None:
         starts.append(start)
         at += 4
     ends = sorted(set(starts) | {groups})
@@ -207,12 +195,12 @@ def _legacy_headers(data: bytes, context: dict) -> dict[int, str]:
             at = start + number * 4
             if following is not None and at >= following:
                 break
-            header = _pointer(data, at)
+            header = pointer_at(data, at)
             if header is None:
                 if following is None:
                     break
                 continue
-            if _pointer(data, header) is not None and _pointer(data, header + 4) is not None:
+            if pointer_at(data, header) is not None and pointer_at(data, header + 4) is not None:
                 headers.setdefault(header, f"{group}.{number}")
     return headers
 
@@ -221,7 +209,7 @@ def _runtime_banks(data: bytes, context: dict) -> tuple[list[int], list[int]]:
     table = int(context["engine_groups"])
     banks = []
     for group in range(int(context["engine_count"])):
-        encoded = _value(data, table + group * 4)
+        encoded = value_at(data, table + group * 4)
         if encoded is None:
             raise ValueError("runtime map table exceeds ROM")
         bank = (encoded ^ int(context.get("bank_xor", 0))) - ROM_BASE
@@ -240,7 +228,7 @@ def _runtime_word(data: bytes, context: dict, runtime: str) -> int | None:
     end = next(end for end in ends if end > bank)
     if number >= min(256, (end - bank) // 4):
         return None
-    return _value(data, bank + number * 4)
+    return value_at(data, bank + number * 4)
 
 
 def _runtime_headers(data: bytes, context: dict) -> dict[str, int]:
@@ -249,7 +237,7 @@ def _runtime_headers(data: bytes, context: dict) -> dict[str, int]:
     for group, bank in enumerate(banks):
         end = next(end for end in ends if end > bank)
         for number in range(min(256, (end - bank) // 4)):
-            header = _pointer(data, bank + number * 4)
+            header = pointer_at(data, bank + number * 4)
             if header is None:
                 continue
             headers[f"{group}.{number}"] = header
@@ -261,27 +249,27 @@ def _structural_headers(data: bytes, known: set[int]) -> dict[int, str]:
     def layout_ok(at):
         if at is None or at % 4:
             return False
-        width = _value(data, at)
-        height = _value(data, at + 4)
+        width = value_at(data, at)
+        height = value_at(data, at + 4)
         return (width is not None and height is not None and 1 <= width <= 512 and 1 <= height <= 512
-                and all(_pointer(data, at + 8 + 4 * i) is not None for i in range(4)))
+                and all(pointer_at(data, at + 8 + 4 * i) is not None for i in range(4)))
 
     def events_ok(at):
         if at is None or at % 4:
             return False
         for i in range(4):
-            count = _value(data, at + i, 1)
-            pointer = _value(data, at + 4 + i * 4)
-            if (count or pointer) and _pointer(data, at + 4 + i * 4) is None:
+            count = value_at(data, at + i, 1)
+            pointer = value_at(data, at + 4 + i * 4)
+            if (count or pointer) and pointer_at(data, at + 4 + i * 4) is None:
                 return False
         return True
 
     headers = {}
     for match in re.finditer(rb"[\x08\x09]", data):
         at = match.start() - 3
-        if (at >= 0 and at % 4 == 0 and at not in known and layout_ok(_pointer(data, at))
-                and events_ok(_pointer(data, at + 4))
-                and (_pointer(data, at + 8) is not None or data[at + 8:at + 12] == b"\0\0\0\0")):
+        if (at >= 0 and at % 4 == 0 and at not in known and layout_ok(pointer_at(data, at))
+                and events_ok(pointer_at(data, at + 4))
+                and (pointer_at(data, at + 8) is not None or data[at + 8:at + 12] == b"\0\0\0\0")):
             headers[at] = f"h{at:07X}"
     return headers
 
@@ -294,7 +282,7 @@ def _context_maps(data: bytes, context: dict) -> dict[str, dict]:
         if header in legacy:
             out[runtime] = {
                 "map": legacy[header],
-                "map_section": _value(data, header + 20, 1),
+                "map_section": value_at(data, header + 20, 1),
                 "map_header": f"0x{header:06x}",
             }
     return out
@@ -318,7 +306,7 @@ def build(block: dict, data: bytes, species_count: int) -> dict:
         table = header_block[variant]
         for index in range(int(table["count"])):
             header = int(table["base"]) + index * stride
-            group, number = _value(data, header, 1), _value(data, header + 1, 1)
+            group, number = value_at(data, header, 1), value_at(data, header + 1, 1)
             if group == 0xFF:
                 raise ValueError(f"{variant} header {index} ends before its configured count")
             runtime = f"{group}.{number}"
@@ -332,12 +320,12 @@ def build(block: dict, data: bytes, species_count: int) -> dict:
                     unavailable.append({"kind": "map", "id": runtime, "reason": map_error})
                     missing.add(("map", runtime))
             for method, config in block["methods"].items():
-                info = _pointer(data, header + int(config["pointer"]))
+                info = pointer_at(data, header + int(config["pointer"]))
                 if info is None:
                     continue
                 coverage.setdefault((runtime, method), set()).add(variant)
-                encounter_rate = _value(data, info, 1)
-                entries = _pointer(data, info + 4)
+                encounter_rate = value_at(data, info, 1)
+                entries = pointer_at(data, info + 4)
                 if encounter_rate is None or entries is None:
                     raise ValueError(f"{variant} {runtime} {method}: invalid info pointer")
                 choices = []
@@ -349,9 +337,9 @@ def build(block: dict, data: bytes, species_count: int) -> dict:
                     choices = list(enumerate(config["rates"]))
                 for slot, percentage, *rod in choices:
                     at = entries + slot * 4
-                    min_level = _value(data, at, 1)
-                    max_level = _value(data, at + 1, 1)
-                    species = _value(data, at + 2, 2)
+                    min_level = value_at(data, at, 1)
+                    max_level = value_at(data, at + 1, 1)
+                    species = value_at(data, at + 2, 2)
                     if min_level is None or max_level is None or species is None:
                         raise ValueError(f"{variant} {runtime} {method} slot {slot}: entry exceeds ROM")
                     if not 0 < species < species_count:
@@ -375,7 +363,7 @@ def build(block: dict, data: bytes, species_count: int) -> dict:
                         "offset": f"0x{at:06x}",
                     })
         terminator = int(table["base"]) + int(table["count"]) * stride
-        if _value(data, terminator, 1) != 0xFF:
+        if value_at(data, terminator, 1) != 0xFF:
             raise ValueError(f"{variant}: configured count has no header terminator")
     _validate_triggers(block, data, context_maps, set(coverage))
     labels = method_labels(block)

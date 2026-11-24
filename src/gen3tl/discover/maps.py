@@ -8,7 +8,7 @@ import re
 
 from ..core.notes import has_prose
 from ..core.charmap import Charmap, CharmapError
-from ..core.rom import Rom
+from ..core.rom import Rom, pointer_at
 from ..families.knowledge import load_script
 
 # total command length (opcode included) for fixed-size FRLG commands
@@ -220,7 +220,7 @@ class Walker:
         self.decoded: set[int] = set()   # command starts the walks decode
 
     def ptr(self, off: int) -> int | None:
-        return self.rom.ptr_at(off) if 0 <= off <= len(self.d) - 4 else None
+        return pointer_at(self.d, off)
 
     def command_spans(self) -> list[tuple[int, int]]:
         """[start, end) of every script command the walks decoded."""

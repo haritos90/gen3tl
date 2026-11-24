@@ -10,7 +10,7 @@ from test_roots import TOOLKIT_ROOT
 
 sys.path.insert(0, str(TOOLKIT_ROOT / "src"))
 
-from gen3tl.core.rom import Rom, RomError, RomEvidence, ptr_bytes  # noqa: E402
+from gen3tl.core.rom import Rom, RomError, RomEvidence, pointer_at, ptr_bytes, value_at  # noqa: E402
 from gen3tl.cli.main import main
 from project_fixture import rom_evidence
 
@@ -34,6 +34,18 @@ class RomTest(unittest.TestCase):
         self.assertIsNone(rom.ptr_at(8))  # outside the 16-byte image
         with self.assertRaises(RomError):
             rom.write(14, b"\x00\x00\x00")
+
+    def test_bounded_values_and_pointers(self):
+        data = b"\xfe\xff" + ptr_bytes(8) + (0x08000000 + 64).to_bytes(4, "little") + b"\x00" * 6
+        self.assertEqual((value_at(data, 0, 2), value_at(data, 0, 2, signed=True)), (0xFFFE, -2))
+        self.assertEqual(value_at(data, 2), 0x08000008)
+        for at, width in ((-1, 1), (15, 2), (0, 0)):
+            with self.subTest(at=at, width=width):
+                self.assertIsNone(value_at(data, at, width))
+        self.assertEqual(pointer_at(data, 2), 8)
+        for at in (-4, 0, 6, 13):   # outside, not a pointer, past the image, cut off
+            with self.subTest(at=at):
+                self.assertIsNone(pointer_at(data, at))
 
 
 class RomEvidenceTest(unittest.TestCase):

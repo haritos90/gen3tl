@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 
 from ..core.notes import has_prose
+from ..core.rom import value_at
 
 FORMAT = "gen3tl-pokedex"
 SCHEMA = 1
@@ -38,15 +39,9 @@ def _field(spec) -> tuple[int, int]:
     return int(spec), 1
 
 
-def _value(data: bytes, at: int, width: int) -> int | None:
-    if at < 0 or width <= 0 or at + width > len(data):
-        return None
-    return int.from_bytes(data[at:at + width], "little")
-
-
 def _text_id(data: bytes, at: int) -> tuple[str | None, int]:
     """The catalog id of the string a pointer at `at` leads to, and that pointer's offset."""
-    pointer = _value(data, at, 4)
+    pointer = value_at(data, at, 4)
     if pointer and POINTER_LOW <= pointer < POINTER_HIGH:
         return f"s{pointer - POINTER_LOW:07X}", at
     return None, at
@@ -581,7 +576,7 @@ def _natdex_map(block: dict, data: bytes) -> dict[int, int]:
     first = int(block["species"].get("first", 0))
     out = {}
     for slot in range(first, count):
-        value = _value(data, base + slot * stride, width)
+        value = value_at(data, base + slot * stride, width)
         if value is not None:
             out[slot] = value
     return out
@@ -611,7 +606,7 @@ def _dex_values(block: dict, data: bytes, slot: int, natdex: int | None) -> tupl
             if table:
                 values["category"] = f"{table}:{index}"
         else:
-            values[name] = _value(data, start + off, width)
+            values[name] = value_at(data, start + off, width)
     return values, start
 
 
@@ -619,7 +614,7 @@ def _species_values(block: dict, data: bytes, slot: int) -> tuple[dict, int]:
     sp = block["species"]
     start = int(sp["base"]) + slot * int(sp["stride"])
     fields = {name: _field(spec) for name, spec in sp.get("fields", {}).items()}
-    values = {name: _value(data, start + off, width) for name, (off, width) in fields.items()}
+    values = {name: value_at(data, start + off, width) for name, (off, width) in fields.items()}
     # an inline category, named by its [[table]]
     if sp.get("category_table"):
         values["category"] = f"{sp['category_table']}:{slot}"
@@ -630,7 +625,7 @@ def _species_values(block: dict, data: bytes, slot: int) -> tuple[dict, int]:
 def _ev_yield(block: dict, data: bytes, start: int) -> dict | None:
     """The EV yield of one slot, 0-3 per stat in STAT_FIELDS order; None when undeclared."""
     spec = block["species"].get("ev_yield")
-    word = _value(data, start + int(spec["offset"]), 2) if spec else None
+    word = value_at(data, start + int(spec["offset"]), 2) if spec else None
     if word is None:
         return None
     return {name: (word >> 2 * i) & 3 for i, name in enumerate(STAT_FIELDS)}
@@ -646,7 +641,7 @@ def _evolution(block: dict, data: bytes, slot: int, start: int) -> list[dict] | 
     stop = int(ev.get("stop", 0))
 
     def read(row: int) -> dict:
-        values = {name: _value(data, row + off, width) for name, (off, width) in fields.items()}
+        values = {name: value_at(data, row + off, width) for name, (off, width) in fields.items()}
         if values.get("method") in ev.get("tile_methods", []):
             tile = block.get("tile_behaviors", {}).get("names", {}).get(str(values.get("extra")))
             if tile:
@@ -663,7 +658,7 @@ def _evolution(block: dict, data: bytes, slot: int, start: int) -> list[dict] | 
         return values
 
     if ev.get("index") == "pointer":
-        pointer = _value(data, start + int(ev["pointer"]), 4)
+        pointer = value_at(data, start + int(ev["pointer"]), 4)
         if not pointer or not POINTER_LOW <= pointer < POINTER_HIGH:
             return []
         at, limit = pointer - POINTER_LOW, int(ev.get("count", 32))
@@ -927,8 +922,8 @@ def build(block: dict, data: bytes, profile: dict) -> dict:
         sections = block["map_sections"]
         doc["map_sections"] = []
         for section in range(int(sections["first"]), int(sections["first"]) + int(sections["count"])):
-            pointer = _value(data, int(sections["base"]) + (section - int(sections["first"]))
-                             * int(sections.get("stride", 4)), 4)
+            pointer = value_at(data, int(sections["base"]) + (section - int(sections["first"]))
+                               * int(sections.get("stride", 4)), 4)
             name = f"s{pointer - POINTER_LOW:07X}" if pointer and POINTER_LOW <= pointer < POINTER_HIGH else None
             doc["map_sections"].append({"id": section, "name": name})
     learnsets = None

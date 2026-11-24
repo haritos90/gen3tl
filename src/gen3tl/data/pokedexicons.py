@@ -10,9 +10,8 @@ from ..core.notes import has_prose
 from ..build.font import INK, FontTable
 from ..build.graphics import GraphicsError, bgr555, lz77_decompress
 from ..check.render import indexed_png
-from ..core.rom import Rom
+from ..core.rom import Rom, pointer_at
 
-ROM_BASE = 0x08000000
 ITEM_PIC = 9 * 32   # nine 8 x 8 4bpp tiles
 CATEGORIES = ("physical", "special", "status")
 KEYS = ("base", "stride", "width", "height", "symbol")
@@ -59,16 +58,9 @@ def item_file(item_id: int) -> str:
     return f"icons/items/{item_id}.png"
 
 
-def _pointer(data: bytes, at: int) -> int | None:
-    if at + 4 > len(data):
-        return None
-    value = int.from_bytes(data[at:at + 4], "little")
-    return value - ROM_BASE if ROM_BASE <= value < ROM_BASE + len(data) else None
-
-
 def item_icon(data: bytes, table: int, item_id: int) -> tuple[list[list[int]], list[tuple[int, int, int]]] | None:
     """The pixel rows and palette of an item's icon, or None when the row is not a 24 x 24 icon."""
-    pic_at, pal_at = _pointer(data, table + 8 * item_id), _pointer(data, table + 8 * item_id + 4)
+    pic_at, pal_at = pointer_at(data, table + 8 * item_id), pointer_at(data, table + 8 * item_id + 4)
     if pic_at is None or pal_at is None or data[pic_at] != 0x10:
         return None
     try:

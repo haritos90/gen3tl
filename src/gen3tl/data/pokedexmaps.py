@@ -7,10 +7,10 @@ import json
 from pathlib import Path
 
 from ..core.notes import has_prose
+from ..core.rom import pointer_at, value_at
 from ..build.graphics import GraphicsError, bgr555, lz77_decompress, tiles_to_pixels
 from ..check.render import indexed_png
 
-ROM_BASE = 0x08000000
 BLOCK = 16          # px per block
 TILE_BYTES = 32     # one 8x8 4bpp tile
 KEYS = ("primary_tiles", "primary_metatiles", "primary_palettes", "palettes")
@@ -19,19 +19,6 @@ KEYS = ("primary_tiles", "primary_metatiles", "primary_palettes", "palettes")
 def map_file(runtime: str) -> str:
     """The file of a runtime map, relative to the sprite directory."""
     return f"maps/{runtime}.png"
-
-
-def _value(data: bytes, at: int, width: int) -> int | None:
-    if at < 0 or at + width > len(data):
-        return None
-    return int.from_bytes(data[at:at + width], "little")
-
-
-def _pointer(data: bytes, at: int) -> int | None:
-    value = _value(data, at, 4)
-    if value is None or not ROM_BASE <= value < ROM_BASE + len(data):
-        return None
-    return value - ROM_BASE
 
 
 def check(block: dict | None) -> list[str]:
@@ -51,11 +38,11 @@ def check(block: dict | None) -> list[str]:
 
 def layout(data: bytes, header: int) -> dict:
     """The layout a map header points to: size in blocks and the three pointers."""
-    at = _pointer(data, header)
+    at = pointer_at(data, header)
     if at is None:
         raise ValueError(f"map header 0x{header:06x}: invalid layout pointer")
-    width, height = _value(data, at, 4), _value(data, at + 4, 4)
-    blocks, primary, secondary = _pointer(data, at + 12), _pointer(data, at + 16), _pointer(data, at + 20)
+    width, height = value_at(data, at, 4), value_at(data, at + 4, 4)
+    blocks, primary, secondary = pointer_at(data, at + 12), pointer_at(data, at + 16), pointer_at(data, at + 20)
     if not (width and height and 1 <= width <= 512 and 1 <= height <= 512):
         raise ValueError(f"map header 0x{header:06x}: invalid layout size")
     if blocks is None or primary is None or secondary is None:
@@ -68,8 +55,8 @@ def layout(data: bytes, header: int) -> dict:
 
 def tileset(data: bytes, at: int) -> dict:
     """A tileset's tile rows (one 8 px wide tile per 8 rows), palettes and metatile base."""
-    compressed = _value(data, at, 1)
-    tiles_at, palettes_at, metatiles_at = _pointer(data, at + 4), _pointer(data, at + 8), _pointer(data, at + 12)
+    compressed = value_at(data, at, 1)
+    tiles_at, palettes_at, metatiles_at = pointer_at(data, at + 4), pointer_at(data, at + 8), pointer_at(data, at + 12)
     if compressed is None or tiles_at is None or palettes_at is None or metatiles_at is None:
         raise ValueError(f"tileset 0x{at:06x}: invalid pointers")
     if compressed:
@@ -81,7 +68,7 @@ def tileset(data: bytes, at: int) -> dict:
         blob = data[tiles_at:tiles_at + 1024 * TILE_BYTES]
     count = len(blob) // TILE_BYTES
     rows = tiles_to_pixels(bytes(blob), count, 4, 1)
-    palettes = [[bgr555(_value(data, palettes_at + 32 * p + 2 * c, 2) or 0) for c in range(16)] for p in range(16)]
+    palettes = [[bgr555(value_at(data, palettes_at + 32 * p + 2 * c, 2) or 0) for c in range(16)] for p in range(16)]
     return {"rows": rows, "count": count, "palettes": palettes, "metatiles": metatiles_at}
 
 
@@ -109,7 +96,7 @@ def render(data: bytes, header: int, maps: dict) -> tuple[list[list[int]], list[
 
     for by in range(height):
         for bx in range(width):
-            metatile = _value(data, lay["blocks"] + 2 * (by * width + bx), 2) & 0x3FF
+            metatile = value_at(data, lay["blocks"] + 2 * (by * width + bx), 2) & 0x3FF
             if metatile < primary_metatiles:
                 entry_at = primary["metatiles"] + metatile * 16
             else:
@@ -118,7 +105,7 @@ def render(data: bytes, header: int, maps: dict) -> tuple[list[list[int]], list[
                 raise ValueError(f"map header 0x{header:06x}: metatile {metatile} exceeds ROM")
             for layer in range(2):
                 for quarter in range(4):
-                    entry = _value(data, entry_at + 2 * (layer * 4 + quarter), 2)
+                    entry = value_at(data, entry_at + 2 * (layer * 4 + quarter), 2)
                     tile, hflip, vflip, pal = entry & 0x3FF, entry >> 10 & 1, entry >> 11 & 1, entry >> 12
                     ox, oy = bx * BLOCK + (quarter & 1) * 8, by * BLOCK + (quarter >> 1) * 8
                     for y in range(8):

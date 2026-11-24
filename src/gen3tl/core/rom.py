@@ -114,3 +114,16 @@ def to_ptr(offset: int) -> int:
 
 def ptr_bytes(offset: int) -> bytes:
     return to_ptr(offset).to_bytes(4, "little")
+
+
+def value_at(data: bytes | bytearray, at: int, width: int = 4, signed: bool = False) -> int | None:
+    """The little-endian integer of `width` bytes at `at`, or None when they leave `data`."""
+    if at < 0 or width <= 0 or at + width > len(data):
+        return None
+    return int.from_bytes(data[at:at + width], "little", signed=signed)
+
+
+def pointer_at(data: bytes | bytearray, at: int) -> int | None:
+    """The ROM offset the pointer at `at` refers to, or None."""
+    value = value_at(data, at)
+    return value - ROM_BASE if value is not None and ROM_BASE <= value < ROM_BASE + len(data) else None

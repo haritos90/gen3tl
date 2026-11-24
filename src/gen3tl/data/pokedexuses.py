@@ -20,11 +20,6 @@ def _u16(data: bytes, at: int) -> int:
     return int.from_bytes(data[at:at + 2], "little")
 
 
-def _pointer(data: bytes, at: int) -> int | None:
-    value = int.from_bytes(data[at:at + 4], "little")
-    return value - 0x08000000 if 0x08000000 <= value < 0x08000000 + len(data) else None
-
-
 def _offset(value) -> bool:
     return type(value) is int and 0 <= value < 0x2000000
 

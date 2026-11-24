@@ -10,14 +10,8 @@ from collections import defaultdict
 from ..core.notes import has_prose
 from ..discover.maps import Walker
 from ..discover.reach import Code, SCRIPT_OPERAND
-from ..core.rom import Rom, RomEvidence
+from ..core.rom import Rom, RomEvidence, value_at
 from ..discover.scan import pointer_index
-
-
-def _value(data: bytes, at: int, width: int) -> int | None:
-    if at < 0 or at + width > len(data):
-        return None
-    return int.from_bytes(data[at:at + width], "little")
 
 
 def _variable(value: int) -> bool:
@@ -137,17 +131,17 @@ def _linked(data: bytes, code: Code, entry: int, references: list[int]) -> bool:
 
 def _candidate(data: bytes, at: int, commands: dict, species_count: int, item_count: int) -> tuple | None:
     op = data[at]
-    species = _value(data, at + 1, 2)
+    species = value_at(data, at + 1, 2)
     if species is None or not (0 < species < species_count or _variable(species)):
         return None
     if op == commands["egg"]:
         return ("egg", species, None, None, 3)
     if op != commands["gift"] or at + 15 > len(data):
         return None
-    level, item = data[at + 3], _value(data, at + 4, 2)
+    level, item = data[at + 3], value_at(data, at + 4, 2)
     if not 0 < level <= 100 or item is None or not (0 <= item < item_count or _variable(item)):
         return None
-    if any(_value(data, at + offset, 4) not in (0, 1) for offset in (6, 10)):
+    if any(value_at(data, at + offset, 4) not in (0, 1) for offset in (6, 10)):
         return None
     if data[at + 14] not in (0, 1, 15):
         return None
@@ -190,31 +184,31 @@ def _bound_trades(trades: dict, data: bytes, species_count: int) -> list[dict]:
         index, header = binding["index"], binding["map_header"]
         if _runtime_word(data, trades["context"], binding["map"]) != 0x08000000 + header:
             raise ValueError(f"trade {index}: runtime map differs")
-        events = (_value(data, header + 4, 4) or 0) - 0x08000000
-        count = _value(data, events, 1)
-        objects = (_value(data, events + 4, 4) or 0) - 0x08000000
+        events = (value_at(data, header + 4, 4) or 0) - 0x08000000
+        count = value_at(data, events, 1)
+        objects = (value_at(data, events + 4, 4) or 0) - 0x08000000
         if count is None or objects < 0 or objects + count * 24 > len(data):
             raise ValueError(f"trade {index}: invalid map objects")
-        roots = {_value(data, objects + i * 24 + 16, 4) - 0x08000000
+        roots = {value_at(data, objects + i * 24 + 16, 4) - 0x08000000
                  for i in range(count) if data[objects + i * 24 + 2] != 255}
         if not set(binding["roots"]) <= roots:
             raise ValueError(f"trade {index}: NPC script roots differ")
         if not RomEvidence.parse(binding["guard"]).matches(data):
             raise ValueError(f"trade {index}: selector bytes differ")
         selector = binding["selector"]
-        selected = _value(data, selector["offset"], selector["width"])
+        selected = value_at(data, selector["offset"], selector["width"])
         if "second" in selector:
-            choice = _value(data, selector["second"], selector["width"])
+            choice = value_at(data, selector["second"], selector["width"])
             if selected is None or selected < selector["first"] or choice is None or not 0 <= choice < selector["stride"]:
                 raise ValueError(f"trade {index}: invalid selector inputs")
             selected = selector["base"] + (selected - selector["first"]) * selector["stride"] + choice
         if selected != index:
             raise ValueError(f"trade {index}: selector index differs")
-        if "dispatch" in binding and _value(data, binding["dispatch"], 4) != 0x08000000 + binding["script"]:
+        if "dispatch" in binding and value_at(data, binding["dispatch"], 4) != 0x08000000 + binding["script"]:
             raise ValueError(f"trade {index}: dispatch script differs")
         at = trades["base"] + index * trades["stride"]
-        species = _value(data, at + trades["species"], 2)
-        wanted = _value(data, at + trades["wanted"], 2)
+        species = value_at(data, at + trades["species"], 2)
+        wanted = value_at(data, at + trades["wanted"], 2)
         if species is None or wanted is None or not 0 < species < species_count or not 0 < wanted < species_count:
             raise ValueError(f"trade {index}: invalid species")
         record = _record("trade", species, None, None,
@@ -225,13 +219,13 @@ def _bound_trades(trades: dict, data: bytes, species_count: int) -> list[dict]:
             record["availability"] = binding["availability"]
         if "speaker" in binding:
             offset = binding["speaker_offset"]
-            pointer = _value(data, offset, 4)
+            pointer = value_at(data, offset, 4)
             if data[offset - 2:offset] != b"\x0f\x00" \
                     or pointer != 0x08000000 + int(binding["speaker"][1:], 16):
                 raise ValueError(f"trade {index}: speaker name box differs")
             record["speaker"] = binding["speaker"]
         if "original_trainer" in trades:
-            pointer = _value(data, at + trades["original_trainer"], 4)
+            pointer = value_at(data, at + trades["original_trainer"], 4)
             if pointer is None or not 0x08000000 <= pointer < 0x08000000 + len(data):
                 raise ValueError(f"trade {index}: invalid original trainer pointer")
             record.update(original_trainer=f"s{pointer - 0x08000000:07X}", original_trainer_offset=f"0x{at:07X}")
@@ -245,14 +239,14 @@ def _trade_records(block: dict, data: bytes, walker: _SourceWalker,
     if "bindings" in trades:
         return _bound_trades(trades, data, species_count)
     contexts = [pc for pc in walker.contexts
-                if walker.d[pc] == 0x25 and _value(walker.d, pc + 1, 2) == trades["command"]]
+                if walker.d[pc] == 0x25 and value_at(walker.d, pc + 1, 2) == trades["command"]]
     if not contexts:
         contexts = [0]
     records = []
     for index in range(int(trades["count"])):
         at = int(trades["base"]) + index * int(trades["stride"])
-        species = _value(data, at + int(trades["species"]), 2)
-        wanted = _value(data, at + int(trades["wanted"]), 2)
+        species = value_at(data, at + int(trades["species"]), 2)
+        wanted = value_at(data, at + int(trades["wanted"]), 2)
         if species is None or wanted is None:
             raise ValueError(f"trade {index}: record exceeds ROM")
         if not 0 < species < species_count or not 0 < wanted < species_count:

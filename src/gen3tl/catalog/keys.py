@@ -6,6 +6,8 @@ import hashlib
 import re
 from pathlib import Path
 
+from ..core.rom import pointer_at
+
 POINTER_LOW = 0x08000000
 ALIAS_DIR = Path("source/keys")
 HEADER = ("key", "offset", "id")
@@ -175,13 +177,6 @@ def exported(e: dict) -> bool:
     return not ({"unverified", "keep"} & set(e["flags"]))
 
 
-def _pointer(data, at: int) -> int | None:
-    if at < 0 or at + 4 > len(data):
-        return None
-    value = int.from_bytes(data[at:at + 4], "little")
-    return value - POINTER_LOW if POINTER_LOW <= value < POINTER_LOW + len(data) else None
-
-
 def description_slots(prof, data) -> list[tuple[str, int, int]]:
     """(table, index, string offset) of the Pokedex description tables, in profile order."""
     out = []
@@ -192,13 +187,13 @@ def description_slots(prof, data) -> list[tuple[str, int, int]]:
         table = block.get("descriptions")
         if isinstance(table, dict) and "base" in table and "count" in table:
             for i in range(int(table["count"])):
-                if (target := _pointer(data, int(table["base"]) + i * int(table.get("stride", 4)))) is not None:
+                if (target := pointer_at(data, int(table["base"]) + i * int(table.get("stride", 4)))) is not None:
                     out.append((name, i, target))
         field = (block.get("fields") or {}).get("description")
         if isinstance(field, dict) and int(field.get("width", 0)) == 4 and {"base", "stride", "count"} <= block.keys():
             for i in range(int(block.get("first", 0)), int(block["count"])):
                 at = int(block["base"]) + i * int(block["stride"]) + int(field["offset"])
-                if (target := _pointer(data, at)) is not None:
+                if (target := pointer_at(data, at)) is not None:
                     out.append((name, i, target))
     return out
 
@@ -210,7 +205,7 @@ def battle_slots(prof, data) -> list[tuple[int, int]]:
         return []
     out = []
     for i in range(int(table.get("first", 0)), int(table["count"])):
-        if (target := _pointer(data, int(table["base"]) + 4 * i)) is not None:
+        if (target := pointer_at(data, int(table["base"]) + 4 * i)) is not None:
             out.append((i, target))
     return out
 
