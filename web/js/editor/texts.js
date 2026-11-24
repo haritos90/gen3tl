@@ -263,9 +263,9 @@ export function renderContext(entry) {
     if (c.uses) item(t("Uses"), String(c.uses));
     if (c.inserted.length) {
       const table = el("table", { class: "mini" }, el("tr", {}, el("th", { textContent: t("Inserted") }),
-        el("th", { textContent: t("Width") }), el("th", { textContent: t("Source") })));
+        el("th", { class: "num", textContent: t("Width") }), el("th", { textContent: t("Source") })));
       for (const x of c.inserted) {
-        table.append(el("tr", {}, el("td", { textContent: x.token }), el("td", { textContent: keepUnits(`${x.width} px`) }),
+        table.append(el("tr", {}, el("td", { textContent: x.token }), el("td", { class: "num", textContent: keepUnits(`${x.width} px`) }),
           el("td", { textContent: slotSource(x.source) })));
       }
       box.append(table);

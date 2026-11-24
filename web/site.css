@@ -737,6 +737,7 @@ body.editor-page:not(.in-start) { height: 100%; overflow: hidden; }
 .unmeasured { font-size: 12px; color: var(--warn); border-left: 2px solid var(--warn); padding-left: 6px; margin-top: 2px; }
 table.mini { border-collapse: collapse; font-size: 12px; margin: 2px 0 6px; }
 table.mini td, table.mini th { border-bottom: 1px solid var(--line-2); padding: 1px 8px 1px 0; text-align: left; vertical-align: top; }
+table.mini .num { white-space: nowrap; } /* Keep a width and its unit together. */
 .term { display: grid; gap: 2px; padding: 8px 10px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line-2); font-size: 13.5px; }
 .term + .term { margin-top: 6px; }
 .term.missing { border-color: var(--err); }
