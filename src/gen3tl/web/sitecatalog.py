@@ -463,21 +463,32 @@ def write_interface(root: Path) -> None:
     (root / "languages.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
 
 
-def list_catalogs(site: Path) -> list[str] | None:
-    """Name the catalogs of the site's data/site/catalogs.json in its root pages, which then ask for no other."""
+def index_codes(data: Path) -> list[str] | None:
+    """The languages of the site/catalogs.json under an editor data directory; None when it is unreadable."""
     try:
-        index = json.loads((Path(site) / "data" / SITE / "catalogs.json").read_text(encoding="utf-8"))
+        index = json.loads((Path(data) / SITE / "catalogs.json").read_text(encoding="utf-8"))
         codes = [row["code"] for row in index["catalogs"]] if index["schema"] == SCHEMA else None
     except (OSError, ValueError, KeyError, TypeError):
         return None
-    # An unreadable index leaves the pages unlisted.
     if codes is None or not all(isinstance(code, str) and CODE.fullmatch(code) for code in codes):
         return None
+    return codes
+
+
+def listed(document: str, codes: list[str]) -> str:
+    """The page with the catalog list opening its head; a page without a head unchanged."""
     meta = f'<meta name="site-catalogs" content="{" ".join(codes)}">'
+    return re.sub(r"<head\b[^>]*>", lambda match: match[0] + "\n" + meta, document, count=1, flags=re.IGNORECASE)
+
+
+def list_catalogs(site: Path) -> list[str] | None:
+    """Name the catalogs of the site's data/site/catalogs.json in its root pages, which then ask for no other."""
+    codes = index_codes(Path(site) / "data")
+    # An unreadable index leaves the pages unlisted.
+    if codes is None:
+        return None
     for page in sorted(Path(site).glob("*.html")):
         document = page.read_text(encoding="utf-8")
-        listed, count = re.subn(r"<head\b[^>]*>", lambda match: match[0] + "\n" + meta, document, count=1,
-                                flags=re.IGNORECASE)
-        if count:
-            page.write_text(listed, encoding="utf-8")
+        if (text := listed(document, codes)) != document:
+            page.write_text(text, encoding="utf-8")
     return codes

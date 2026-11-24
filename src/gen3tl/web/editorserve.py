@@ -39,17 +39,18 @@ def gzipped(path: str, st: os.stat_result, raw: bytes) -> bytes:
     return data
 
 
-def page_body(path: Path, data: Path) -> bytes:
-    """Resolve project licences before sending complete HTML."""
-    from . import siteshell
+def page_body(path: Path, data: Path, web: Path) -> bytes:
+    """Resolve project licences and list the served catalogs before sending complete HTML."""
+    from . import sitecatalog, siteshell
     source = path.read_text(encoding="utf-8")
-    if "<!-- site-shell:" not in source or not (path.parent / "fragments").is_dir():
-        return source.encode("utf-8")
-    try:
-        licenses = siteshell.registry_licenses(data)
-    except (OSError, ValueError):
-        licenses = None
-    return siteshell.rewrite(source, path.name, path.parent, licenses).encode("utf-8")
+    if "<!-- site-shell:" in source and (path.parent / "fragments").is_dir():
+        try:
+            licenses = siteshell.registry_licenses(data)
+        except (OSError, ValueError):
+            licenses = None
+        source = siteshell.rewrite(source, path.name, path.parent, licenses)
+    codes = sitecatalog.index_codes(data) if path.parent == web else None   # built sites list root pages only
+    return (source if codes is None else sitecatalog.listed(source, codes)).encode("utf-8")
 
 
 class PreviewHandler(SimpleHTTPRequestHandler):
@@ -103,7 +104,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
         body = None
         if Path(path).suffix == ".html":
             try:
-                body = page_body(Path(path), self.data)
+                body = page_body(Path(path), self.data, Path(self.directory).resolve())
             except OSError:
                 self.send_error(404, "File not found")
                 return

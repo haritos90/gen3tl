@@ -1,4 +1,4 @@
-"""The local site server: validators and compression."""
+"""The local site server: validators, compression and the catalog list."""
 import gzip
 import io
 import json
@@ -10,7 +10,7 @@ from http.client import HTTPConnection, HTTPResponse
 from pathlib import Path
 from unittest.mock import Mock
 
-from gen3tl.web import editorserve
+from gen3tl.web import editorserve, sitecatalog
 
 
 class PageRouteTest(unittest.TestCase):
@@ -90,6 +90,32 @@ class PageRouteTest(unittest.TestCase):
         self.assertIn(b'license-gen3tl.txt', self.request("/")[1])
         shutil.rmtree(self.web / "fragments")
         self.assertEqual(self.request("/")[1], (self.web / "index.html").read_bytes())
+
+    def test_root_pages_list_the_served_catalogs_as_a_built_site_does(self):
+        page = "<!doctype html>\n<html><head>\n<title>Home</title></head></html>"
+        (self.web / "nested").mkdir()
+        for path in (self.web / "index.html", self.web / "nested/index.html", self.data / "record.html"):
+            path.write_text(page, encoding="utf-8")
+        index = self.data / "site" / "catalogs.json"
+        index.parent.mkdir()
+        index.write_text(json.dumps({"schema": 1, "catalogs": [{"code": "ru"}, {"code": "pt-BR"}], "guides": []}))
+        site = self.web.parent / "site"
+        (site / "data").mkdir(parents=True)
+        shutil.copytree(index.parent, site / "data" / "site")
+        (site / "index.html").write_text(page, encoding="utf-8")
+        self.assertEqual(sitecatalog.list_catalogs(site), ["ru", "pt-BR"])
+        response, body = self.request("/", **{"Accept-Encoding": "gzip"})
+        self.assertEqual(gzip.decompress(body), (site / "index.html").read_bytes())
+        self.assertIn(b'<meta name="site-catalogs" content="ru pt-BR">', gzip.decompress(body))
+        self.assertEqual(self.request("/nested/")[1], page.encode())
+        self.assertEqual(self.request("/data/record.html")[1], page.encode())
+        etag = response.getheader("ETag")
+        index.write_text(json.dumps({"schema": 1, "catalogs": []}))
+        response, body = self.request("/", **{"If-None-Match": etag})
+        self.assertEqual(response.status, 200)
+        self.assertIn(b'<meta name="site-catalogs" content="">', body)
+        index.write_text('{"schema": 1')
+        self.assertEqual(self.request("/")[1], page.encode())
 
     def test_existing_paths_and_data_keep_their_resolution(self):
         (self.web / "exact").write_text("exact")
