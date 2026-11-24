@@ -80,18 +80,21 @@ class Rom:
         return Rom(bytes(self.data), self.path)
 
     def u8(self, off: int) -> int:
-        return self.data[off]
+        return self.read(off, 1)[0]
 
     def u16(self, off: int) -> int:
-        return int.from_bytes(self.data[off:off + 2], "little")
+        return int.from_bytes(self.read(off, 2), "little")
 
     def u32(self, off: int) -> int:
-        return int.from_bytes(self.data[off:off + 4], "little")
+        return int.from_bytes(self.read(off, 4), "little")
 
     def put_u32(self, off: int, value: int) -> None:
         self.data[off:off + 4] = value.to_bytes(4, "little")
 
     def read(self, off: int, n: int) -> bytes:
+        # a negative offset would read from the end
+        if off < 0 or n < 0 or off + n > len(self.data):
+            raise IndexError(f"read of {n} bytes at {off:#x} leaves the ROM")
         return bytes(self.data[off:off + n])
 
     def write(self, off: int, blob: bytes) -> None:
