@@ -1,7 +1,5 @@
 // Recover original bytes before reading the game's text.
 
-import { englishOf as readEnglishOf } from "./check.js";
-import { getJson } from "./data.js";
 import { glossaryMatcher, glossaryProblems } from "./terms.js";
 import { digest, reverseRelease, validateManifest } from "./patcher-core.js";
 import { releasePatch } from "./patch-engine.js";
@@ -63,11 +61,6 @@ export function problemsHeading(res, rom) {
   if (res.estimate) return { key: N_("Problems: check not loaded") };
   if (rom) return { key: N_("Problems: original ROM") };
   return { key: N_("Problems: ROM not loaded") };
-}
-
-/** The English of a ROM for the data at `url`. */
-export async function readEnglish(check, bytes, url, fetcher = fetch) {
-  return readEnglishOf(check, bytes, await getJson(url, fetcher));
 }
 
 /** The English a catalog key names in the ROM. */

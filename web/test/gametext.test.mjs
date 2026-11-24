@@ -6,7 +6,7 @@ import { test } from "node:test";
 
 import { filterRows } from "../js/data.js";
 import { decodeGlyph } from "../js/font.js";
-import { TEXT_NOTE, applyEnglish, applyGlossary, englishBlock, englishOf, joinRows, problemsHeading, readEnglish, readRom,
+import { TEXT_NOTE, applyEnglish, applyGlossary, englishBlock, englishOf, joinRows, problemsHeading, readRom,
   searchHint, shipsEnglish, unavailableNote, withEnglish } from "../js/gametext.js";
 import { digest as romDigest, patchRelease } from "../js/patcher-core.js";
 import { setCatalog, t } from "../js/ui.js";
@@ -68,7 +68,7 @@ test("the clean base and local UPS supply identical original text and glyphs", a
   assert.deepEqual(clean, before);
   assert.deepEqual(BASE_PATCH, patchBefore);
   assert.deepEqual(decodeGlyph(loaded.bytes.subarray(0x100, 0x140)), decodeGlyph(original.subarray(0x100, 0x140)));
-  const read = await readEnglish(check, loaded.bytes, "https://site.test/data/game/ru/source.json", fetcher);
+  const read = check.english(loaded.bytes, SOURCE);
   assert.deepEqual(read.missing, []);
   const list = rows();
   assert.equal(applyEnglish(list, read.texts), 4);
@@ -172,7 +172,6 @@ const check = { english(rom, source) {
   }
   return { texts, missing };
 } };
-const fetcher = async (url) => ({ ok: url.endsWith("/source.json"), status: 200, json: async () => SOURCE });
 
 /** The editor data's list rows, no English. */
 const rows = () => [
@@ -230,7 +229,7 @@ test("with the original fixture ROM: the English of every line, its search and i
   const rom = loaded.bytes;
   assert.equal(loaded.sha1, game.sha1);
   assert.equal(loaded.release, undefined);
-  const read = await readEnglish(check, rom, "https://site.test/data/game/ru/source.json", fetcher);
+  const read = check.english(rom, SOURCE);
   assert.deepEqual(read.missing, []);
   const list = rows();
   assert.equal(applyEnglish(list, read.texts), 4);
@@ -246,7 +245,7 @@ test("with the original fixture ROM: the English of every line, its search and i
 
 test("with the fixture ROM: glossary terms and problems follow the loaded English", async () => {
   const rom = fixtureRom();
-  const read = await readEnglish(check, rom, "https://site.test/data/game/ru/source.json", fetcher);
+  const read = check.english(rom, SOURCE);
   const list = rows();
   list[2].translation = "ВОДА"; // The POTION entry without a glossary form.
   applyEnglish(list, read.texts);
@@ -266,7 +265,7 @@ test("with the fixture ROM: glossary terms and problems follow the loaded Englis
 });
 
 test("the combined worker join preserves every loaded row field", async () => {
-  const read = await readEnglish(check, fixtureRom(), "https://site.test/data/game/ru/source.json", fetcher);
+  const read = check.english(fixtureRom(), SOURCE);
   const expected = rows();
   applyEnglish(expected, read.texts);
   applyGlossary(expected, read.texts, GLOSSARY);
@@ -346,7 +345,7 @@ test("a released fixture ROM restores every English line before extraction", asy
   const { base, result, game, release } = await fixtureRelease();
   const patched = await patchRelease(base, PATCH, release);
   assert.deepEqual(patched, result);
-  const partial = await readEnglish(check, patched, `${game.data}ru/source.json`, fetcher);
+  const partial = check.english(patched, SOURCE);
   assert.deepEqual(partial.missing, ["s0012001", "items:0"]);
   const calls = [];
   const other = { ...release, language: "de", result_sha1: "0".repeat(40),
@@ -361,7 +360,7 @@ test("a released fixture ROM restores every English line before extraction", asy
   assert.deepEqual(patched, result);
   assert.equal(loaded.sha1, game.sha1);
   assert.equal(loaded.release, release);
-  const read = await readEnglish(check, loaded.bytes, `${game.data}ru/source.json`, fetcher);
+  const read = check.english(loaded.bytes, SOURCE);
   assert.deepEqual(read.missing, []);
   const list = rows();
   assert.equal(applyEnglish(list, read.texts), 4);
