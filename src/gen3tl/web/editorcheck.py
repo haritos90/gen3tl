@@ -15,6 +15,7 @@ from ..check.entrycheck import (TEXT_CHECKS, Source, addable_tokens, droppable_t
 from ..build.font import decode_glyph, glyph_size, shadow_end
 from ..check.layout import (Limit, Measure, SpriteMeasure, entry_measure, key_count, line_width,
                             lines_of, paragraphs, shadow_overflow, waiting_windows)
+from ..check.provenance import code as coded, encoding_problem, is_warning
 from ..build.release import expand
 from ..lang.termbase import Term, TermMatcher
 
@@ -104,12 +105,12 @@ def source(entry: dict):
                   entry.get("status") == "nothing")
 
 
-def encode_problem(text: str, cm: Charmap) -> str | None:
-    """The message of layout.check for text the charmap cannot encode."""
+def encode_problem(text: str, cm: Charmap) -> dict | None:
+    """The problem of layout.check for text the charmap cannot encode."""
     try:
         cm.encode(text, terminate=False)
     except CharmapError as e:
-        return f"not encodable: {e}"
+        return encoding_problem(e)
     return None
 
 
@@ -219,9 +220,9 @@ class Checker:
             w = ({**original, "slot_details": {name: {**detail, "state": "unavailable",
                       "previous_state": detail.get("previous_state", detail["state"])}
                   for name, detail in (original.get("slot_details") or {}).items()}} if original else None)
-            unavailable = f"substitution measurements unavailable: {exc}"
+            unavailable = coded("substitution_unavailable", error=str(exc))
         if w is None:
-            laid, probs, m, keys = t, ["no inventory entry for this id"], self.measure, None
+            laid, probs, m, keys = t, [coded("no_inventory_entry")], self.measure, None
         else:
             lim = limit_of(w)
             m, keys = entry_measure(self.measure, lim), lim.keys
@@ -235,10 +236,10 @@ class Checker:
                                              scoped_matcher,
                                              self.addable.get(entry["id"]), w.get("pair"))
             except CharmapError as e:   # check batch stops here
-                laid, probs = t, [encode_problem(t, self.cm) or f"not encodable: {e}"]
+                laid, probs = t, [encode_problem(t, self.cm) or encoding_problem(e)]
         if unavailable:
             probs.append(unavailable)
-        problems = [{"message": p, "severity": "warning" if "(warning)" in p else "error"} for p in probs]
+        problems = [{"message": p, "severity": "warning" if is_warning(p) else "error"} for p in probs]
 
         def line(l: str, consumer: dict | None = None) -> dict:
             try:

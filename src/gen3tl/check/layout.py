@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 
 from ..core.charmap import Charmap, CharmapError
-from .provenance import formatted
+from .provenance import code as coded, encoding_problem, noted
 
 TOKEN = re.compile(r"(\\[nlp]|\{[^}]*\})")
 COLOR_LIKE = re.compile(r"^\{(COLOR|HIGHLIGHT|SHADOW|COLOR_HIGHLIGHT_SHADOW|PALETTE|FONT|RESET_FONT|PAUSE|"
@@ -194,26 +194,31 @@ class SpriteMeasure:
         return self.bytes_width(cm.encode(text, terminate=False))
 
 
-def slot_note(line: str, lim: Limit) -> str:
-    """The placeholders of a line with their width and source, for a message."""
-    bits = []
+def slot_items(line: str, lim: Limit) -> list[dict]:
+    """The placeholders of a line with their width and coded source, for a message."""
+    items = []
     for token, px in (lim.placeholders or {}).items():
         if "{" + token + "}" not in line:
             continue
-        source = formatted((lim.slot_sources or {}).get(token, "profile width"))
+        source = (lim.slot_sources or {}).get(token, coded("slot_profile"))
         detail = (lim.slot_details or {}).get(token, {})
         if detail.get("unavailable"):
-            source += "; recorded width; sources unavailable"
+            source = coded("slot_unavailable", source=source)
         parts = []
         for part in detail.get("contributors", []):
             if "text" in part:
-                parts.append(f"«{part['text']}» {part['width']} px")
+                parts.append(coded("slot_part", text=part["text"], width=part["width"]))
             elif part.get("label") == "No prefix":
-                parts.append("no prefix 0 px")
+                parts.append(coded("slot_no_prefix"))
         if parts:
-            source += "; " + ", ".join(parts)
-        bits.append(f"{{{token}}} = {px} px ({source})")
-    return " with " + "; ".join(bits) if bits else ""
+            source = coded("slot_parts", source=source, parts=parts)
+        items.append(coded("slot_item", token="{" + token + "}", width=px, source=source))
+    return items
+
+
+def with_slots(name: str, slots: list[dict], **args) -> dict:
+    """The problem `name`, or its form naming the inserted words of the line."""
+    return coded(f"{name}_slots", slots=slots, **args) if slots else coded(name, **args)
 
 
 def split_tokens(text: str) -> list[str]:
@@ -318,7 +323,7 @@ def crowded(par: str, last: bool, lim: Limit, m: Measure, cm: Charmap, newlines:
             if consumer and line_width(line, m, cm) > consumer["width"] - consumer["arrow"]]
 
 
-def arrow_overflows(laid: str, lim: Limit, m: Measure, cm: Charmap) -> list[str]:
+def arrow_overflows(laid: str, lim: Limit, m: Measure, cm: Charmap) -> list[dict]:
     """Problems for laid-out lines that wait and leave the prompt arrow no room."""
     me = entry_measure(m, lim)
     pars = paragraphs(laid)
@@ -327,9 +332,10 @@ def arrow_overflows(laid: str, lim: Limit, m: Measure, cm: Charmap) -> list[str]
         for l, consumer in zip(lines_of(par), waiting):
             if not consumer or line_width(l, me, cm) <= consumer["width"] - consumer["arrow"]:
                 continue
-            where = f" in {formatted(consumer['name'])}" if consumer.get("name") else ""
-            out.append(f"line leaves no room for the prompt arrow: box {i}: {line_width(l, me, cm)} > "
-                       f"{consumer['width'] - consumer['arrow']} px{where}: {l[:40]!r}")
+            args = {"box": i, "width": line_width(l, me, cm), "limit": consumer["width"] - consumer["arrow"],
+                    "text": repr(l[:40])}
+            out.append(coded("arrow_room_window", where=consumer["name"], **args) if consumer.get("name")
+                       else coded("arrow_room", **args))
     return out
 
 
@@ -510,7 +516,7 @@ def dash_starts(par: str) -> list[bool]:
             for wi, w in enumerate(x for x in split_words(line) if x != "") if w == DASH]
 
 
-def wrapped_dash_lines(text: str, laid_out: str) -> list[str]:
+def wrapped_dash_lines(text: str, laid_out: str) -> list[dict]:
     """Problems for lines that start with a spaced hyphen after an automatic wrap."""
     out = []
     for i, (a, b) in enumerate(zip(paragraphs(text), paragraphs(laid_out)), 1):
@@ -522,12 +528,12 @@ def wrapped_dash_lines(text: str, laid_out: str) -> list[str]:
                 if w != DASH:
                     continue
                 if wi == 0 and not (n < len(src) and src[n]):
-                    out.append(f"line starts with a spaced hyphen after an automatic wrap: box {i}: {line[:40]!r}")
+                    out.append(coded("wrapped_dash", box=i, text=repr(line[:40])))
                 n += 1
     return out
 
 
-def slot_rewraps(text: str, lim: Limit, m: Measure, cm: Charmap) -> list[str]:
+def slot_rewraps(text: str, lim: Limit, m: Measure, cm: Charmap) -> list[dict]:
     """Translator lines that fit with profile placeholder widths and not with the insertion widths."""
     if lim.kind not in ("dialogue", "battle") or not lim.placeholders:
         return []
@@ -537,20 +543,19 @@ def slot_rewraps(text: str, lim: Limit, m: Measure, cm: Charmap) -> list[str]:
         for l in lines_of(par):
             w = line_width(l, me, cm)
             if not fits(l, lim.width, me, cm) and fits(l, lim.width, m, cm):
-                out.append(f"line wider than the window with the inserted words: box {i}: {w} > {lim.width} px: "
-                           f"{l[:40]!r}{slot_note(l, lim)}; the build re-wraps the box")
+                out.append(with_slots("slot_rewrap", slot_items(l, lim), box=i, width=w, limit=lim.width,
+                                      text=repr(l[:40])))
     return out
 
 
-def short_line_ends(text: str) -> list[str]:
+def short_line_ends(text: str) -> list[dict]:
     """Written lines ending with a word the wrap keeps with the next."""
     out = []
     for i, par in enumerate(paragraphs(text), 1):
         for j, line in enumerate(lines_of(par)[:-1], 1):
             words = line.rstrip(" ").split(" ")
             if words[-1] and keeps_with_next(words[-1]):
-                out.append(f"written line ends with «{words[-1]}»: box {i}, line {j}; "
-                           f"the break stays as written")
+                out.append(coded("short_line_end", word=words[-1], box=i, row=j))
     return out
 
 
@@ -565,7 +570,7 @@ def inserted(tok: str, m: Measure) -> bool:
             or name.startswith("B_") or name.startswith("STR_VAR"))
 
 
-def split_names(laid: str, lim: Limit, m: Measure) -> list[str]:
+def split_names(laid: str, lim: Limit, m: Measure) -> list[dict]:
     """Shown breaks that split a noun from the name after it, or a count from its unit."""
     rules = language.current().data.get("wrapping", {})
     heads, units = rules.get("name_heads"), rules.get("count_units", [])
@@ -581,16 +586,16 @@ def split_names(laid: str, lim: Limit, m: Measure) -> list[str]:
             words = [w for w in split_words(a) if w]
             word = visible_word(words[-1]) if words else ""
             if heads and right and inserted(right[0], me) and re.fullmatch(heads, word, re.IGNORECASE):
-                out.append(f"shown break splits «{word}» from the name after it: box {i}, line {j}")
+                out.append(coded("split_name", word=word, box=i, row=j))
             starts = [w for w in split_words(b) if w]
             first = visible_word(starts[0]) if starts else ""
             unit = next((u for u in units if first.startswith(u)), None)
             if left and inserted(left[-1], me) and unit:
-                out.append(f"shown break splits a count from «{unit}»: box {i}, line {j}")
+                out.append(coded("split_count", unit=unit, box=i, row=j))
     return out
 
 
-def dropped_breaks(text: str, lim: Limit, m: Measure, cm: Charmap) -> list[str]:
+def dropped_breaks(text: str, lim: Limit, m: Measure, cm: Charmap) -> list[dict]:
     """Written breaks the layout drops in a paragraph whose translator lines exceed the window."""
     if lim.kind in ("single", "field"):
         return []
@@ -606,9 +611,8 @@ def dropped_breaks(text: str, lim: Limit, m: Measure, cm: Charmap) -> list[str]:
             if not fits(l, lim.width, me, cm):
                 if shown is None:
                     shown = paragraphs(layout(text, lim, m, cm))
-                out.append(f"written line wider than the window: box {i}: {w} > {lim.width} px: "
-                           f"{l[:40]!r}; the build drops the written breaks of the box and re-wraps it "
-                           f"as {shown[i - 1]!r}")
+                out.append(coded("dropped_breaks", box=i, width=w, limit=lim.width, text=repr(l[:40]),
+                                 shown=repr(shown[i - 1])))
     return out
 
 
@@ -681,6 +685,11 @@ def layout(text: str, lim: Limit, m: Measure, cm: Charmap, keep: bool = True) ->
     return "\\p".join(out_pars)
 
 
+# the problems of a too wide line
+LINE_WIDE = frozenset({"line_wide", "line_wide_window", "line_wide_slots", "line_wide_slots_window",
+                       "column_wide", "column_wide_slots"})
+
+
 def strip_prefixes(text: str, lim: Limit) -> str:
     """The text as the code prints it: without each prefix of lim.strip in turn that it starts with."""
     for p in lim.strip or []:
@@ -689,55 +698,58 @@ def strip_prefixes(text: str, lim: Limit) -> str:
     return text
 
 
-def check(text: str, lim: Limit, m: Measure, cm: Charmap) -> list[str]:
+def check(text: str, lim: Limit, m: Measure, cm: Charmap) -> list[dict]:
     problems = []
     m = entry_measure(m, lim)
     try:
         raw = cm.encode(text, terminate=False)
     except CharmapError as e:
-        return [f"not encodable: {e}"]
+        return [encoding_problem(e)]
     if lim.chars is not None:
         n = len(raw)
         if n > lim.chars:
-            problems.append(f"field overflow: {n} > {lim.chars} characters")
+            problems.append(coded("field_overflow", n=n, limit=lim.chars))
     if lim.bytes is not None and len(raw) > lim.bytes:
-        problems.append(f"in-place overflow: {len(raw)} > {lim.bytes} bytes")
+        problems.append(coded("in_place_overflow", n=len(raw), limit=lim.bytes))
     # the code reads from inside the text
     head = b"" if lim.head is None else cm.encode(lim.head, terminate=False)
     if not raw.startswith(head):
-        problems.append(f"must begin with {lim.head}: the code reads the text from byte {len(head)}")
+        problems.append(coded("head_missing", head=lim.head, byte=len(head)))
     # the rest measured as printed; the head checked once
     shown = strip_prefixes(text, lim)
     if shown != text:
         cut = text[:len(text) - len(shown)]
         rest = check(shown, Limit(**{**vars(lim), "chars": None, "bytes": None, "strip": None, "head": None}),
                      m, cm)
-        return problems + [p + f" (prefix {cut!r} stripped)" if p.startswith("line too wide") else p for p in rest]
+        return problems + [noted(p, "prefix_stripped", prefix=repr(cut)) if p["code"] in LINE_WIDE else p for p in rest]
     total_lines = 0
     for par in paragraphs(runtime_text(text, lim.newline_scroll_after)):
         ls = lines_of(par)
         total_lines += len(ls)
         if lim.kind in ("single", "field") and len(ls) > 1:
-            problems.append("line break in a single-line field")
+            problems.append(coded("single_line_break"))
         if (lim.kind in ("dialogue", "battle") or lim.newline_scroll_after is not None) and lim.lines and len(ls) > lim.lines:
             # over two lines per box need scrolling (\\l)
             if "\\l" not in par:
-                problems.append(f"{len(ls)} lines in one box without scrolling")
+                problems.append(coded("box_unscrolled", n=len(ls)))
         for l in ls:
             if lim.keys is not None:   # keys, not pixels
                 n = key_count(l)
                 if n > lim.keys:
-                    problems.append(f"too many keys: {n} > {lim.keys}: {l[:40]!r}")
+                    problems.append(coded("too_many_keys", n=n, limit=lim.keys, text=repr(l[:40])))
                 continue
             w = line_width(l, m, cm)
             if w > lim.width and not shadow_overflow(l, lim.width, m, cm):
                 consumer = min(lim.consumers, key=lambda c: c["width"]) if len(lim.consumers or []) > 1 else None
-                where = f"; window {formatted(consumer['name'])}" if consumer else ""
-                problems.append(f"line too wide: {w} > {lim.width} px: {l[:40]!r}" + slot_note(l, lim) + where)
+                slots = slot_items(l, lim)
+                name = "line_wide" + ("_slots" if slots else "") + ("_window" if consumer else "")
+                problems.append(coded(name, width=w, limit=lim.width, text=repr(l[:40]),
+                                      **({"slots": slots} if slots else {}),
+                                      **({"where": consumer["name"]} if consumer else {})))
             # text past its CLEAR_TO column
             for x, n, seg in column_overflows(l, m, cm):
-                problems.append(f"line too wide: {x} > {n} px before the column {{CLEAR_TO {n:02X}}}: "
-                                f"{seg[:40]!r}" + slot_note(seg, lim))
+                problems.append(with_slots("column_wide", slot_items(seg, lim), width=x, limit=n,
+                                           column=f"{{CLEAR_TO {n:02X}}}", text=repr(seg[:40])))
     if lim.kind == "multiline" and lim.newline_scroll_after is None and lim.lines and total_lines > lim.lines:
-        problems.append(f"too many lines: {total_lines} > {lim.lines}")
+        problems.append(coded("too_many_lines", n=total_lines, limit=lim.lines))
     return problems

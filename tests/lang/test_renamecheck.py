@@ -12,6 +12,7 @@ from gen3tl.lang import termbase as tb
 from gen3tl.check.entrycheck import entry_problems
 from gen3tl.lang.langpack import LangPack
 from gen3tl.check.layout import Limit, Measure
+from gen3tl.check.provenance import code, formatted, noted
 from gen3tl.catalog.po import PoEntry, read, write
 from project_fixture import workspace_project, select_language
 
@@ -102,6 +103,14 @@ class ProblemTest(unittest.TestCase):
                          [{"message": after[1], "severity": "error"},
                           {"message": "x (warning)", "severity": "warning"}])
 
+    def test_a_coded_problem_pairs_by_its_text_and_takes_its_severity_from_its_notes(self):
+        wide = code("line_wide", width=80, limit=60, text="'б'")
+        self.assertEqual(rc.problem_key(wide), rc.problem_key("line too wide: 70 > 60 px: 'а'"))
+        term = noted(code("glossary_missing", term="'Gym'", translation="'гим'"), "warning")
+        self.assertEqual(rc.problem_key(term), rc.problem_key("glossary term 'Gym' -> 'гим' not found (warning)"))
+        self.assertEqual(rc.added_problems([code("line_wide", width=70, limit=60, text="'а'")], [wide, term]),
+                         [{"message": term, "severity": "warning"}])
+
 class RenameReportTest(unittest.TestCase):
     def test_width_overflow_is_blocked(self):
         gym = term("term:gym", "Gym", "гим", GIM)
@@ -112,7 +121,7 @@ class RenameReportTest(unittest.TestCase):
         by_id = {e["id"]: e for e in rep["entries"]}
         self.assertEqual(by_id["s1"]["after"], "Стадион Антисиса")
         self.assertEqual([p["severity"] for p in by_id["s1"]["added"]], ["error"])
-        self.assertTrue(by_id["s1"]["added"][0]["message"].startswith("line too wide: 96 > 80 px"))
+        self.assertTrue(formatted(by_id["s1"]["added"][0]["message"]).startswith("line too wide: 96 > 80 px"))
         self.assertEqual(by_id["s2"]["added"], [])
         self.assertEqual(by_id["s3"]["added"], [])   # wider, but not new
         s = rep["summary"]
@@ -237,7 +246,7 @@ class RenameReportTest(unittest.TestCase):
         catalog = {"s1": ("The Gym Leader waits.", "Гим-лидер ждёт.", Limit("dialogue", 208, 2))}
         rep = run(catalog, [gym, leader], [rc.Rename(gym, "стадион", STADION)])
         self.assertEqual(rep["entries"][0]["after"], "Стадион-лидер ждёт.")
-        self.assertEqual([p["message"] for p in rep["entries"][0]["added"]],
+        self.assertEqual([formatted(p["message"]) for p in rep["entries"][0]["added"]],
                          ["glossary term 'Gym Leader' -> 'гим-лидер' not found (warning)"])
         rep = run(catalog, [gym, leader], [rc.Rename(leader, "лидер стадиона", LEADER),
                                            rc.Rename(gym, "стадион", STADION)])   # the longer term first

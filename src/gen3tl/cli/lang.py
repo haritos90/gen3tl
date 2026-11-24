@@ -162,6 +162,7 @@ def _rename_checks(args, catalog, terms, renames, changes):
     from ..lang import termbase as tb
     from ..core.charmap import CharmapError
     from ..check.entrycheck import entry_problems
+    from ..check.provenance import formatted
     from ..build.font import FontTable
     from ..lang.langpack import LangPack
     from ..check.layout import Measure
@@ -194,9 +195,10 @@ def _rename_checks(args, catalog, terms, renames, changes):
         if lim is None:
             return ["no inventory entry for this id"]
         try:
-            return entry_problems(catalog[sid][1].msgid, expand(text, version), lim, measure, cm,
-                                  optional | droppable.get(sid, set()), forbidden, windows.other(sid),
-                                  windows.measures, matcher, addable.get(sid))[1]
+            return [formatted(p) for p in entry_problems(catalog[sid][1].msgid, expand(text, version), lim, measure,
+                                                         cm, optional | droppable.get(sid, set()), forbidden,
+                                                         windows.other(sid), windows.measures, matcher,
+                                                         addable.get(sid))[1]]
         except CharmapError as e:   # check batch stops here
             return [f"not encodable: {e}"]
     checked = {sid: e.msgstr for sid, (p, e) in catalog.items()

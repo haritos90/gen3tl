@@ -107,8 +107,31 @@ MODES = {"field": FIELD_PLACEHOLDERS, "battle": BATTLE_PLACEHOLDERS}
 _HEX2 = re.compile(r"^[0-9A-F]{2}$")
 
 
+# the encoder's errors: one template per code
+ERRORS = {
+    "unknown_escape": "unknown escape {escape} at {at} in {text}",
+    "unclosed_brace": "unclosed brace at {at} in {text}",
+    "unmapped_character": "character {char} (U+{unicode}) has no byte, in {text}",
+    "empty_token": "empty token in {text}",
+    "token_arguments": "{token} needs {n} hex argument(s), in {text}",
+    "unknown_token": "unknown token {token} in {text}",
+}
+FIELD = re.compile(r"\{(\w+)\}")
+
+
 class CharmapError(ValueError):
-    pass
+    """A codec error; `coded` is its code with its arguments, where ERRORS has one."""
+
+    def __init__(self, message: str, coded: dict | None = None):
+        super().__init__(message)
+        self.coded = coded
+
+
+def _error(name: str, **args) -> CharmapError:
+    """The encoder error `name` with its arguments, in the order of its template."""
+    template = ERRORS[name]
+    return CharmapError(FIELD.sub(lambda m: str(args[m[1]]), template),
+                        {"code": name, **{field: args[field] for field in FIELD.findall(template)}})
 
 
 class Charmap:
@@ -202,19 +225,19 @@ class Charmap:
                 elif nxt == "p":
                     out.append(PARAGRAPH)
                 else:
-                    raise CharmapError(f"unknown escape \\{nxt} at {i} in {text!r}")
+                    raise _error("unknown_escape", escape=f"\\{nxt}", at=i, text=repr(text))
                 i += 2
                 continue
             if c == "{":
                 j = text.find("}", i)
                 if j < 0:
-                    raise CharmapError(f"unclosed brace at {i} in {text!r}")
+                    raise _error("unclosed_brace", at=i, text=repr(text))
                 out += self._encode_token(text[i + 1:j], text)
                 i = j + 1
                 continue
             b = self.encode_table.get(c)
             if b is None:
-                raise CharmapError(f"character {c!r} (U+{ord(c):04X}) has no byte, in {text!r}")
+                raise _error("unmapped_character", char=repr(c), unicode=f"{ord(c):04X}", text=repr(text))
             out.append(b)
             i += 1
         if terminate:
@@ -224,7 +247,7 @@ class Charmap:
     def _encode_token(self, tok: str, text: str) -> bytes:
         parts = tok.split()
         if not parts:
-            raise CharmapError(f"empty token in {text!r}")
+            raise _error("empty_token", text=repr(text))
         head, args = parts[0], parts[1:]
         if len(parts) == 1 and _HEX2.match(head):
             return bytes([int(head, 16)])
@@ -233,13 +256,13 @@ class Charmap:
         if head in self.ctrl_by_name:
             code, nargs = self.ctrl_by_name[head]
             if len(args) != nargs or not all(_HEX2.match(a) for a in args):
-                raise CharmapError(f"{{{tok}}} needs {nargs} hex argument(s), in {text!r}")
+                raise _error("token_arguments", token=f"{{{tok}}}", n=nargs, text=repr(text))
             return bytes([CTRL, code] + [int(a, 16) for a in args])
         if not args and head in self.placeholder_by_name:
             return bytes([PLACEHOLDER, self.placeholder_by_name[head]])
         if not args and head in self.named_to_byte:
             return bytes([self.named_to_byte[head]])
-        raise CharmapError(f"unknown token {{{tok}}} in {text!r}")
+        raise _error("unknown_token", token=f"{{{tok}}}", text=repr(text))
 
     def can_encode(self, text: str) -> bool:
         try:

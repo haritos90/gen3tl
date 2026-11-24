@@ -20,6 +20,7 @@ from gen3tl.build.graphics import (GraphicsConfig, GraphicsError, append_problem
                                    check_report, parse_area, pixel_check)
 from gen3tl.check.entrycheck import entry_problems  # noqa: E402
 from gen3tl.check.layout import Limit, Measure, SpriteMeasure, check, slot_rewraps, wrapped_dash_lines  # noqa: E402
+from gen3tl.check.provenance import MESSAGES as TEMPLATES, NOTES  # noqa: E402
 from gen3tl.check.render import PngImage, indexed_png  # noqa: E402
 from gen3tl.core.charmap import Charmap  # noqa: E402
 from gen3tl.lang.langpack import LangPack  # noqa: E402
@@ -32,15 +33,10 @@ from project_fixture import select_language  # noqa: E402
 WEB = TOOLKIT_ROOT / "web"
 NODE = shutil.which("node")
 
-PARSE = '''
+KEYS = '''
 import fs from "node:fs";
-import { ENCODING, MESSAGES, NOTES, parseMessage } from "%s";
-const messages = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
-const parsed = messages.map((m) => {
-  const p = parseMessage(m);
-  return p && { key: p.key, notes: p.notes.map((n) => n.key), error: p.error?.key ?? null };
-});
-fs.writeFileSync(process.argv[3], JSON.stringify({ keys: [...MESSAGES, ...ENCODING, ...NOTES], parsed }));
+import { ENCODING, MESSAGES, NOTES } from "%s";
+fs.writeFileSync(process.argv[3], JSON.stringify({ keys: [...MESSAGES, ...ENCODING], notes: NOTES }));
 '''
 
 PARSE_FINDINGS = '''
@@ -52,8 +48,8 @@ fs.writeFileSync(process.argv[3], JSON.stringify({ keys: [...FINDINGS, ...REPORT
 '''
 
 
-def messages() -> list[str]:
-    """One message of every kind the editor's check gives, from the functions that word them."""
+def messages() -> list[dict]:
+    """One problem of every kind the editor's check gives, from the functions that code them."""
     cm = LangPack.load("ru", "unbound").charmap()
     m = Measure(lambda b: 6, {"PLAYER": 42}, styles={"wide": lambda b: 12})
     out = []
@@ -109,7 +105,15 @@ def messages() -> list[str]:
            "placeholders": {"default": 0, "widths": {}}, "charmap": {}, "glossary": {}}
     checker = Checker(doc, {"main": bytes([6] * 256)})
     out.extend(p["message"] for p in checker.check({"id": "x", "source_text": "Hi", "window": None}, "Hi")["problems"])
-    return list(dict.fromkeys(out))
+    return list({json.dumps(p, sort_keys=True): p for p in out}.values())
+
+
+def shown_codes(problem: dict) -> list[str]:
+    """The codes a problem shows with a key of its own: its notes, the problem and its encoder error."""
+    if problem["code"] in NOTES:
+        return [problem["code"], *shown_codes(problem["message"])]
+    error = problem.get("error")
+    return [problem["code"], *(shown_codes(error) if isinstance(error, dict) else [])]
 
 
 def findings() -> list[str]:
@@ -211,16 +215,22 @@ def setUpModule():
 @unittest.skipUnless(NODE, "no node")
 class CheckMessagesTest(unittest.TestCase):
     def test_every_message_kind_has_a_key_and_a_russian_entry(self):
-        found = messages()
-        out = node_parse(PARSE, found)
-        self.assertEqual([m for m, p in zip(found, out["parsed"]) if p is None], [])
+        out = node_parse(KEYS, [])
         used = set()
-        for p in out["parsed"]:
-            used.update([p["key"], *p["notes"], *([p["error"]] if p["error"] else [])])
-        self.assertEqual(sorted(set(out["keys"]) - used), [], "a key no message of the check has")
-        self.assertEqual(len(out["keys"]), 44)
+        for problem in messages():
+            for code in shown_codes(problem):
+                with self.subTest(code=code):
+                    # the page shows a note's key after the problem, the others by their template
+                    key = out["notes"][code] if code in NOTES else TEMPLATES[code]
+                    self.assertEqual(TEMPLATES[code], f"{{message}} {key}" if code in NOTES else key)
+                    self.assertIn(key, [*out["keys"], *out["notes"].values()], "a code the page has no key for")
+                    used.add(key)
+        keys = [*out["keys"], *out["notes"].values()]
+        self.assertEqual(sorted(set(keys) - used), [], "a key no problem of the check has")
+        self.assertEqual(len(keys), 44)
+        self.assertEqual(sorted(out["notes"]), sorted(NOTES))
         ru = sitecatalog.strings(sitecatalog.load(sitecatalog.CATALOGS / "ru.po"))
-        self.assertEqual([k for k in out["keys"] if k not in ru], [])
+        self.assertEqual([k for k in keys if k not in ru], [])
 
     def test_every_graphics_finding_has_a_key_and_a_russian_entry(self):
         found = findings()

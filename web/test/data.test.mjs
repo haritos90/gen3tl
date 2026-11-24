@@ -9,6 +9,7 @@ import { fakeFetch, storedLanguage } from "./fixture.mjs";
 import { EDITOR_SCHEMA, loadIndex, verifyEditorSchema, projectProfiles, verifyProjectIndex } from "../js/data.js";
 import { loadAliases, placeOf, tableKey, tailId } from "../js/data.js";
 import { checkDoc } from "../js/check.js";
+import { glossaryMissing } from "../js/checktext.js";
 
 test("keyboard routes retain their target kind and decoded identity", () => {
   for (const kind of ["page", "chat"]) {
@@ -80,9 +81,9 @@ const ROWS = [
   { id: "s0000200", chunk: 0, status: "untranslated", source_text: "Potion", translation: "", kind: "single",
     maps: ["Bellin Town"], reach: "never shown", problems: [] },
   { id: "s0000300", chunk: 1, status: "fuzzy", source_text: "It's super effective!", translation: "Очень эффективно!",
-    kind: "battle", maps: [], reach: "possibly reachable", problems: [ERR("line too wide: 230 > 208 px: 'x'")] },
+    kind: "battle", maps: [], reach: "possibly reachable", problems: [ERR({ code: "line_wide", width: 230, limit: 208, text: "'x'" })] },
   { id: "s0000400", chunk: 2, status: "approved", source_text: "Seaport", translation: "Порт", kind: "single",
-    maps: ["Seaport City"], problems: [WARN("glossary term 'Seaport' -> 'Сипорт' not found (warning)")] },
+    maps: ["Seaport City"], problems: [WARN(glossaryMissing("'Seaport'", "'Сипорт'"))] },
 ];
 
 const ids = (f, edits) => filterRows(ROWS, f, edits, groupsOf(INDEX.chunks)).map((i) => ROWS[i].id);
@@ -121,7 +122,7 @@ test("decoded rows and entries take their defaults from the format", async () =>
 });
 
 test("old indexes, term files and chunks cannot mix with current data", async () => {
-  for (const schema of [undefined, 1, "1.0.0", "2.0.0", "2.1.0", "7.4.0", "8.1.0", "10.0.0"]) {
+  for (const schema of [undefined, 1, "1.0.0", "2.0.0", "2.1.0", "7.4.0", "8.0.0", "9.1.0", "11.0.0"]) {
     assert.throws(() => verifyProjectIndex({ schema, profile: "fixture", language: "xx" }, "fixture", "xx"), /schema/);
     assert.throws(() => verifyEditorSchema({ schema, terms: [] }), /schema/);
     assert.throws(() => new Chunks("", { schema, chunks: [] }), /schema/);
@@ -137,15 +138,15 @@ test("old indexes, term files and chunks cannot mix with current data", async ()
     await assert.rejects(loadIndex(`${DATA}index.json`, fakeFetch({ ...files, [`${DATA}index.json`]:
       { ...files[`${DATA}index.json`], schema } })), /schema/);
   }
-  assert.equal(EDITOR_SCHEMA, "9.0.0");
+  assert.equal(EDITOR_SCHEMA, "10.0.0");
   // the data of the previous schema still loads
   const previous = storedLanguage(`${DATA}index.json`, { language: "ru", list: [{ id: "s1", status: "approved" }] });
-  for (const doc of Object.values(previous)) if (doc.schema === EDITOR_SCHEMA) doc.schema = "8.0.0";
+  for (const doc of Object.values(previous)) if (doc.schema === EDITOR_SCHEMA) doc.schema = "9.0.0";
   const index = await loadIndex(`${DATA}index.json`, fakeFetch(previous));
-  assert.equal(index.schema, "8.0.0");
+  assert.equal(index.schema, "9.0.0");
   assert.equal((await new Chunks(DATA, index, fakeFetch(previous)).get(0)).byId.get("s1").id, "s1");
-  for (const schema of ["8.0.0", "9.0.0"]) assert.doesNotThrow(() => verifyEditorSchema({ schema, terms: [] }));
-  assert.throws(() => verifyEditorSchema({ schema: "7.4.0", terms: [] }), /Catalog schema does not match 9\.0\.0/);
+  for (const schema of ["9.0.0", "10.0.0"]) assert.doesNotThrow(() => verifyEditorSchema({ schema, terms: [] }));
+  assert.throws(() => verifyEditorSchema({ schema: "8.0.0", terms: [] }), /Catalog schema does not match 10\.0\.0/);
 });
 
 test("JSON and paths", async () => {
@@ -179,15 +180,18 @@ test("filters: status, file, map and window", () => {
 });
 
 test("filters: problems, with the page's edits first", () => {
-  assert.ok(isOverflow(ERR("too many lines: 4 > 3")));
-  assert.ok(isOverflow(WARN("written line wider than the window: box 1: 220 > 208 px")));
-  assert.ok(!isOverflow(WARN("box 1 wraps to 3 lines, the English box has 2 (warning)")));
-  assert.ok(isOverflow(ERR("pair too wide: 117 > 111 px in HUD (hud) with «A» table:abilities/1, 61 px, for «B» table:species/1")));
+  assert.ok(isOverflow(ERR({ code: "too_many_lines", n: 4, limit: 3 })));
+  const dropped = { code: "dropped_breaks", box: 1, width: 220, limit: 208, text: "'x'", shown: "'x'" };
+  assert.ok(isOverflow(WARN({ code: "warning", message: { code: "unmeasured_width", message: dropped } })));
+  assert.ok(!isOverflow(WARN({ code: "warning", message: { code: "box_wraps", box: 1, n: 3, lines: 2 } })));
+  assert.ok(isOverflow(ERR({ code: "pair_wide", width: 117, limit: 111, where: "HUD", font: "hud", partner: "A",
+    partner_id: "table:abilities/1", partner_width: 61, outline: 1, species: "B", species_id: "table:species/1" })));
+  assert.ok(!isOverflow(ERR("too many lines: 4 > 3")), "a text is not read for its code");
   assert.deepEqual(ids({ problems: "overflow" }), ["s0000300"]);
   assert.deepEqual(ids({ problems: "errors" }), ["s0000300"]);
   assert.deepEqual(ids({ problems: "warnings" }), ["s0000400"]);
   const edits = new Map([["s0000300", { translation: "Эффективно!", problems: [] }],
-    ["s0000100", { translation: "Ну\\nи ну", problems: [ERR("3 lines in one box without scrolling")] }]]);
+    ["s0000100", { translation: "Ну\\nи ну", problems: [ERR({ code: "box_unscrolled", n: 3 })] }]]);
   assert.deepEqual(ids({ problems: "overflow" }, edits), ["s0000100"]);
   assert.deepEqual(ids({ status: "edited" }, edits), ["s0000100", "s0000300"]);
 });

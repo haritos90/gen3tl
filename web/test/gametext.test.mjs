@@ -10,6 +10,7 @@ import { TEXT_NOTE, applyEnglish, applyGlossary, englishBlock, englishOf, joinRo
   searchHint, shipsEnglish, unavailableNote, withEnglish } from "../js/gametext.js";
 import { digest as romDigest, patchRelease } from "../js/patcher-core.js";
 import { setCatalog, t } from "../js/ui.js";
+import { checkText } from "../js/checktext.js";
 import { allForms, englishTerms, glossaryProblems, hasTermForm, norm, pyRepr, stripCodes } from "../js/terms.js";
 import { EditorRuntime } from "../js/editor-runtime.js";
 
@@ -255,8 +256,9 @@ test("with the fixture ROM: glossary terms and problems follow the loaded Englis
   assert.deepEqual(list[2].terms, ["term:potion"]);
   assert.deepEqual(list[2].problems, [{
     severity: "warning",
-    message: "glossary term 'POTION' -> 'Зелье' not found (warning)",
+    message: { code: "warning", message: { code: "glossary_missing", term: "'POTION'", translation: "'Зелье'" } },
   }]);
+  assert.equal(checkText(list[2].problems[0].message), "glossary term 'POTION' -> 'Зелье' not found (warning)");
   assert.deepEqual(list[0].problems, [], "a present form leaves no glossary problem");
   assert.deepEqual(list[1].problems, [], "untranslated rows keep the build's marks");
   assert.equal(applyGlossary(list, null, GLOSSARY), 0); // The ROM forgotten.
@@ -312,7 +314,8 @@ test("indexed glossary matches and warnings equal the plain matcher", () => {
         new RegExp(`(?<![\\p{L}\\p{N}])${escape(norm(form, fold))}(?![\\p{L}\\p{N}])`, "u").test(low)))
         .map((term) => term.source_text));
       const expected = matches.filter((term) => !present.has(term.source_text)).map((term) => ({ severity: "warning",
-        message: `glossary term ${pyRepr(term.source_text)} -> ${pyRepr(term.translation)} not found (warning)` }));
+        message: { code: "warning", message: { code: "glossary_missing", term: pyRepr(term.source_text),
+          translation: pyRepr(term.translation) } } }));
       assert.deepEqual(glossaryProblems(english, translation, glossary, fold), expected, `${english}: ${translation}`);
     }
   }

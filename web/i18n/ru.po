@@ -5719,9 +5719,9 @@ msgid "typography: {reason}"
 msgstr "типографика: {reason}"
 
 #. js/checktext.js
-msgctxt "site:not centred in the {window} px window: lead with {code}"
-msgid "not centred in the {window} px window: lead with {code}"
-msgstr "не по центру окна шириной {window} px: начните с {code}"
+msgctxt "site:not centred in the {window} px window: lead with {token}"
+msgid "not centred in the {window} px window: lead with {token}"
+msgstr "не по центру окна шириной {window} px: начните с {token}"
 
 #. js/checktext.js
 msgctxt "site:glossary term {term} -> {translation} not found"
@@ -6364,35 +6364,9 @@ msgid "code fill"
 msgstr "заполнение кодом"
 
 #. js/checktext.js
-msgctxt "site:the window of {host}, which inserts it: {rule}"
-msgid "the window of {host}, which inserts it: {rule}"
-msgstr "окно {host}, куда вставляется эта строка: {rule}"
-
-#. js/checktext.js
-msgctxt "site:{rule}, centred against {ref}"
-msgid "{rule}, centred against {ref}"
-msgstr "{rule}, по центру относительно {ref}"
-
-#. js/checktext.js
-msgctxt "site:two lines per message box ({via})"
-msgid "two lines per message box ({via})"
-msgstr "две строки на окно сообщения ({via})"
-
-#. js/checktext.js
 msgctxt "site:two lines per message box"
 msgid "two lines per message box"
 msgstr "две строки на окно сообщения"
-
-#. js/checktext.js
-msgctxt ""
-"site:[layout.box_width] {name}: the message box, measured in game ({via})"
-msgid "[layout.box_width] {name}: the message box, measured in game ({via})"
-msgstr "[layout.box_width] {name}: окно сообщения, измерено в игре ({via})"
-
-#. js/checktext.js
-msgctxt "site:[layout.box_width] {name}: the message box, measured in game"
-msgid "[layout.box_width] {name}: the message box, measured in game"
-msgstr "[layout.box_width] {name}: окно сообщения, измерено в игре"
 
 #. js/checktext.js
 msgctxt "site:the English: its widest line"
@@ -6428,26 +6402,6 @@ msgstr "английский текст: самая широкая строка 
 msgctxt "site:the English: the most lines of {file}"
 msgid "the English: the most lines of {file}"
 msgstr "английский текст: больше всего строк в {file}"
-
-#. js/checktext.js
-msgctxt "site:[language policy] window_width.{id}: text budget"
-msgid "[language policy] window_width.{id}: text budget"
-msgstr "[политика языка] window_width.{id}: место для текста"
-
-#. js/checktext.js
-msgctxt "site:[layout.window_width] {id}: measured in game"
-msgid "[layout.window_width] {id}: measured in game"
-msgstr "[layout.window_width] {id}: измерено в игре"
-
-#. js/checktext.js
-msgctxt "site:[layout.window_lines] {id}: measured in game"
-msgid "[layout.window_lines] {id}: measured in game"
-msgstr "[layout.window_lines] {id}: измерено в игре"
-
-#. js/checktext.js
-msgctxt "site:[keyboard] columns: the key cells of its keyboard"
-msgid "[keyboard] columns: the key cells of its keyboard"
-msgstr "[keyboard] columns: клетки клавиш её клавиатуры"
 
 #. js/checktext.js
 msgctxt ""

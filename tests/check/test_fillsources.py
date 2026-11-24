@@ -267,7 +267,8 @@ class FillSourceIntegrationTest(unittest.TestCase):
 
         from gen3tl.catalog.keys import Aliases
         from gen3tl.check import qa
-        from gen3tl.check.layout import check, entry_measure, slot_note
+        from gen3tl.check.layout import check, entry_measure, slot_items
+        from gen3tl.check.provenance import formatted
         from gen3tl.web.editordata import keyed_window
         self.prof["font"][0].update(glyphs=0, widths=0, count=256)
         self.prof["keyboard"] = {"rows": {"test_keys_0": "AB"}}
@@ -287,12 +288,12 @@ class FillSourceIntegrationTest(unittest.TestCase):
             with self.subTest(sid=sid):
                 limit = limits[sid]
                 self.assertEqual(limit.placeholders["B_ATK_NAME_WITH_PREFIX"], width)
-                self.assertIn(words, slot_note(text, limit))
+                self.assertIn(words, "; ".join(map(formatted, slot_items(text, limit))))
                 window = keyed_window(asdict(limit), Aliases())
                 self.assertEqual(window["slot_context"], context)
                 self.assertEqual(window["slot_details"]["B_ATK_NAME_WITH_PREFIX"]["width"], width)
                 limit.width = 8
-                problems = check(text, limit, entry_measure(self.measure, limit), self.cm)
+                problems = [formatted(p) for p in check(text, limit, entry_measure(self.measure, limit), self.cm)]
                 self.assertTrue(any(words in problem for problem in problems), problems)
 
 class FillSourcePageTest(unittest.TestCase):
@@ -351,7 +352,7 @@ class FillSourcePageTest(unittest.TestCase):
         detail = result["window"]["slot_details"]["B_ATK_NAME_WITH_PREFIX"]
         self.assertEqual((detail["width"], detail["state"]), (60, "recorded"))
         self.assertIn("original measurement unavailable", detail["unavailable"])
-        self.assertFalse(any("substitution measurements unavailable" in p["message"] for p in result["problems"]))
+        self.assertFalse(any(p["message"]["code"] == "substitution_unavailable" for p in result["problems"]))
 
     def test_page_original_fallback_empty_and_font_revision(self):
         values = {sid: {"translation": "", "flags": []} for sid in self.catalog}
@@ -383,7 +384,8 @@ class FillSourcePageTest(unittest.TestCase):
         host = self.host()
         result = self.checker().check(host, host["source_text"], drafts={"p1": {"translation": "@", "state": "text"}})
         self.assertGreater(result["errors"], 0)
-        self.assertIn("substitution measurements unavailable", result["problems"][-1]["message"])
+        self.assertEqual(result["problems"][-1]["message"]["code"], "substitution_unavailable")
+        self.assertIn("unmeasurable draft", result["problems"][-1]["message"]["error"])
 
     def test_page_recomputes_table_subset_after_drafts_fonts_and_undo(self):
         self.prof["table"] = [{"name": "names", "base": 100, "count": 3, "stride": 10}]

@@ -440,7 +440,8 @@ class SnapshotTest(unittest.TestCase):
                 self.assertEqual(e, english[sid])
                 self.assertEqual(e["source_sha256"], doc["source"][sid][0])
         for row in index["list"]:
-            row["problems"] = [p for p in row["problems"] if not p["message"].startswith("glossary term ")]
+            row["problems"] = [p for p in row["problems"]
+                               if provenance.unnoted(p["message"])["code"] != "glossary_missing"]
         self.assertEqual(keyed, index)
         self.assertEqual(keyed["engine_rules"]["rules"][0]["id"], "plural")
         self.assertEqual(len(keyed["engine_rules"]["rules"][0]["operands"][0]["bindings"]), 2)
@@ -469,5 +470,5 @@ class SnapshotTest(unittest.TestCase):
             self.assertNotIn(line, text)
         checker = snapshot.checker(keyed, doc["fonts"], {}, "1.2.3")
         result = checker.check(facts["s0000100"], "Привет!")
-        self.assertIn("placeholders differ", result["problems"][0]["message"])
+        self.assertEqual(result["problems"][0]["message"], provenance.code("placeholders_differ"))
         self.assertEqual(result["unavailable"], ["typography", "glossary"])

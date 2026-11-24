@@ -1,21 +1,12 @@
 // The check's messages in the site language.
-// A message is its kind, then its separately translated notes.
-// Problems are stored in English; explanations as codes.
+// Problems and explanations are stored as codes with arguments;
+// a problem's template comes from the data's message table.
 
 import { N_, t, uiLanguage } from "./ui.js";
 
 const NUMBER = "\\d+";
-const QUOTED = `'(?:[^'\\\\]|\\\\.)*'|"(?:[^"\\\\]|\\\\.)*"`; // a Python repr
-const CODE = "\\{[^{}]*\\}";
-// what a hole matches, by its name; any text otherwise
-const HOLES = {
-  n: NUMBER, width: NUMBER, limit: "-?\\d+", box: NUMBER, row: NUMBER, lines: NUMBER, window: NUMBER, byte: NUMBER,
-  at: NUMBER, outline: NUMBER, partner_width: NUMBER, unicode: "[0-9A-F]{4,6}", escape: "\\\\.",
-  text: QUOTED, shown: QUOTED, prefix: QUOTED, term: QUOTED, translation: QUOTED, char: QUOTED,
-  column: CODE, code: CODE, was: CODE, token: CODE,
-};
 
-/** The kinds of the check's messages. */
+/** The templates of the check's problems, the keys they show with. */
 export const MESSAGES = [
   N_("not encodable: {error}"),
   N_("field overflow: {n} > {limit} characters"),
@@ -47,7 +38,7 @@ export const MESSAGES = [
   N_("shown break splits a count from «{unit}»: box {box}, line {row}"),
   N_("box {box} wraps to {n} lines, the English box has {lines}"),
   N_("typography: {reason}"),
-  N_("not centred in the {window} px window: lead with {code}"),
+  N_("not centred in the {window} px window: lead with {token}"),
   N_("glossary term {term} -> {translation} not found"),
   N_("no inventory entry for this id"),
 ];
@@ -62,14 +53,14 @@ export const ENCODING = [
   N_("unknown token {token} in {text}"),
 ];
 
-/** The notes a message may end with. */
-export const NOTES = [
-  N_("(warning)"),
-  N_("[unmeasured limit: the English width]"),
-  N_("[unmeasured limit: the English line count]"),
-  N_("[unverified limit: an estimate for this language]"),
-  N_("(prefix {prefix} stripped)"),
-];
+/** The notes a problem may end with, by their codes. */
+export const NOTES = {
+  warning: N_("(warning)"),
+  unmeasured_width: N_("[unmeasured limit: the English width]"),
+  unmeasured_lines: N_("[unmeasured limit: the English line count]"),
+  unverified_width: N_("[unverified limit: an estimate for this language]"),
+  prefix_stripped: N_("(prefix {prefix} stripped)"),
+};
 
 /** The graphics check's findings. */
 export const FINDINGS = [
@@ -119,42 +110,6 @@ const GFX_HOLES = {
   pixel: "\\d+,\\d+", area: "-?\\d+,-?\\d+,-?\\d+,-?\\d+", entries: "\\d+(?:, \\d+)+",
 };
 
-/** The sources of a slot width. */
-export const SLOTS = [
-  N_("profile width"),
-  N_("profile width, unverified estimate"),
-  N_("default width"),
-  N_("context records"),
-  N_("profile width, above the widest known {source} {width} px"),
-  N_("profile width, unverified estimate, above the widest known {source} {width} px"),
-  N_("widest of table {table}: {word}"),
-  N_("native table {table}: {ids}"),
-  N_("number of up to {n} digits (a variable)"),
-  N_("number of {n} digits, the record's {value}"),
-  N_("number {value}"),
-  N_("{word} (untranslated)"),
-  N_("{word} (translated as empty)"),
-  N_("widest source {id}, English {english} px, {where}"),
-  N_("widest source {id}, {where}"),
-  N_("number of {n} digit, English {english} px, {where}"),
-  N_("number of {n} digit, {where}"),
-  N_("number of {n} digits, English {english} px, {where}"),
-  N_("number of {n} digits, {where}"),
-  N_("{width} px, unverified estimate, English {english} px, {where}"),
-  N_("{width} px, unverified estimate, {where}"),
-  N_("{width} px, English {english} px, {where}"),
-  N_("{width} px, {where}"),
-];
-
-/** Why a slot width is partly unknown. */
-export const SLOT_REASONS = [
-  N_("no fill known"),
-  N_("{n} of {uses} walked paths set no value"),
-  N_("a value the scripts do not name: {kinds}"),
-  N_("{n} script references not walked"),
-  N_("shown by code"),
-];
-
 const CODE_FILL = N_("code fill");
 const UNITS = { px: N_("px"), keys: N_("keys") };
 
@@ -190,10 +145,7 @@ const WINDOW_KINDS = {
 const BOX_NAMES = { dialogue: N_("Dialogue message window"), battle: N_("Battle message window") };
 const DEFAULT_NAMES = { dialogue_width: BOX_NAMES.dialogue, battle_width: BOX_NAMES.battle,
   label_min_width: N_("Minimum label width") };
-const PROFILE_ROW = /^\[\[([^\[\]]+)\]\] ([^\s:]+)(?: (window|buffer|save_link))?(?::\s*(.*))?$/s;
 const PROFILE_KEY = /^\[\[?([^\[\]]+)\]\]?$/;
-const PROFILE_STRINGS = /^\[strings\] (save_link(?:_[^\s]+)?)$/;
-const POLICY_WINDOW = /^\[language policy\] table_window\.([^\s:]+)(?::\s*(.*))?$/s;
 
 let places = {};
 
@@ -204,18 +156,22 @@ export function setPlaces(table) {
 
 export const whereText = (where) => places[where]?.[uiLanguage()] || where;
 const fillKind = (kind) => FILL_KINDS[kind] ? t(FILL_KINDS[kind]) : kind;
-const fillKinds = (kinds) => kinds.split(", ").map(fillKind).join(", ");
 
-let messages = {}; // the data's explanation templates: code -> English
+let messages = {}; // the data's templates: code -> English
 
-/** The explanation templates of the shown data; null clears them. */
+/** The explanation and problem templates of the shown data; null clears them. */
 export function setMessages(table) {
   messages = table && typeof table === "object" ? table : {};
 }
 
+const CHECK_FAILED = N_("check failed: {error}");
+// the page's own problems, also for data without their templates
+const OWN = { check_failed: CHECK_FAILED, glossary_missing: N_("glossary term {term} -> {translation} not found") };
+const templateOf = (code) => messages[code] ?? OWN[code] ?? code;
+
 // arguments holding explanations; lists and their separators
-const NESTED = new Set(["rule", "via", "source", "word", "fill"]);
-const JOINED = { reasons: "; ", kinds: ", ", ids: " + " };
+const NESTED = new Set(["rule", "via", "source", "word", "fill", "where", "error", "message"]);
+const JOINED = { reasons: "; ", kinds: ", ", ids: " + ", slots: "; ", parts: ", " };
 
 /** Whether a value is an explanation: a code with its arguments. */
 export const isExplanation = (value) => typeof value?.code === "string";
@@ -223,7 +179,7 @@ export const isExplanation = (value) => typeof value?.code === "string";
 /** The English text of an explanation, from the message table; a text is its own. */
 export function explanationText(value) {
   if (!isExplanation(value)) return value ?? "";
-  return messages[value.code].replace(/\{(\w+)\}/g, (_, name) => (name in JOINED
+  return templateOf(value.code).replace(/\{(\w+)\}/g, (_, name) => (name in JOINED
     ? value[name].map(explanationText).join(JOINED[name])
     : NESTED.has(name) ? explanationText(value[name]) : String(value[name])));
 }
@@ -236,45 +192,10 @@ export function sameExplanation(a, b) {
   return keys.length === Object.keys(b).length && keys.every((key) => sameExplanation(a[key], b[key]));
 }
 
-/** The descriptions of a window's limits. */
-export const LIMITS = [
-  N_("the window of {host}, which inserts it: {rule}"),
-  N_("{rule}, centred against {ref}"),
-  N_("two lines per message box ({via})"),
-  N_("two lines per message box"),
-  N_("[layout.box_width] {name}: the message box, measured in game ({via})"),
-  N_("[layout.box_width] {name}: the message box, measured in game"),
-  N_("the English: its widest line"),
-  N_("the English: one line"),
-  N_("the English: its line count"),
-  N_("the English: its box lines"),
-  N_("the English: the widest line of its pointer-table run"),
-  N_("the English: the widest line of {file}"),
-  N_("the English: the most lines of {file}"),
-  N_("a one-line field"),
-  N_("a field of {n} bytes with the terminator"),
-  N_("a field of {n} bytes"),
-  N_("a field of {n} byte with the terminator"),
-  N_("a field of {n} byte"),
-  N_("a long-name pointer of {n} bytes with the terminator"),
-  N_("[language policy] window_width.{id}: text budget"),
-  N_("[layout.window_width] {id}: measured in game"),
-  N_("[layout.window_lines] {id}: measured in game"),
-  N_("[keyboard] columns: the key cells of its keyboard"),
-  N_("keyboard layout columns: the columns its pack keyboard reaches"),
-  N_("in place: its {n} bytes with the terminator, a reference the build cannot rewrite ({kinds})"),
-  N_("in place in its {n}-byte field with the terminator"),
-  N_("read from byte {byte}, in place in its {n} bytes"),
-  N_("its host"),
-];
-
-const SLOT_HOLES = { n: NUMBER, width: NUMBER, english: NUMBER, uses: NUMBER, value: NUMBER };
-const LIMIT_HOLES = { n: NUMBER, byte: NUMBER };
-
 const literal = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/** A key as a pattern: holes as groups. */
-function compile(key, head = "", holes = HOLES) {
+/** A graphics key as a pattern: holes as groups. */
+function compile(key, head = "", holes = GFX_HOLES) {
   const names = [];
   let source = "";
   let last = 0;
@@ -286,16 +207,8 @@ function compile(key, head = "", holes = HOLES) {
   return { key, names, pattern: new RegExp(`^${head}${source}${literal(key.slice(last))}$`, "s") };
 }
 
-const KINDS = MESSAGES.map((key) => compile(key));
-const ERRORS = ENCODING.map((key) => compile(key));
-const TAILS = NOTES.map((key) => compile(key, "(.*) "));
-const CHECK_FAILED = N_("check failed: {error}");
-const PAGE = [compile(CHECK_FAILED)]; // the page's own problems with values
-const FOUND = FINDINGS.map((key) => compile(key, "", GFX_HOLES));
-const LINES = REPORT.map((key) => compile(key, "", GFX_HOLES));
-const SOURCES = SLOTS.map((key) => compile(key, "", SLOT_HOLES));
-const WHYS = SLOT_REASONS.map((key) => compile(key, "", SLOT_HOLES));
-const RULES = LIMITS.map((key) => compile(key, "", LIMIT_HOLES));
+const FOUND = FINDINGS.map((key) => compile(key));
+const LINES = REPORT.map((key) => compile(key));
 
 const valuesOf = (kind, groups) => Object.fromEntries(kind.names.map((name, i) => [name, groups[i]]));
 
@@ -307,46 +220,7 @@ function kindOf(text, kinds) {
   return null;
 }
 
-/** A message as {key, vars, notes}; null if unknown. */
-export function parseMessage(message) {
-  let rest = String(message);
-  const notes = [];
-  for (let found = true; found;) {
-    found = false;
-    for (const tail of TAILS) {
-      const m = tail.pattern.exec(rest);
-      if (!m) continue;
-      notes.unshift({ key: tail.key, vars: valuesOf(tail, m.slice(2)) });
-      rest = m[1];
-      found = true;
-      break;
-    }
-  }
-  const kind = kindOf(rest, KINDS);
-  if (!kind) return null;
-  const error = kind.vars.error === undefined ? null : kindOf(kind.vars.error, ERRORS);
-  return { ...kind, notes, ...(error ? { error } : {}) };
-}
-
-/** A text translated by its first matching kind. */
-function phrase(text, kinds, nested = {}) {
-  const kind = kindOf(text, kinds);
-  if (!kind) return text;
-  const vars = { ...kind.vars };
-  for (const [name, inner] of Object.entries(nested)) if (vars[name] !== undefined) vars[name] = inner(vars[name]);
-  return t(kind.key, vars);
-}
-
 const fillPlace = (where) => (where === CODE_FILL ? t(CODE_FILL) : limitText(where));
-const slotHead = (text) => {
-  const first = /^(\w+) (.+)$/s.exec(text);
-  if (first && Object.hasOwn(FILL_KINDS, first[1]) && !kindOf(text, SOURCES)) {
-    return `${fillKind(first[1])} ${slotHead(first[2])}`;
-  }
-  return phrase(text, SOURCES, { source: slotHead, word: slotHead, where: fillPlace });
-};
-// the reasons a slot width is partly unknown
-const WHY = /^(.*) \(([^()]*)\)$/s;
 
 // a word's note covers its record kind
 const WORD_NOTES = { slot_untranslated: N_("{word} (untranslated)"), slot_empty: N_("{word} (translated as empty)") };
@@ -414,19 +288,11 @@ const whyText = (why) => {
   }
 };
 
-/** Translate descriptions while preserving inserted words and identifiers. */
+/** Translate descriptions while preserving inserted words and identifiers; a text shows as written. */
 export function slotSource(text) {
-  if (isExplanation(text)) {
-    return keepUnits(text.code === "slot_reasons"
-      ? `${codedSlot(text.source)} (${text.reasons.map(whyText).join("; ")})` : codedSlot(text));
-  }
-  const source = String(text);
-  const m = WHY.exec(source);
-  const whys = m ? m[2].split("; ") : [];
-  if (m && whys.every((why) => kindOf(why, WHYS))) {
-    return keepUnits(`${slotHead(m[1])} (${whys.map((why) => phrase(why, WHYS, { kinds: fillKinds })).join("; ")})`);
-  }
-  return keepUnits(slotHead(source));
+  if (!isExplanation(text)) return keepUnits(String(text));
+  return keepUnits(text.code === "slot_reasons"
+    ? `${codedSlot(text.source)} (${text.reasons.map(whyText).join("; ")})` : codedSlot(text));
 }
 
 // the profile row an explanation names: its section, the argument naming it, and a prefix
@@ -444,34 +310,30 @@ const PROFILE_ROWS = {
   table_field_byte_unterminated: ["table", "table"], table_long_name: ["table", "table"],
   keyboard_columns: ["keyboard", null, "columns"],
   table_base: ["strings.table_base", "id"], interior: ["strings.interior", "pointer"],
+  rule_table: ["table", "table"], rule_table_save_link: ["table", "table"], rule_strings: ["strings", "key"],
+  rule_computed: ["strings.computed", "pointer"], rule_interior: ["strings.interior", "pointer"],
+  rule_code_fill: ["layout.code_fill", "name"], rule_code_fill_where: ["layout.code_fill", "name"],
+  rule_droppable: ["qa.droppable", null], rule_pointer_table: ["strings.pointer_table", "table"],
 };
 const IDS = /\bs[0-9A-F]{7}\b|\b0x[0-9A-Fa-f]+\b|\b(?:hash|map|table|sym):[^\s,)]+/g;
 
 // the profile rows and identifiers of an explanation, in the order of its text
 function named(rule, rows, ids) {
   const row = PROFILE_ROWS[rule.code];
-  if (row) rows.push(`${row[0]} ${row[2] ?? ""}${row[1] ? rule[row[1]] : ""}`);
+  if (row) rows.push([row[0], `${row[2] ?? ""}${row[1] ? rule[row[1]] : ""}`].filter(Boolean).join(" "));
   for (const [name, value] of Object.entries(rule)) {
     if (name === "code") continue;
-    if (NESTED.has(name)) named(value, rows, ids);
+    if (NESTED.has(name) && isExplanation(value)) named(value, rows, ids);
     else ids.push(...[...String(value).matchAll(IDS)].map((match) => match[0]));
   }
 }
 
-/** Keep profile identities behind the evidence disclosure. */
+/** Keep profile identities behind the evidence disclosure; a text names only its identifiers. */
 export function limitReferences(rule) {
-  if (isExplanation(rule)) {
-    const rows = [], ids = [];
-    named(rule, rows, ids);
-    return [...new Set([...rows, ...ids.filter((id) => !rows.some((row) => row.endsWith(` ${id}`)))])];
-  }
-  const source = String(rule);
-  const rows = [...source.matchAll(/\[\[?([^\[\]]+)\]\]? ([^\s,)]+?)(?=:\s|[\s,)]|$)/g)]
-    .map((match) => `${match[1]} ${match[2]}`);
-  const keys = [...source.matchAll(/\[\[?([^\[\]]+)\]\]?/g)].map((match) => match[1]);
-  const ids = [...source.matchAll(IDS)].map((match) => match[0]);
-  return [...new Set([...rows, ...keys.filter((key) => !rows.some((row) => row.startsWith(`${key} `))),
-    ...ids.filter((id) => !rows.some((row) => row.endsWith(` ${id}`)))])];
+  if (!isExplanation(rule)) return [...new Set([...String(rule).matchAll(IDS)].map((match) => match[0]))];
+  const rows = [], ids = [];
+  named(rule, rows, ids);
+  return [...new Set([...rows, ...ids.filter((id) => !rows.some((row) => row.endsWith(` ${id}`)))])];
 }
 
 // the windows an explanation describes: profile section, name and description
@@ -500,6 +362,10 @@ const RULE_TEXTS = {
   english_run_widest: N_("the English: the widest line of its pointer-table run"),
   pack_keyboard_columns: N_("keyboard layout columns: the columns its pack keyboard reaches"),
   host_default: N_("its host"),
+  rule_table: WINDOW_KINDS.table, rule_table_save_link: WINDOW_KINDS.table, rule_strings: N_("Save or link text"),
+  rule_computed: WINDOW_KINDS["strings.computed"], rule_interior: WINDOW_KINDS["strings.interior"],
+  rule_code_fill: WINDOW_KINDS["layout.code_fill"], rule_droppable: WINDOW_KINDS["qa.droppable"],
+  rule_pointer_table: WINDOW_KINDS["strings.pointer_table"],
 };
 // the limit codes shown with their sizes
 const SIZES = {
@@ -523,6 +389,7 @@ function ruleText(rule, sources) {
     case "in_place": return t("in place: its {n} bytes with the terminator, a reference the build cannot rewrite ({kinds})",
       { n: rule.bytes, kinds: rule.references });
     case "interior": return t("read from byte {byte}, in place in its {n} bytes", { byte: rule.offset, n: rule.bytes });
+    case "rule_code_fill_where": return whereText(rule.where);
     default: break;
   }
   const window = windowOf(rule);
@@ -534,43 +401,17 @@ function ruleText(rule, sources) {
   return described ? whereText(described.where) : t(WINDOW_KINDS[window.section]);
 }
 
-const windowRule = (rule) => String(rule).replace(POLICY_WINDOW, (_, name, where) =>
-  `[[layout.table_window]] ${name}${where ? `: ${where}` : ""}`);
-
-/** Show descriptions without profile section notation; `sources` describe a coded window. */
+/** A limit, a window or a rule source in words, without profile notation; `sources` describe a coded window. */
 export function limitText(rule, sources = []) {
-  if (isExplanation(rule)) return ruleText(rule, sources);
-  const source = windowRule(rule).replace(/^profile /, "");
-  const host = /^the window of .+?, which inserts it: (.*)$/s.exec(source);
-  if (host) return limitText(host[1]);
-  const centred = /^(.*), centred against \S+$/s.exec(source);
-  if (centred) return t("{rule}, centred", { rule: limitText(centred[1]) });
-  const box = /^\[layout.box_width\] ([^:]+):/.exec(source);
-  if (box) return t(BOX_NAMES[box[1]] ?? "Text window");
-  const layout = /^\[layout\] (\w+)$/.exec(source);
-  if (layout) return t(DEFAULT_NAMES[layout[1]] ?? "Text window");
-  if (/^\[layout.window_width\]/.test(source)) return t("Text window width");
-  if (/^\[layout.window_lines\]/.test(source)) return t("Visible lines in the text window");
-  if (/^\[layout.window_box\]/.test(source)) return t("Message window");
-  if (/^\[language policy\] window_width\./.test(source)) return t("Translation text budget");
-  if (/^\[keyboard\]/.test(source)) return t("Keyboard key columns");
-  if (source.startsWith("two lines per message box (")) return t("two lines per message box");
-  if (!kindOf(source, RULES)) {
-    const bare = PROFILE_KEY.exec(source);
-    if (bare && Object.hasOwn(WINDOW_KINDS, bare[1])) return t(WINDOW_KINDS[bare[1]]);
-    if (PROFILE_STRINGS.test(source)) return t("Save or link text");
-    const row = PROFILE_ROW.exec(source);
-    // their descriptions are phrases, not where texts
-    if (row && ["strings.table_base", "strings.interior"].includes(row[1]) && row[4]) {
-      return phrase(row[4], RULES);
-    }
-    if (row && Object.hasOwn(WINDOW_KINDS, row[1])) {
-      if (row[4]?.trim()) return row[1] === "table" && !row[3]
-        ? phrase(row[4], RULES) : whereText(row[4]);
-      return t(WINDOW_KINDS[row[1]]);
-    }
-  }
-  return phrase(whereText(t(source)), RULES, { rule: limitText, via: limitText, where: limitText });
+  return isExplanation(rule) ? ruleText(rule, sources) : whereText(t(String(rule)));
+}
+
+/** A rule's wording with its profile keys in words. */
+export function wordingText(text) {
+  return text.replace(/\[\[?[^\[\]\n]+\]\]?/g, (key) => {
+    const bare = PROFILE_KEY.exec(key);
+    return bare && Object.hasOwn(WINDOW_KINDS, bare[1]) ? t(WINDOW_KINDS[bare[1]]) : whereText(t(key));
+  });
 }
 
 let reasons = {}; // the policy's typography reasons: reason -> {code: text}
@@ -582,29 +423,53 @@ export function setReasons(table) {
 
 const reasonText = (reason) => reasons[reason]?.[uiLanguage()] ?? reason;
 
-// one slot of a width note
-const SLOT = /^(\{[^{}]*\} = \d+ px \()(.*)\)$/s;
-const slotText = (slots) => slots.split("; ").map((item) => {
-  const m = SLOT.exec(item);
-  return m ? `${m[1]}${slotSource(m[2])})` : item;
-}).join("; ");
-
 /** The problem of a failed check, as stored. */
-export const checkFailed = (error) => CHECK_FAILED.replace("{error}", () => String(error));
+export const checkFailed = (error) => ({ code: "check_failed", error: String(error) });
 
-/** A check message in the site language, values kept. */
-export function checkText(message) {
-  const parts = parseMessage(message);
-  if (!parts) {
-    const page = kindOf(String(message), PAGE);
-    return keepUnits(page ? t(page.key, page.vars) : t(String(message)));
+/** The problem of a glossary term the translation lacks, as the check words it. */
+export const glossaryMissing = (term, translation) =>
+  ({ code: "warning", message: { code: "glossary_missing", term, translation } });
+
+/** A problem without the notes after it. */
+export function unnoted(message) {
+  let own = message;
+  while (isExplanation(own) && Object.hasOwn(NOTES, own.code)) own = own.message;
+  return own;
+}
+
+/** The glossary terms the problems name as not found: {term, translation} as quoted. */
+export const missingTerms = (problems) => problems.map((p) => unnoted(p.message))
+  .filter((message) => message?.code === "glossary_missing");
+
+// the wrappers of an inserted word's source in a message
+const SLOT_EXTRAS = new Set(["slot_unavailable", "slot_parts"]);
+
+/** A problem argument in the site language. */
+function argumentText(name, value) {
+  switch (name) {
+    case "where": return limitText(value);
+    case "slots": return value.map(problemText).join("; ");
+    case "parts": return value.map(problemText).join(", ");
+    case "source": return SLOT_EXTRAS.has(value?.code) ? problemText(value) : slotSource(value);
+    case "reason": return reasonText(value);
+    case "error": case "message": return isExplanation(value) ? problemText(value) : String(value);
+    default: return value;
   }
-  const vars = { ...parts.vars };
-  if (parts.error) vars.error = t(parts.error.key, parts.error.vars);
-  if (vars.slots !== undefined) vars.slots = slotText(vars.slots);
-  if (vars.reason !== undefined) vars.reason = reasonText(vars.reason);
-  if (vars.where !== undefined) vars.where = limitText(vars.where);
-  return keepUnits([t(parts.key, vars), ...parts.notes.map((note) => t(note.key, note.vars))].join(" "));
+}
+
+/** A coded problem in the site language: its template from the message table, then its notes. */
+function problemText(problem) {
+  if (Object.hasOwn(NOTES, problem.code)) {
+    return `${argumentText("message", problem.message)} ${t(NOTES[problem.code], { prefix: problem.prefix })}`;
+  }
+  const vars = {};
+  for (const [name, value] of Object.entries(problem)) if (name !== "code") vars[name] = argumentText(name, value);
+  return t(templateOf(problem.code), vars);
+}
+
+/** A check message in the site language, values kept; a text is a key or shows as written. */
+export function checkText(message) {
+  return keepUnits(isExplanation(message) ? problemText(message) : t(String(message)));
 }
 
 // a failed line of the report

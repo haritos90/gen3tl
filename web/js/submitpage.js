@@ -3,10 +3,11 @@
 // The JSON file carries all.
 
 import { setToolContext, startPage } from "./site-shell.js";
-import { checkText, setReasons } from "./checktext.js";
+import { checkText, setMessages, setReasons } from "./checktext.js";
 import { Chunks, dirOf, getJson, loadIndex, projectProfiles, verifyProjectIndex, versionLabel } from "./data.js";
 import { download, el } from "./dom.js";
 import { isDraft, translationState } from "./draft.js";
+import { messagesOf } from "./editorstore.js";
 import { Codec, entryMeasure } from "./font.js";
 import { draftFonts, drawArt, sheetsOf, styleGlyphs } from "./fonts.js";
 import { languageName } from "./landing.js";
@@ -592,6 +593,7 @@ async function load() {
   verifyProjectIndex(index, game.id, code);
   Object.assign(state, { code, index, codec: new Codec(index.codec, index.charmap, index.language_rules) });
   setReasons(index.check_rules?.reasons);
+  setMessages(messagesOf(index));
   state.edits = new Edits(state.storage, code, index.profile);
   state.ruleEdits = new RuleEdits(state.storage, code, index.profile);
   state.uploads = new PictureEdits(state.storage, code, index.profile);

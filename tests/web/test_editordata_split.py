@@ -59,7 +59,7 @@ class SplitTest(editordata_support.SplitTest, unittest.TestCase):
         # 6 px Latin widths: "Сумка" fits its 76 px window
         self.assertEqual(self.problems["s0000300"], [])
         long = self.checker.check(self.by_id["s0000300"], "Сумка " * 6)["problems"]
-        self.assertTrue(any(p["message"].startswith("line too wide") for p in long))
+        self.assertTrue(any(p["message"]["code"] == "line_wide" for p in long), long)
 
     def test_glyph_art(self):
         from gen3tl.lang.langpack import parse_art

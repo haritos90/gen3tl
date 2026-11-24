@@ -133,12 +133,13 @@ test("fixed multiline previews keep overflow tinted despite scroll codes", () =>
 
 
 test("a box wrapped anew names its too-wide written line", () => {
-  const message = "written line wider than the window: box 1: 122 > 118 px: 'ягоду, если она есть.'; " +
-    "the build drops the written breaks of the box and re-wraps it";
-  assert.equal(droppedNote([{ severity: "warning", message }]),
+  const dropped = { code: "dropped_breaks", box: 1, width: 122, limit: 118, text: "'ягоду, если она есть.'",
+    shown: "'ягоду, если\\nона есть.'" };
+  assert.equal(droppedNote([{ severity: "warning", message: { code: "warning", message: dropped } }]),
     "Your line breaks in box 1 are not used: the line “ягоду, если она есть.” is 122 px, wider than the " +
     "118 px window, so the game wraps the box anew. Shorten that line or move its break to keep your breaks.");
-  assert.equal(droppedNote([{ severity: "error", message: "line too wide: 48 > 36 px: 'Абвгдежз'" }]), "");
+  assert.equal(droppedNote([{ severity: "error", message: { code: "line_wide", width: 48, limit: 36, text: "'Абвгдежз'" } }]), "");
+  assert.equal(droppedNote([{ severity: "error", message: "Unclosed or unmatched control-code braces." }]), "");
   assert.equal(droppedNote(undefined), "");
 });
 

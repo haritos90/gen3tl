@@ -1,8 +1,10 @@
-"""Explanations of limits, reach and inserted widths: one template per code, stored as the code with its arguments."""
+"""Explanations and check messages: one template per code, stored as the code with its arguments."""
 
 from __future__ import annotations
 
 import re
+
+from ..core.charmap import ERRORS
 
 # {name}: an argument; nested names hold explanations
 MESSAGES = {
@@ -78,10 +80,74 @@ MESSAGES = {
     "slot_english": "{fill}, English {source_width} px",
     "slot_fill": "{fill}, {where}",
     "slot_code_fill": "{fill}, code fill",
+    # the sources of profile rules
+    "rule_table": "profile [[table]] {table}",
+    "rule_table_save_link": "profile [[table]] {table} save_link",
+    "rule_strings": "profile [strings] {key}",
+    "rule_computed": "profile [[strings.computed]] {pointer}",
+    "rule_interior": "profile [[strings.interior]] {pointer}",
+    "rule_code_fill": "profile [[layout.code_fill]] {name}",
+    "rule_code_fill_where": "profile [[layout.code_fill]] {name}: {where}",
+    "rule_droppable": "profile [[qa.droppable]]",
+    "rule_pointer_table": "profile [[strings.pointer_table]] {table}",
+    # the check's problems; their templates are the page's keys
+    "not_encodable": "not encodable: {error}",
+    "field_overflow": "field overflow: {n} > {limit} characters",
+    "in_place_overflow": "in-place overflow: {n} > {limit} bytes",
+    "head_missing": "must begin with {head}: the code reads the text from byte {byte}",
+    "single_line_break": "line break in a single-line field",
+    "box_unscrolled": "{n} lines in one box without scrolling",
+    "too_many_keys": "too many keys: {n} > {limit}: {text}",
+    "line_wide": "line too wide: {width} > {limit} px: {text}",
+    "line_wide_window": "line too wide: {width} > {limit} px: {text}; window {where}",
+    "line_wide_slots": "line too wide: {width} > {limit} px: {text} with {slots}",
+    "line_wide_slots_window": "line too wide: {width} > {limit} px: {text} with {slots}; window {where}",
+    "column_wide": "line too wide: {width} > {limit} px before the column {column}: {text}",
+    "column_wide_slots": "line too wide: {width} > {limit} px before the column {column}: {text} with {slots}",
+    "too_many_lines": "too many lines: {n} > {limit}",
+    "empty_translation": "empty translation of a non-empty English: imports as an intended empty translation",
+    "placeholders_differ": "placeholders differ",
+    "instant_print": "scroll and page codes are not supported in {where}: "
+                     "this window prints instantly and drops the remaining text",
+    "other_window_wide": "line too wide: {width} > {limit} px in {where} ({font})",
+    "pair_wide": "pair too wide: {width} > {limit} px in {where} ({font}) with «{partner}» {partner_id}, "
+                 "{partner_width} px, outline {outline} px, for «{species}» {species_id}",
+    "wrapped_dash": "line starts with a spaced hyphen after an automatic wrap: box {box}: {text}",
+    "arrow_room": "line leaves no room for the prompt arrow: box {box}: {width} > {limit} px: {text}",
+    "arrow_room_window": "line leaves no room for the prompt arrow: box {box}: {width} > {limit} px in {where}: {text}",
+    "slot_rewrap": "line wider than the window with the inserted words: box {box}: {width} > {limit} px: {text}; "
+                   "the build re-wraps the box",
+    "slot_rewrap_slots": "line wider than the window with the inserted words: box {box}: {width} > {limit} px: "
+                         "{text} with {slots}; the build re-wraps the box",
+    "dropped_breaks": "written line wider than the window: box {box}: {width} > {limit} px: {text}; "
+                      "the build drops the written breaks of the box and re-wraps it as {shown}",
+    "short_line_end": "written line ends with «{word}»: box {box}, line {row}; the break stays as written",
+    "split_name": "shown break splits «{word}» from the name after it: box {box}, line {row}",
+    "split_count": "shown break splits a count from «{unit}»: box {box}, line {row}",
+    "box_wraps": "box {box} wraps to {n} lines, the English box has {lines}",
+    "typography": "typography: {reason}",
+    "not_centred": "not centred in the {window} px window: lead with {token}",
+    "glossary_missing": "glossary term {term} -> {translation} not found",
+    "no_inventory_entry": "no inventory entry for this id",
+    "substitution_unavailable": "substitution measurements unavailable: {error}",
+    # the notes a problem may end with
+    "warning": "{message} (warning)",
+    "unmeasured_width": "{message} [unmeasured limit: the English width]",
+    "unmeasured_lines": "{message} [unmeasured limit: the English line count]",
+    "unverified_width": "{message} [unverified limit: an estimate for this language]",
+    "prefix_stripped": "{message} (prefix {prefix} stripped)",
+    # an inserted word of a too wide line
+    "slot_item": "{token} = {width} px ({source})",
+    "slot_unavailable": "{source}; recorded width; sources unavailable",
+    "slot_parts": "{source}; {parts}",
+    "slot_part": "«{text}» {width} px",
+    "slot_no_prefix": "no prefix 0 px",
+    **ERRORS,
 }
-NESTED = frozenset({"rule", "via", "source", "word", "fill"})
+NESTED = frozenset({"rule", "via", "source", "word", "fill", "where", "error", "message"})
 # list arguments and their separators
-JOINED = {"reasons": "; ", "kinds": ", ", "ids": " + "}
+JOINED = {"reasons": "; ", "kinds": ", ", "ids": " + ", "slots": "; ", "parts": ", "}
+NOTES = ("warning", "unmeasured_width", "unmeasured_lines", "unverified_width", "prefix_stripped")
 FIELD = re.compile(r"\{(\w+)\}")
 
 
@@ -113,3 +179,29 @@ def formatted(coded) -> str:
             return JOINED[name].join(formatted(part) for part in item)
         return formatted(item) if name in NESTED else str(item)
     return FIELD.sub(lambda m: value(m[1]), MESSAGES[coded["code"]])
+
+
+def noted(problem, note: str, **args) -> dict:
+    """A check problem with the note `note` after it."""
+    return code(note, message=problem, **args)
+
+
+def unnoted(problem):
+    """A check problem without the notes after it."""
+    while isinstance(problem, dict) and problem["code"] in NOTES:
+        problem = problem["message"]
+    return problem
+
+
+def is_warning(problem) -> bool:
+    """Whether a check problem is noted as a warning."""
+    while isinstance(problem, dict) and problem["code"] in NOTES:
+        if problem["code"] == "warning":
+            return True
+        problem = problem["message"]
+    return False
+
+
+def encoding_problem(error) -> dict:
+    """The problem of a text the character map cannot encode (core.charmap.CharmapError)."""
+    return code("not_encodable", error=getattr(error, "coded", None) or str(error))

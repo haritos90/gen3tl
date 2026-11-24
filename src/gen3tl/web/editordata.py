@@ -22,7 +22,7 @@ from .editorrules import SOURCE_TEXT_FIELDS, rules_data
 from ..check.layout import Limit, entry_measure
 from ..check.provenance import code as coded
 
-SCHEMA = "9.0.0"
+SCHEMA = "10.0.0"
 NEVER = "never shown"   # the reach class progress leaves out
 BLANK = text_digest("")   # an empty English
 BRACE = re.compile(r"\{[^}]*\}")

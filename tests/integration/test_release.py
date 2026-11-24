@@ -15,6 +15,7 @@ from gen3tl import __version__
 from gen3tl.__main__ import main
 from gen3tl.lang.langpack import LangPack
 from gen3tl.check.layout import Limit, Measure, check, layout
+from gen3tl.check.provenance import code
 from gen3tl.catalog.po import PoEntry, write
 from gen3tl.profile.profile import Profile
 
@@ -425,7 +426,7 @@ class TokenInLayoutAndQaTest(unittest.TestCase):
         self.assertTrue(laid.endswith("\\nРусская версия\\n1000000.2000000.3"))
         self.assertEqual(check(laid, lim, M6, CM), [])
         nine = Limit("multiline", lim.width, 9)
-        self.assertEqual(check(layout(longer, nine, M6, CM), nine, M6, CM), ["too many lines: 10 > 9"])
+        self.assertEqual(check(layout(longer, nine, M6, CM), nine, M6, CM), [code("too_many_lines", n=10, limit=9)])
 
 class ReleaseProject:
     """A game project in a git repository with one committed release."""

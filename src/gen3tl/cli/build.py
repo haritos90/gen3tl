@@ -223,6 +223,7 @@ def build(args):
     from ..build.inject import DiffRegistry, diff_positions, field_bytes, inject, verify
     from ..lang.langpack import LangPack, LangPackError
     from ..check.layout import Measure, check, layout
+    from ..check.provenance import formatted
     prof = Profile.by_name(args.profile)
     if args.source_as_translation:
         from ..build.textprefix import original_limits
@@ -290,7 +291,7 @@ def build(args):
         lim = limits[sid]
         # source-as-translation keeps English breaks; over-wide lines are skipped
         laid = target if args.source_as_translation else layout(target, lim, measure, cm)
-        probs = check(laid, lim, measure, cm) + windows.problems(sid, target)
+        probs = [formatted(x) for x in check(laid, lim, measure, cm) + windows.problems(sid, target)]
         if args.ignore_width:  # test builds: show over-wide text; byte and length limits hold
             probs = [x for x in probs if not x.startswith("line too wide")]
         if probs:

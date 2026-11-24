@@ -6,6 +6,7 @@ from pathlib import Path
 
 from gen3tl.check import rules
 from gen3tl.check.layout import Limit
+from gen3tl.check.provenance import code, formatted
 from gen3tl.catalog.po import PoEntry
 from gen3tl.profile.profile import Profile
 
@@ -63,7 +64,8 @@ class ProfileRulesTest(unittest.TestCase):
     def test_computed_byte_gap(self):
         # the lower block member stays within the gap
         [low] = self.out["s0000300"]
-        self.assertEqual(low["source"], "profile [[strings.computed]] 0x9BDE20")
+        self.assertEqual(low["source"], code("rule_computed", pointer="0x9BDE20"))
+        self.assertEqual(formatted(low["source"]), "profile [[strings.computed]] 0x9BDE20")
         self.assertIn("Moves with s0000340 as one block", low["text"])
         self.assertIn("At most 63 bytes, the gap to s0000340 less the terminator", low["text"])
         self.assertEqual(low["evidence"], "ldr r2 at 0x89BDD40")
@@ -74,23 +76,23 @@ class ProfileRulesTest(unittest.TestCase):
         [r] = self.out["s0000700"]
         self.assertEqual(r["text"], "Begins with {STR_VAR_1}, the first 2 bytes of the English; code reads the text "
                                     "from byte 2 (pool word 0x13255C); kept in place: at most 21 bytes.")
-        self.assertEqual((r["source"], r["evidence"]), ("profile [[strings.interior]] 0x13255C", "StringAppend + 2"))
+        self.assertEqual((formatted(r["source"]), r["evidence"]), ("profile [[strings.interior]] 0x13255C", "StringAppend + 2"))
 
     def test_code_characters(self):
         # unterminated code table with a pad byte
         [r] = self.out["possessive:0"]
         self.assertEqual(r["text"], "Character code written by game code: at most 1 character; only that byte "
                                     "changes; empty writes 0xFF, the terminator.")
-        self.assertEqual(r["source"], "profile [[table]] possessive")
+        self.assertEqual(r["source"], code("rule_table", table="possessive"))
         self.assertNotIn("keys:0", self.out)
 
     def test_save_link(self):
         [table] = self.out["species:1"]
-        self.assertEqual((table["source"], table["evidence"]),
+        self.assertEqual((formatted(table["source"]), table["evidence"]),
                          ("profile [[table]] species save_link", "names at stride 11"))
         self.assertTrue(table["text"].startswith("Copied into save or link data"))
         [listed] = self.out["s0000600"]
-        self.assertEqual((listed["source"], listed["evidence"]),
+        self.assertEqual((formatted(listed["source"]), listed["evidence"]),
                          ("profile [strings] save_link_defaults", ""))
 
     def test_declared_source_needs_no_recorded_number(self):
@@ -103,7 +105,7 @@ class ProfileRulesTest(unittest.TestCase):
         self.assertIn("text measured from species name", out["s0000100"][0]["text"])
 
     def test_code_fill_droppable_and_order(self):
-        got = [(r["text"], r["source"]) for r in self.out["s0000100"]]
+        got = [(r["text"], formatted(r["source"])) for r in self.out["s0000100"]]
         self.assertEqual(got, [
             ("The code fills {STR_VAR_1} with a number of 2 digits (count).",
              "profile [[layout.code_fill]] s0000100: count"),
@@ -113,7 +115,7 @@ class ProfileRulesTest(unittest.TestCase):
 
     def test_pointer_table_note(self):
         [r] = self.out["s0000800"]
-        self.assertEqual((r["text"], r["source"], r["evidence"]),
+        self.assertEqual((r["text"], formatted(r["source"]), r["evidence"]),
                          ("names stay as in the English credits", "profile [[strings.pointer_table]] credits",
                           "credits records"))
 

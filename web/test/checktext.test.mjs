@@ -1,9 +1,10 @@
-// The check's messages: kinds, notes, values and site language.
+// The check's messages: codes, notes, values and site language.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { ENCODING, MESSAGES, NOTES, checkText, explanationText, extractionFailed, findingText, layoutFailed, limitReferences,
-  limitText, parseFinding, parseMessage, sameExplanation, setMessages, setPlaces, setReasons, slotSource } from "../js/checktext.js";
+import { ENCODING, MESSAGES, NOTES, checkFailed, checkText, explanationText, extractionFailed, findingText,
+  glossaryMissing, layoutFailed, limitReferences, limitText, missingTerms, parseFinding, sameExplanation, setMessages,
+  setPlaces, setReasons, slotSource, unnoted, wordingText } from "../js/checktext.js";
 import { slotRows } from "../js/slots.js";
 import { setCatalog, setUiLanguage, t } from "../js/ui.js";
 
@@ -17,54 +18,109 @@ const RU = {
   "[unmeasured limit: the English width]": "[предел не измерен: ширина английского текста]",
   "(prefix {prefix} stripped)": "(префикс {prefix} отброшен)",
   "profile width": "ширина из профиля",
+  "check failed: {error}": "проверка не удалась: {error}",
   "Preserve the source placeholders and control codes.": "Сохраните подстановки и управляющие коды оригинала.",
 };
 
-test("a message is its kind with its values, then its notes in order", () => {
-  assert.deepEqual(parseMessage("line too wide: 210 > 196 px: 'Привет, {PLAYER}! Как дела?' with {PLAYER} = 42 px (profile width) (prefix 'A: ' stripped) [unmeasured limit: the English width]"), {
-    key: "line too wide: {width} > {limit} px: {text} with {slots}",
-    vars: { width: "210", limit: "196", text: "'Привет, {PLAYER}! Как дела?'", slots: "{PLAYER} = 42 px (profile width)" },
-    notes: [{ key: "(prefix {prefix} stripped)", vars: { prefix: "'A: '" } },
-      { key: "[unmeasured limit: the English width]", vars: {} }],
-  });
-  assert.deepEqual(parseMessage("glossary term 'Poké Ball' -> \"Покебол's\" not found (warning)").vars,
-    { term: "'Poké Ball'", translation: "\"Покебол's\"" });
-  assert.equal(parseMessage("placeholders differ").key, "placeholders differ");
-  assert.equal(parseMessage("line too wide: 99 > 98 px in the bag (unbound-small)").vars.where, "the bag");
-  assert.equal(parseMessage("A message the check never gives"), null);
-  assert.equal(parseMessage("line too wide: wide > 196 px: 'x'"), null, "a number hole takes digits only");
+// the data's problem templates (gen3tl.check.provenance.MESSAGES)
+const PROBLEMS = {
+  not_encodable: "not encodable: {error}", too_many_lines: "too many lines: {n} > {limit}",
+  line_wide: "line too wide: {width} > {limit} px: {text}",
+  line_wide_window: "line too wide: {width} > {limit} px: {text}; window {where}",
+  line_wide_slots: "line too wide: {width} > {limit} px: {text} with {slots}",
+  other_window_wide: "line too wide: {width} > {limit} px in {where} ({font})",
+  arrow_room_window: "line leaves no room for the prompt arrow: box {box}: {width} > {limit} px in {where}: {text}",
+  instant_print: "scroll and page codes are not supported in {where}: "
+    + "this window prints instantly and drops the remaining text",
+  typography: "typography: {reason}", placeholders_differ: "placeholders differ",
+  glossary_missing: "glossary term {term} -> {translation} not found",
+  warning: "{message} (warning)", unmeasured_width: "{message} [unmeasured limit: the English width]",
+  prefix_stripped: "{message} (prefix {prefix} stripped)",
+  slot_item: "{token} = {width} px ({source})", slot_unavailable: "{source}; recorded width; sources unavailable",
+  slot_parts: "{source}; {parts}", slot_part: "«{text}» {width} px", slot_no_prefix: "no prefix 0 px",
+  unmapped_character: "character {char} (U+{unicode}) has no byte, in {text}",
+};
+// the explanation templates with them
+const table = () => ({ ...TEMPLATES, ...PROBLEMS });
+const noted = (message, code, args = {}) => ({ code, message, ...args });
+const item = (token, width, source) => ({ code: "slot_item", token, width, source });
+const wide = { code: "line_wide_slots", width: 210, limit: 196, text: "'Привет, {PLAYER}! Как дела?'",
+  slots: [item("{PLAYER}", 42, { code: "slot_profile" })] };
+
+test("a problem is its code with its arguments, then its notes in order", (ctx) => {
+  ctx.after(() => setMessages(null));
+  setMessages(table());
+  const message = noted(noted(wide, "prefix_stripped", { prefix: "'A: '" }), "unmeasured_width");
+  assert.equal(checkText(message), "line too wide: 210 > 196 px: 'Привет, {PLAYER}! Как дела?' with {PLAYER} = 42 px "
+    + "(profile width) (prefix 'A: ' stripped) [unmeasured limit: the English width]");
+  assert.equal(explanationText(message), "line too wide: 210 > 196 px: 'Привет, {PLAYER}! Как дела?' with {PLAYER} = 42 px "
+    + "(profile width) (prefix 'A: ' stripped) [unmeasured limit: the English width]");
+  assert.equal(unnoted(message), wide);
+  assert.equal(unnoted("placeholders differ"), "placeholders differ");
+  const term = glossaryMissing("'Poké Ball'", "\"Покебол's\"");
+  assert.deepEqual(missingTerms([{ message: term }, { message: wide }, { message: "Preserve the source placeholders and control codes." }]),
+    [{ code: "glossary_missing", term: "'Poké Ball'", translation: "\"Покебол's\"" }]);
+  assert.equal(checkText(term), "glossary term 'Poké Ball' -> \"Покебол's\" not found (warning)");
 });
 
-test("the character map's error inside a message is a kind of its own", () => {
-  const parts = parseMessage("not encodable: character 'ж' (U+0436) has no byte, in 'жук'");
-  assert.deepEqual(parts.error, { key: "character {char} (U+{unicode}) has no byte, in {text}",
-    vars: { char: "'ж'", unicode: "0436", text: "'жук'" } });
-  assert.equal(parseMessage("not encodable: no terminator after 0x10").error, undefined);
-});
-
-test("the text follows the site catalog and keeps the values", () => {
+test("the character map's error inside a message is a code of its own", (ctx) => {
+  ctx.after(() => { setMessages(null); setCatalog(null); });
+  setMessages(table());
+  const error = { code: "unmapped_character", char: "'ж'", unicode: "0436", text: "'жук'" };
+  assert.equal(checkText({ code: "not_encodable", error }), "not encodable: character 'ж' (U+0436) has no byte, in 'жук'");
   setCatalog(RU);
-  try {
-    assert.equal(checkText("line too wide: 210 > 196 px: 'Как дела?' with {PLAYER} = 42 px (profile width); {STR_VAR_1} = 60 px (widest of table items) (warning)"),
-      "строка слишком широкая: 210 > 196\u00a0px: 'Как дела?' при {PLAYER} = 42\u00a0px (ширина из профиля); {STR_VAR_1} = 60\u00a0px (widest of table items) (предупреждение)");
-    assert.equal(checkText("not encodable: character 'ж' (U+0436) has no byte, in 'жук'"),
-      "не кодируется: у символа 'ж' (U+0436) нет байта, в 'жук'");
-    assert.equal(checkText("not encodable: no terminator after 0x10"), "не кодируется: no terminator after 0x10");
-    assert.equal(checkText("glossary term 'Potion' -> 'Зелье' not found (warning)"),
-      "термин глоссария 'Potion' -> 'Зелье' не найден (предупреждение)");
-    assert.equal(checkText("Preserve the source placeholders and control codes."), "Сохраните подстановки и управляющие коды оригинала.");
-    assert.equal(checkText("A message the check never gives"), "A message the check never gives");
-    assert.equal(checkText("too many lines: 4 > 3"), "too many lines: 4 > 3", "a kind without a translation stays English");
-  } finally {
-    setCatalog(null);
-  }
-  assert.equal(checkText("line too wide: 210 > 196 px: 'x' (warning)"), "line too wide: 210 > 196\u00a0px: 'x' (warning)");
+  assert.equal(checkText({ code: "not_encodable", error }), "не кодируется: у символа 'ж' (U+0436) нет байта, в 'жук'");
+  assert.equal(checkText({ code: "not_encodable", error: "no terminator after 0x10" }), "не кодируется: no terminator after 0x10");
+});
+
+test("the text follows the site catalog and keeps the values", (ctx) => {
+  ctx.after(() => { setMessages(null); setCatalog(null); });
+  setMessages(table());
+  const slots = { ...wide, text: "'Как дела?'", slots: [...wide.slots, item("{STR_VAR_1}", 60, "widest of table items")] };
+  setCatalog(RU);
+  assert.equal(checkText(noted(slots, "warning")), "строка слишком широкая: 210 > 196 px: 'Как дела?' при {PLAYER} = 42 px "
+    + "(ширина из профиля); {STR_VAR_1} = 60 px (widest of table items) (предупреждение)");
+  assert.equal(checkText(glossaryMissing("'Potion'", "'Зелье'")), "термин глоссария 'Potion' -> 'Зелье' не найден (предупреждение)");
+  assert.equal(checkText(checkFailed("no bundle")), "проверка не удалась: no bundle");
+  assert.equal(checkText("Preserve the source placeholders and control codes."), "Сохраните подстановки и управляющие коды оригинала.");
+  assert.equal(checkText("A message the check never gives"), "A message the check never gives");
+  assert.equal(checkText("too many lines: 4 > 3"), "too many lines: 4 > 3", "a text is not read for its code");
+  assert.equal(checkText({ code: "too_many_lines", n: 4, limit: 3 }), "too many lines: 4 > 3", "a code without a translation stays English");
+  setCatalog(null);
+  assert.equal(checkText(noted({ code: "line_wide", width: 210, limit: 196, text: "'x'" }, "warning")),
+    "line too wide: 210 > 196 px: 'x' (warning)");
+  setMessages(null);
+  assert.equal(checkText(checkFailed("no bundle")), "check failed: no bundle", "the page's own problems need no table");
+  assert.equal(checkText(glossaryMissing("'Potion'", "'Зелье'")), "glossary term 'Potion' -> 'Зелье' not found (warning)");
+});
+
+test("an inserted word's source in a message shows as in the slot rows, its extras after it", (ctx) => {
+  ctx.after(() => { setMessages(null); setCatalog(null); setPlaces(null); setUiLanguage("en"); });
+  setMessages(table());
+  const label = { code: "slot_fill", fill: { code: "slot_label", label: "Trainer name" }, where: "battle text, name of the opposing trainer" };
+  const message = { ...wide, slots: [item("{B_TRAINER1_NAME}", 60, label),
+    item("{STR_VAR_1}", 42, { code: "slot_parts", source: { code: "slot_unavailable", source: { code: "slot_profile" } },
+      parts: [{ code: "slot_part", text: "Зелье", width: 30 }, { code: "slot_no_prefix" }] })] };
+  assert.equal(checkText(message), "line too wide: 210 > 196 px: 'Привет, {PLAYER}! Как дела?' with "
+    + "{B_TRAINER1_NAME} = 60 px (Trainer name, battle text, name of the opposing trainer); "
+    + "{STR_VAR_1} = 42 px (profile width; recorded width; sources unavailable; «Зелье» 30 px, no prefix 0 px)");
+  setPlaces({ "battle text, name of the opposing trainer": { ru: "боевой текст, имя тренера противника" },
+    "Trainer name": { ru: "Имя тренера" } });
+  setUiLanguage("ru");
+  setCatalog({ ...RU, "{label}, {where}": "{label}, {where}" });
+  const rows = slotRows({ slot_details: { "{B_TRAINER1_NAME}": { label: "Trainer name", width: 60, state: "computed" } } });
+  assert.equal(rows[0].label, "Имя тренера");
+  assert.equal(checkText({ ...message, slots: message.slots.slice(0, 1) }), "строка слишком широкая: 210 > 196 px: "
+    + "'Привет, {PLAYER}! Как дела?' при {B_TRAINER1_NAME} = 60 px (Имя тренера, боевой текст, имя тренера противника)");
 });
 
 test("every key's holes are named and every kind is distinct", () => {
-  const keys = [...MESSAGES, ...ENCODING, ...NOTES];
+  const keys = [...MESSAGES, ...ENCODING, ...Object.values(NOTES)];
   assert.equal(new Set(keys).size, keys.length);
   for (const key of keys) assert.match(key, /^(?:[^{}]|\{\w+\})*$/, key);
+  for (const [code, template] of Object.entries(PROBLEMS)) {
+    if (!code.startsWith("slot_") && !Object.hasOwn(NOTES, code) && code !== "unmapped_character") assert.ok(MESSAGES.includes(template), code);
+  }
 });
 
 test("a graphics finding or report line is its kind with its values, in the site language", () => {
@@ -105,64 +161,70 @@ test("graphics extraction errors translate only the toolkit's phrases", (ctx) =>
 });
 
 test("a typography reason takes the policy's text in the site language", (ctx) => {
-  ctx.after(() => { setReasons(null); setCatalog(null); setUiLanguage("en"); });
-  const message = "typography: three dots: use the ellipsis character …";
+  ctx.after(() => { setReasons(null); setCatalog(null); setUiLanguage("en"); setMessages(null); });
+  setMessages(table());
+  const message = { code: "typography", reason: "three dots: use the ellipsis character …" };
   setReasons({ "three dots: use the ellipsis character …": { ru: "три точки: используйте символ многоточия …" } });
   setUiLanguage("ru");
   setCatalog({ "typography: {reason}": "типографика: {reason}" });
   assert.equal(checkText(message), "типографика: три точки: используйте символ многоточия …");
-  assert.equal(checkText("typography: double space"), "типографика: double space", "a reason without a text stays");
+  assert.equal(checkText({ code: "typography", reason: "double space" }), "типографика: double space", "a reason without a text stays");
   setUiLanguage("en");
   setCatalog(null);
-  assert.equal(checkText(message), message);
+  assert.equal(checkText(message), "typography: three dots: use the ellipsis character …");
 });
 
-test("a slot source in the site language: its phrases, the reasons it is partly unknown, its words kept", (ctx) => {
-  ctx.after(() => setCatalog(null));
-  const source = "profile width, above the widest known species table:species/499 'Munchlax' (untranslated) 47 px "
-    + "(1 of 1 walked paths set no value; 3 script references not walked)";
+test("a slot source in the site language: its codes, the reasons it is partly unknown, its words kept", (ctx) => {
+  ctx.after(() => { setCatalog(null); setMessages(null); });
+  setMessages(table());
+  const source = { code: "slot_reasons", source: { code: "slot_profile_above", source: { code: "slot_record", kind: "species",
+    word: { code: "slot_word", id: "table:species/499", text: "'Munchlax'" } }, width: 47 },
+  reasons: [{ code: "slot_unfilled", unfilled: 1, uses: 1 }, { code: "slot_unwalked", references: 3 }] };
   setCatalog({
     "profile width, above the widest known {source} {width} px": "ширина из профиля, больше самого широкого известного: {source} {width} px",
-    "{word} (untranslated)": "{word} (не переведено)",
     "{n} of {uses} walked paths set no value": "путей без значения: {n} из {uses} пройденных",
     "{n} script references not walked": "непройденных ссылок скриптов: {n}",
     "{width} px, {where}": "{width} px, {where}", "code fill": "заполнение кодом",
     "line too wide: {width} > {limit} px: {text} with {slots}": "строка слишком широкая: {width} > {limit} px: {text} при {slots}",
   });
+  const codeFill = { code: "slot_code_fill", fill: { code: "slot_width", width: 66 } };
   assert.equal(slotSource(source), "ширина из профиля, больше самого широкого известного: species name table:species/499 "
-    + "'Munchlax' (не переведено) 47\u00a0px (путей без значения: 1 из 1 пройденных; непройденных ссылок скриптов: 3)");
-  assert.equal(slotSource("66 px, code fill"), "66\u00a0px, заполнение кодом");
-  assert.equal(slotSource("66 px, battle text, name of the opposing trainer"), "66\u00a0px, battle text, name of the opposing trainer");
-  assert.equal(slotSource("number of up to 5 digits (a variable)"), "number of up to 5 digits (a variable)");
-  assert.equal(checkText("line too wide: 210 > 196 px: 'x' with {STR_VAR_1} = 60 px (66 px, code fill)"),
-    "строка слишком широкая: 210 > 196\u00a0px: 'x' при {STR_VAR_1} = 60\u00a0px (66\u00a0px, заполнение кодом)");
+    + "'Munchlax' 47 px (путей без значения: 1 из 1 пройденных; непройденных ссылок скриптов: 3)");
+  assert.equal(slotSource(codeFill), "66 px, заполнение кодом");
+  assert.equal(slotSource("66 px, code fill"), "66 px, code fill", "a text shows as written");
+  assert.equal(checkText({ code: "line_wide_slots", width: 210, limit: 196, text: "'x'", slots: [item("{STR_VAR_1}", 60, codeFill)] }),
+    "строка слишком широкая: 210 > 196 px: 'x' при {STR_VAR_1} = 60 px (66 px, заполнение кодом)");
   setCatalog(null);
-  assert.equal(slotSource(source), source.replace("known species table", "known species name table").replaceAll(" px", "\u00a0px")); // the fill kind shows its label
+  assert.equal(slotSource(source), "profile width, above the widest known species name table:species/499 'Munchlax' 47 px "
+    + "(1 of 1 walked paths set no value; 3 script references not walked)"); // the fill kind shows its label
 });
 
 test("slot measurements use the translated unit without a break", (context) => {
-  context.after(() => setCatalog(null));
+  context.after(() => { setCatalog(null); setMessages(null); });
+  setMessages(table());
   setCatalog({ px: "px", "code fill": "заполнение кодом", "{width} px, {where}": "{width} px, {where}" });
-  assert.equal(slotSource("59 px, code fill"), "59\u00a0px, заполнение кодом");
-  assert.equal(checkText("line too wide: 119 > 110 px: 'x'"), "line too wide: 119 > 110\u00a0px: 'x'");
-  assert.ok(!slotSource("59 px, code fill").includes("59 px"));
+  const codeFill = { code: "slot_code_fill", fill: { code: "slot_width", width: 59 } };
+  assert.equal(slotSource(codeFill), "59 px, заполнение кодом");
+  assert.equal(checkText({ code: "line_wide", width: 119, limit: 110, text: "'x'" }), "line too wide: 119 > 110 px: 'x'");
+  assert.ok(!slotSource(codeFill).includes("59 px"));
 });
 
 test("a limit description in the site language, nested descriptions too", (ctx) => {
   ctx.after(() => setCatalog(null));
-  const rule = "the window of hash:00c6180b, which inserts it: [layout.box_width] dialogue: the message box, measured in game, "
-    + "centred against hash:47007de3";
+  const rule = { code: "centred", rule: { code: "host", host: "hash:00c6180b", rule: { code: "box_width", box: "dialogue" } },
+    reference: "hash:47007de3" };
   setCatalog({ "Dialogue message window": "Окно диалога", "{rule}, centred": "{rule}, по центру" });
   assert.equal(limitText(rule), "Окно диалога, по центру");
-  assert.equal(limitText("[[layout.record_window]] journal"), "Record text window");
+  assert.equal(limitText({ code: "record_window", name: "journal" }), "Record text window");
   setCatalog(null);
   assert.equal(limitText(rule), "Dialogue message window, centred");
+  assert.equal(limitText("[[layout.record_window]] journal"), "[[layout.record_window]] journal", "a text is not read for its rule");
 });
 
-test("profile sources use descriptions in words and retain identities as references", (context) => {
+test("profile rule sources use descriptions in words and retain identities as references", (context) => {
   context.after(() => { setPlaces(null); setCatalog(null); setUiLanguage("en"); });
   setPlaces({ "battle text, name of the opposing trainer": { ru: "боевой текст, имя тренера противника" } });
-  const rule = "profile [[layout.code_fill]] fill-20: battle text, name of the opposing trainer";
+  const rule = { code: "rule_code_fill_where", name: "fill-20", where: "battle text, name of the opposing trainer" };
   assert.equal(limitText(rule), "battle text, name of the opposing trainer");
   assert.deepEqual(limitReferences(rule), ["layout.code_fill fill-20"]);
   setCatalog({ "battle text, name of the opposing trainer": "unused" });
@@ -170,50 +232,50 @@ test("profile sources use descriptions in words and retain identities as referen
   assert.equal(limitText(rule), "боевой текст, имя тренера противника");
   setUiLanguage("en");
   for (const [source, label, reference] of [
-    ["profile [[qa.droppable]]", "Droppable placeholders", "qa.droppable"],
-    ["profile [[strings.pointer_table]] credits", "Pointer table", "strings.pointer_table credits"],
-    ["profile [[table]] species save_link", "Name field", "table species"],
-    ["profile [strings] save_link", "Save or link text", "strings save_link"],
-    ["profile [strings] save_link_letters", "Save or link text", "strings save_link_letters"],
-    ["profile [pokedex.dex.map]", "Pokedex species map", "pokedex.dex.map"],
+    [{ code: "rule_droppable" }, "Droppable placeholders", "qa.droppable"],
+    [{ code: "rule_pointer_table", table: "credits" }, "Pointer table", "strings.pointer_table credits"],
+    [{ code: "rule_table_save_link", table: "species" }, "Name field", "table species"],
+    [{ code: "rule_table", table: "item_plural_s" }, "Name field", "table item_plural_s"],
+    [{ code: "rule_strings", key: "save_link" }, "Save or link text", "strings save_link"],
+    [{ code: "rule_strings", key: "save_link_letters" }, "Save or link text", "strings save_link_letters"],
+    [{ code: "rule_computed", pointer: "0x8123" }, "Computed string group", "strings.computed 0x8123"],
+    [{ code: "rule_interior", pointer: "0x100" }, "Interior string", "strings.interior 0x100"],
+    [{ code: "rule_code_fill", name: "s0123ABC" }, "Code fill", "layout.code_fill s0123ABC"],
   ]) {
     assert.equal(limitText(source), label);
     assert.deepEqual(limitReferences(source), [reference]);
   }
+  // other rule sources are texts: a key or as written, their identifiers kept
+  setCatalog({ "catalog context": "контекст каталога" });
+  assert.equal(limitText("catalog context"), "контекст каталога");
+  assert.deepEqual(limitReferences("catalog context"), []);
+  assert.deepEqual(limitReferences("review of s0000100 and s0000100"), ["s0000100"]);
+});
+
+test("a rule's wording names its profile keys in words", (ctx) => {
+  ctx.after(() => setCatalog(null));
+  assert.equal(wordingText("Species keep the order of [pokedex.dex.map]."), "Species keep the order of Pokedex species map.");
+  assert.equal(wordingText("[[qa.droppable]] and [[unknown.key]]"), "Droppable placeholders and [[unknown.key]]");
+  setCatalog({ "Pokedex species map": "карта видов Покедекса" });
+  assert.equal(wordingText("See [pokedex.dex.map]"), "See карта видов Покедекса");
 });
 
 test("window references survive nested bases separately from their descriptions", () => {
-  const rule = "the window of sym:host, which inserts it: [[layout.table_window]] sample: menu: text, centred against sym:centre";
+  const rule = { code: "centred", rule: { code: "host", host: "sym:host",
+    rule: { code: "table_window_where", name: "sample", where: "menu: text" } }, reference: "sym:centre" };
   assert.equal(limitText(rule), "menu: text, centred");
   assert.deepEqual(limitReferences(rule), ["layout.table_window sample", "sym:host", "sym:centre"]);
-  const via = "two lines per message box ([[layout.table_window]] sample)";
+  const via = { code: "box_lines_via", via: { code: "table_window", name: "sample" } };
   assert.equal(limitText(via), "two lines per message box");
-  assert.equal(limitText(via, [{ rule: "[[layout.table_window]] sample: menu: text" }]),
-    "two lines per message box");
   assert.deepEqual(limitReferences(via), ["layout.table_window sample"]);
-  for (const [rule, text, reference] of [
-    ["[[table]] names: a field of 1 byte", "a field of 1 byte", "table names"],
-    ["[[table]] names: a field of 1 byte with the terminator", "a field of 1 byte with the terminator", "table names"],
-    ["[[table]] names: a field of 12 bytes", "a field of 12 bytes", "table names"],
-    ["[[table]] names: a long-name pointer of 24 bytes with the terminator", "a long-name pointer of 24 bytes with the terminator", "table names"],
-    ["[[table]] names buffer: menu: field", "menu: field", "table names"],
-    ["[language policy] table_window.sample: menu: text", "menu: text", "language policy table_window.sample"],
-    ["[language policy] table_window.sample", "Table text window", "language policy table_window.sample"],
-    ["[[strings.table_base]] sample: in place in its 8-byte field with the terminator", "in place in its 8-byte field with the terminator", "strings.table_base sample"],
-    ["[[strings.interior]] 0x100: read from byte 4, in place in its 12 bytes", "read from byte 4, in place in its 12 bytes", "strings.interior 0x100"],
-  ]) {
-    assert.equal(limitText(rule), text);
-    assert.deepEqual(limitReferences(rule), [reference]);
-  }
 });
 
-
 test("consumer diagnostics retain their binding window", (context) => {
-  context.after(() => setCatalog(null));
-  const arrow = "line leaves no room for the prompt arrow: box 1: 170 > 166 px in trade window: 'Draft'";
-  const ordinary = "line too wide: 180 > 176 px: 'Draft'; window trade window";
-  assert.equal(parseMessage(arrow).vars.where, "trade window");
-  assert.equal(parseMessage(ordinary).vars.where, "trade window");
+  context.after(() => { setCatalog(null); setMessages(null); });
+  setMessages(table());
+  const where = { code: "table_window_where", name: "trade", where: "trade window" };
+  const arrow = { code: "arrow_room_window", box: 1, width: 170, limit: 166, where, text: "'Draft'" };
+  const ordinary = { code: "line_wide_window", width: 180, limit: 176, text: "'Draft'", where };
   setCatalog({
     "line leaves no room for the prompt arrow: box {box}: {width} > {limit} px in {where}: {text}":
       "Arrow: {width}/{limit}, {where}, {text}",
@@ -221,7 +283,12 @@ test("consumer diagnostics retain their binding window", (context) => {
   });
   assert.equal(checkText(arrow), "Arrow: 170/166, trade window, 'Draft'");
   assert.equal(checkText(ordinary), "Width: 180/176, trade window, 'Draft'");
-  assert.equal(parseMessage(arrow.replace("166", "-1")).vars.limit, "-1");
+  assert.equal(checkText({ ...arrow, limit: -1 }), "Arrow: 170/-1, trade window, 'Draft'");
+  setCatalog(null);
+  assert.equal(checkText({ code: "instant_print", where: { code: "record_window", name: "banner" } }),
+    "scroll and page codes are not supported in Record text window: this window prints instantly and drops the remaining text");
+  assert.equal(checkText({ code: "other_window_wide", width: 99, limit: 98, where: "the bag", font: "unbound-small" }),
+    "line too wide: 99 > 98 px in the bag (unbound-small)");
 });
 
 // the data's explanation templates (gen3tl.check.provenance.MESSAGES)
@@ -329,6 +396,85 @@ const SLOT_CODES = [
 ];
 // every key shown through the catalog, marked
 const MARKED = new Proxy({}, { get: (_, key) => `ru:${String(key)}` });
+// each limit code's text in English and marked, and its references, as their phrases showed
+const LIMIT_TEXTS = [
+  ["Record text window", "ru:Record text window", ["layout.record_window journal"]],
+  ["the journal", "the journal", ["layout.record_window journal"]],
+  ["Table text window", "ru:Table text window", ["layout.table_window menu"]],
+  ["the bag, hash:0000abcd", "the bag, hash:0000abcd", ["layout.table_window menu", "hash:0000abcd"]],
+  ["Table text window", "ru:Table text window", ["language policy table_window.menu"]],
+  ["the bag", "сумка", ["language policy table_window.menu"]],
+  ["Text window", "ru:Text window", ["layout.window notice"]],
+  ["Notice window", "Notice window", ["layout.window notice"]],
+  ["Dialogue message window", "ru:Dialogue message window", ["layout dialogue_width"]],
+  ["Minimum label width", "ru:Minimum label width", ["layout label_min_width"]],
+  ["Battle message window", "ru:Battle message window", ["layout.box_width battle"]],
+  ["Dialogue message window", "ru:Dialogue message window", ["layout.box_width dialogue", "layout.window_box s0000100"]],
+  ["two lines per message box", "ru:two lines per message box", []],
+  ["two lines per message box", "ru:two lines per message box", ["layout.table_window menu"]],
+  ["Message window", "ru:Message window", ["layout.window_box s0000100"]],
+  ["Text window width", "ru:Text window width", ["layout.window_width s0000100"]],
+  ["Visible lines in the text window", "ru:Visible lines in the text window", ["layout.window_lines s0000100"]],
+  ["Translation text budget", "ru:Translation text budget", ["language policy window_width.s0000100", "s0000100"]],
+  ["the English: its widest line", "ru:the English: its widest line", []],
+  ["the English: the widest line of po/tables/items.po", "ru:the English: the widest line of po/tables/items.po", []],
+  ["the English: the widest line of its pointer-table run", "ru:the English: the widest line of its pointer-table run", []],
+  ["the English: one line", "ru:the English: one line", []],
+  ["the English: its line count", "ru:the English: its line count", []],
+  ["the English: its box lines", "ru:the English: its box lines", []],
+  ["the English: the most lines of po/maps/town.po", "ru:the English: the most lines of po/maps/town.po", []],
+  ["held summary", "сводка", ["table items"]],
+  ["the bag", "сумка", ["table items"]],
+  ["a one-line field", "ru:a one-line field", ["table items"]],
+  ["a field of 14 bytes with the terminator", "ru:a field of 14 bytes with the terminator", ["table items"]],
+  ["a field of 12 bytes", "ru:a field of 12 bytes", ["table items"]],
+  ["a field of 1 byte with the terminator", "ru:a field of 1 byte with the terminator", ["table keys"]],
+  ["a field of 1 byte", "ru:a field of 1 byte", ["table keys"]],
+  ["a long-name pointer of 18 bytes with the terminator", "ru:a long-name pointer of 18 bytes with the terminator", ["table names"]],
+  ["Keyboard key columns", "ru:Keyboard key columns", ["keyboard columns"]],
+  ["keyboard layout columns: the columns its pack keyboard reaches", "ru:keyboard layout columns: the columns its pack keyboard reaches", []],
+  ["in place: its 12 bytes with the terminator, a reference the build cannot rewrite (script:vmessage, table-base)", "ru:in place: its 12 bytes with the terminator, a reference the build cannot rewrite (script:vmessage, table-base)", []],
+  ["in place in its 8-byte field with the terminator", "ru:in place in its 8-byte field with the terminator", ["strings.table_base berries"]],
+  ["read from byte 3, in place in its 12 bytes", "ru:read from byte 3, in place in its 12 bytes", ["strings.interior 0x1A2B"]],
+  ["the bag, centred", "ru:сумка, centred", ["layout.table_window menu", "s0000200"]],
+  ["Dialogue message window", "ru:Dialogue message window", ["layout.box_width dialogue", "s0000300"]],
+  ["its host", "ru:its host", []],
+];
+// each slot code's text in English and marked, as their phrases showed; a label had no phrase to read
+const SLOT_TEXTS = [
+  ["profile width", "ru:profile width"],
+  ["profile width, unverified estimate", "ru:profile width, unverified estimate"],
+  ["default width", "ru:default width"],
+  ["context records", "ru:context records"],
+  ["profile width, unverified estimate (no fill known; shown by code)", "ru:profile width, unverified estimate (ru:no fill known; ru:shown by code)"],
+  ["profile width, above the widest known species name table:species/499 (untranslated) 47\u00a0px (1 of 1 walked paths set no value; 3 script references not walked)", "ru:profile width, above the widest known ru:ru:species name table:species/499 (untranslated) 47\u00a0ru:px (ru:1 of 1 walked paths set no value; ru:3 script references not walked)"],
+  ["profile width (a value the scripts do not name: nickname, number)", "ru:profile width (ru:a value the scripts do not name: ru:nickname, ru:number)"],
+  ["table:species/499 'Munchlax' (no fill known)", "table:species/499 'Munchlax' (ru:no fill known)"],
+  ["profile width, unverified estimate, above the widest known number of up to 5 digits (a variable) 30\u00a0px", "ru:profile width, unverified estimate, above the widest known ru:number of up to 5 digits (a variable) 30\u00a0ru:px"],
+  ["table:species/499 'Munchlax'", "table:species/499 'Munchlax'"],
+  ["s0000200 (untranslated)", "ru:s0000200 (untranslated)"],
+  ["s0000200 '' (translated as empty)", "ru:s0000200 '' (translated as empty)"],
+  ["item name table:species/499 'Munchlax'", "ru:item name table:species/499 'Munchlax'"],
+  ["item name items:3 '' (translated as empty)", "ru:ru:item name items:3 '' (translated as empty)"],
+  ["std_text table:species/499 'Munchlax'", "std_text table:species/499 'Munchlax'"],
+  ["widest of table items: hash:0000abcd (untranslated)", "ru:widest of table items: ru:hash:0000abcd (untranslated)"],
+  ["native table choices: hash:00000001 + hash:00000002", "ru:native table choices: hash:00000001 + hash:00000002"],
+  ["number of up to 5 digits (a variable)", "ru:number of up to 5 digits (a variable)"],
+  ["number 10", "ru:number 10"],
+  ["number of 2 digits, the record's 10", "ru:number of 2 digits, the record's 10"],
+  ["Battle name with prefix", null],
+  ["widest source hash:0000abcd, Pokemon summary, trainer memo", "ru:widest source hash:0000abcd, ru:Pokemon summary, trainer memo"],
+  ["widest source s0000200, English 50\u00a0px, the bag", "ru:widest source s0000200, English 50\u00a0ru:px, ru:the bag"],
+  ["number of 1 digit, code fill", "ru:number of 1 digit, ru:code fill"],
+  ["number of 3 digits, evolution conditions, damage (never shown)", "ru:number of 3 digits, ru:evolution conditions, damage (never shown)"],
+  ["number of 3 digits, English 18\u00a0px, the bag", "ru:number of 3 digits, English 18\u00a0ru:px, ru:the bag"],
+  ["66\u00a0px, battle text, name of the opposing trainer", "ru:66\u00a0ru:px, ru:battle text, name of the opposing trainer"],
+  ["66\u00a0px, unverified estimate, code fill", "ru:66\u00a0ru:px, unverified estimate, ru:code fill"],
+  ["66\u00a0px, unverified estimate, English 67\u00a0px, the bag", "ru:66\u00a0ru:px, unverified estimate, English 67\u00a0ru:px, ru:the bag"],
+  ["66\u00a0px, English 67\u00a0px, the bag", "ru:66\u00a0ru:px, English 67\u00a0ru:px, ru:the bag"],
+  ["Item name, the bag", null],
+  ["Trainer name, English 60\u00a0px, battle text", null],
+];
 
 test("an explanation's English text comes from the data's message table", (ctx) => {
   ctx.after(() => setMessages(null));
@@ -349,14 +495,14 @@ test("a coded limit shows and names its references as its phrase did", (ctx) => 
   ctx.after(() => { setMessages(null); setCatalog(null); setPlaces(null); setUiLanguage("en"); });
   setMessages(TEMPLATES);
   setPlaces({ "the bag": { ru: "сумка" }, "held summary": { ru: "сводка" } });
-  for (const [language, catalog] of [["en", null], ["ru", MARKED]]) {
+  assert.equal(LIMIT_TEXTS.length, LIMIT_CODES.length);
+  for (const [n, [language, catalog]] of [["en", null], ["ru", MARKED]].entries()) {
     setUiLanguage(language);
     setCatalog(catalog);
-    for (const rule of LIMIT_CODES) {
-      const phrase = explanationText(rule);
-      assert.equal(limitText(rule), limitText(phrase), `${language}: ${phrase}`);
-      assert.deepEqual(limitReferences(rule), limitReferences(phrase), phrase);
-    }
+    LIMIT_CODES.forEach((rule, i) => {
+      assert.equal(limitText(rule), LIMIT_TEXTS[i][n], `${language}: ${explanationText(rule)}`);
+      assert.deepEqual(limitReferences(rule), LIMIT_TEXTS[i][2], explanationText(rule));
+    });
   }
   assert.equal(limitText(LIMIT_CODES.at(-3)), "ru:{rule}, centred".replace("{rule}", "сумка"));
   assert.equal(limitText({ code: "table_field", table: "items", bytes: 14 }), "ru:a field of 14 bytes with the terminator");
@@ -391,13 +537,13 @@ test("a coded slot source shows as its phrase did, its words and identifiers kep
   ctx.after(() => { setMessages(null); setCatalog(null); setPlaces(null); setUiLanguage("en"); });
   setMessages(TEMPLATES);
   setPlaces({ "the bag": { ru: "сумка" } });
-  for (const [language, catalog] of [["en", null], ["ru", MARKED]]) {
+  assert.equal(SLOT_TEXTS.length, SLOT_CODES.length);
+  for (const [n, [language, catalog]] of [["en", null], ["ru", MARKED]].entries()) {
     setUiLanguage(language);
     setCatalog(catalog);
-    for (const source of SLOT_CODES.filter((code) => language === "en" || !labelled(code))) {
-      const phrase = explanationText(source);
-      assert.equal(slotSource(source), slotSource(phrase), `${language}: ${phrase}`);
-    }
+    SLOT_CODES.forEach((source, i) => {
+      if (language === "en" || !labelled(source)) assert.equal(slotSource(source), SLOT_TEXTS[i][n], `${language}: ${explanationText(source)}`);
+    });
   }
   setCatalog({ "{word} (translated as empty)": "{word} (пусто)", "item name": "предмет", "{width} px, {where}": "{width} px, {where}",
     "code fill": "заполнение кодом", "number of {n} digits, English {english} px, {where}": "{n} цифры, английский {english} px, {where}" });

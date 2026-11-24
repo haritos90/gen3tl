@@ -3,7 +3,7 @@
 // Every file decodes through editorstore.js.
 
 import { chunkPartUrl, decodeChunk, decodeIndex, decodeSource, decodeTerms, sourceUrl } from "./editorstore.js";
-import { explanationText } from "./checktext.js";
+import { explanationText, unnoted } from "./checktext.js";
 import { searchable } from "./text.js";
 import { catalogCapabilities, EDITOR_SCHEMA, EDITOR_SCHEMAS, verifyManifest } from "./site-model.js";
 import { N_, t, uiError } from "./ui.js";
@@ -147,12 +147,11 @@ export function mapsOf(rows) {
 }
 
 // size problems: too wide, too many lines or keys
-const OVERFLOW = new RegExp(
-  "^(line too wide|too many lines|\\d+ lines in one box|field overflow|in-place overflow|too many keys|" +
-    "line break in a single-line field|written line wider|line wider than the window|pair too wide)",
-);
+const OVERFLOW = new Set(["line_wide", "line_wide_window", "line_wide_slots", "line_wide_slots_window", "column_wide",
+  "column_wide_slots", "other_window_wide", "too_many_lines", "box_unscrolled", "field_overflow", "in_place_overflow",
+  "too_many_keys", "single_line_break", "dropped_breaks", "slot_rewrap", "slot_rewrap_slots", "pair_wide"]);
 
-export const isOverflow = (p) => OVERFLOW.test(p.message);
+export const isOverflow = (p) => OVERFLOW.has(unnoted(p.message)?.code);
 
 /** The words of an entry status. */
 export const STATUS_LABEL = {

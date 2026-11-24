@@ -232,6 +232,7 @@ def batch_check(args):
     from pathlib import Path
     from ..check.entrycheck import entry_problems
     from ..check.layout import Measure
+    from ..check.provenance import formatted
     from ..build.font import FontTable
     from ..lang.langpack import LangPack
     prof = Profile.by_name(args.profile)
@@ -286,7 +287,7 @@ def batch_check(args):
         _, probs = entry_problems(x["source_text"], t, limits[sid], measure, cm, optional,
                                   prof.get("qa", {}).get("forbidden", {}), windows.other(sid), windows.measures,
                                   scoped_matcher, addable.get(sid), pair)
-        out += [(sid, prob) for prob in probs]
+        out += [(sid, formatted(prob)) for prob in probs]
     for sid in tr:
         if sid not in src:
             out.append((sid, "id not in the batch"))

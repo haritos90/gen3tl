@@ -1,7 +1,7 @@
 import { el, renderChildren, updateChildren, setText } from "../dom.js";
 import { t, languageName, N_, showText } from "../ui.js";
 import { statusLabel, loadIndex, verifyProjectIndex } from "../data.js";
-import { keepUnits, limitText, checkText } from "../checktext.js";
+import { keepUnits, limitText, checkText, missingTerms } from "../checktext.js";
 import { countLabel, countsOf, extentsOf, meterOf, sourceOf, arrowConsumer, consumerOf, waitingWindows } from "../limits.js";
 import { isDraft, draftText } from "../draft.js";
 import { renderUnits } from "../field.js";
@@ -276,9 +276,8 @@ export function renderProblems(res) {
     for (const p of res.problems) ul.append(el("li", { class: p.severity, textContent: checkText(p.message) }));
     const unavailable = unavailableNote(res);
     if (unavailable) ul.append(el("li", { class: "none", textContent: unavailable }));
-    for (const term of document.querySelectorAll("#glossary .term")) {
-      term.classList.toggle("missing", res.problems.some((p) => p.message.includes(term.dataset.key)));
-    }
+    const missing = new Set(missingTerms(res.problems).map((m) => `glossary term ${m.term} -> ${m.translation} `));
+    for (const term of document.querySelectorAll("#glossary .term")) term.classList.toggle("missing", missing.has(term.dataset.key));
   });
 }
 

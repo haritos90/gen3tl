@@ -7,9 +7,9 @@ import { PAGES, toolURL } from "./routes.js";
 export { languageName };
 export { gameHash, PAGES } from "./routes.js";
 
-export const EDITOR_SCHEMA = "9.0.0";
-// the page also reads explanations stored as text
-export const EDITOR_SCHEMAS = ["8.0.0", EDITOR_SCHEMA];
+export const EDITOR_SCHEMA = "10.0.0";
+// the page also reads text problems and rule sources
+export const EDITOR_SCHEMAS = ["9.0.0", EDITOR_SCHEMA];
 
 /** Reject manifests before interpreting versioned game data. */
 export function verifyManifest(doc) {

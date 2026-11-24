@@ -42,18 +42,15 @@ test("sources: the description of a limit in the site language, the profile's na
   assert.equal(sourceOf({ kind: "naming", keys: 9, sources: { keys } }, "keys").text, "столбцы клавиатуры пакета");
 });
 
-test("sources: the interior limit's description in the site language, coded or as a phrase", (ctx) => {
+test("sources: the interior limit's description in the site language", (ctx) => {
   ctx.after(() => setCatalog(null));
   const interior = (rule) => sourceOf({ kind: "single", width: 60, lines: 1, bytes: 11,
     sources: { bytes: { kind: "measured", rule, evidence: "StringAppend + 2" } } }, "bytes");
   const coded = { code: "interior", pointer: "0x13255C", offset: 2, bytes: 12 };
-  const phrase = "[[strings.interior]] 0x13255C: read from byte 2, in place in its 12 bytes";
   assert.equal(interior(coded).text, "read from byte 2, in place in its 12 bytes");
   setCatalog({ "read from byte {byte}, in place in its {n} bytes": "читается с байта {byte}, на месте в своих байтах ({n})" });
-  for (const rule of [coded, phrase]) {
-    assert.equal(interior(rule).text, "читается с байта 2, на месте в своих байтах (12)");
-    assert.deepEqual(interior(rule).references, ["strings.interior 0x13255C"]);
-  }
+  assert.equal(interior(coded).text, "читается с байта 2, на месте в своих байтах (12)");
+  assert.deepEqual(interior(coded).references, ["strings.interior 0x13255C"]);
 });
 
 test("sources: a policy estimate is unverified", () => {

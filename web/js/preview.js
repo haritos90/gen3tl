@@ -7,7 +7,7 @@ import { standIn, standInName } from "./standin.js";
 import { N_, t } from "./ui.js";
 import { el } from "./dom.js";
 import { arrowConsumer, arrowRoom, runtimeText, waitingWindows } from "./limits.js";
-import { limitText, whereText } from "./checktext.js";
+import { limitText, unnoted, whereText } from "./checktext.js";
 
 const RULE_STATES = [["original", N_("Original")], ["current", N_("Current")], ["proposed", N_("Proposed")]];
 
@@ -302,14 +302,11 @@ export function fixNote(geo) {
   return notes.join(" ");
 }
 
-// Rewrapped boxes retain their original check messages.
-const DROPPED = /^written line wider than the window: box (\d+): (\d+) > (\d+) px: (['"])(.*?)\4; the build drops/;
-
 /** Explain automatic rewrapping caused by an overlong written line. */
 export function droppedNote(problems) {
-  const m = (problems ?? []).map((p) => DROPPED.exec(p.message)).find(Boolean);
+  const m = (problems ?? []).map((p) => unnoted(p.message)).find((message) => message?.code === "dropped_breaks");
   if (!m) return "";
-  const [, box, width, limit, , line] = m;
+  // the line between the quotes of its excerpt
   return t("Your line breaks in box {box} are not used: the line “{line}” is {width} px, wider than the {limit} px window, so the game wraps the box anew. Shorten that line or move its break to keep your breaks.",
-    { box, line, width, limit });
+    { box: m.box, line: m.text.slice(1, -1), width: m.width, limit: m.limit });
 }

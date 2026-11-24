@@ -21,7 +21,7 @@ from ..core.fields import long_name_fields
 from .entrycheck import (BRACE, SPACING, Source, addable_tokens, droppable_tokens,  # noqa: F401
                          instant_print_problems, placeholders_differ, token_counts, typography_problems, window_problems)
 from .layout import (Limit, Measure, arrow_overflows, check, dropped_breaks, entry_measure, fits, layout, line_width,
-                     lines_of, paragraphs, short_line_ends, slot_note, slot_rewraps, split_names, wrapped_dash_lines)
+                     lines_of, paragraphs, short_line_ends, slot_items, slot_rewraps, split_names, wrapped_dash_lines)
 from ..build.release import expand
 from ..core.rom import Rom
 from ..discover.scan import INPLACE_ONLY_KINDS, table_base_lengths
@@ -128,7 +128,7 @@ class Windows:
                             "where": w["where"]})
         return out
 
-    def problems(self, sid: str, text: str) -> list[str]:
+    def problems(self, sid: str, text: str) -> list[dict]:
         # shared with the editor check
         return window_problems(text, self.other(sid), self.measures)
 
@@ -1337,8 +1337,9 @@ def run(prof, inv: dict, po_root: Path, cm: Charmap, measure: Measure, glyph_slo
             gate.add(sid, f, "warning", "paragraph breaks removed")
         laid = layout(target, lim, measure, cm)
         for prob in instant_print_problems(target, laid, lim):
-            gate.add(sid, f, "error", prob)
-        size_probs = check(laid, lim, measure, cm) + (windows.problems(sid, target) if windows else [])
+            gate.add(sid, f, "error", formatted(prob))
+        size_probs = [formatted(prob) for prob in
+                      check(laid, lim, measure, cm) + (windows.problems(sid, target) if windows else [])]
         for prob in size_probs:
             # English wider than the measured window: the original overflows
             original_buffer = (prob.startswith("field overflow")
@@ -1347,18 +1348,18 @@ def run(prof, inv: dict, po_root: Path, cm: Charmap, measure: Measure, glyph_slo
             over = source_as_translation and (prob.startswith("line too wide") or original_buffer)
             gate.add(sid, f, "warning" if over else "error", prob)
         for prob in wrapped_dash_lines(target, laid):
-            gate.add(sid, f, "error", prob)
+            gate.add(sid, f, "error", formatted(prob))
         for prob in arrow_overflows(laid, lim, measure, cm):   # English lines may clip it
-            gate.add(sid, f, "warning" if source_as_translation else "error", prob)
+            gate.add(sid, f, "warning" if source_as_translation else "error", formatted(prob))
         for prob in slot_rewraps(target, lim, measure, cm):
-            gate.add(sid, f, "warning", prob)
+            gate.add(sid, f, "warning", formatted(prob))
         dropped = [] if size_probs else dropped_breaks(target, lim, measure, cm)
         for prob in dropped:   # only where the re-wrap fits
-            gate.add(sid, f, "warning", prob)
+            gate.add(sid, f, "warning", formatted(prob))
         for prob in short_line_ends(target) if lim.kind not in ("single", "field") and not dropped else []:
-            gate.add(sid, f, "warning", prob)   # the written break stays
+            gate.add(sid, f, "warning", formatted(prob))   # the written break stays
         for prob in [] if size_probs else split_names(laid, lim, measure):
-            gate.add(sid, f, "warning", prob)   # the breaks the game shows
+            gate.add(sid, f, "warning", formatted(prob))   # the breaks the game shows
         if source_as_translation or e.owner == "keyboard":
             text_rules, text_english = {}, None
         elif isinstance(english, Source):
@@ -1459,6 +1460,11 @@ def cell(text: str) -> str:
     return text.replace("|", "\\|")
 
 
+def slot_text(line: str, lim: Limit) -> str:
+    """The placeholders of a line with their width and source, as a report cell."""
+    return "; ".join(formatted(item) for item in slot_items(line, lim))
+
+
 def inserted_width_report(prof, inv: dict, catalog, ctx: dict, measure: Measure, cm: Charmap,
                           version: str | None = None, rom: Rom | None = None, current=None) -> tuple[str, int]:
     """Markdown report of the placeholder widths per slot and of the entries with text that overflow with them."""
@@ -1481,9 +1487,9 @@ def inserted_width_report(prof, inv: dict, catalog, ctx: dict, measure: Measure,
             for line in lines_of(par):
                 w = line_width(line, m, cm)
                 if not fits(line, lim.width, m, cm):
-                    overflows.append((sid, str(p), str(box), line, slot_note(line, lim)[6:], f"{w} > {lim.width}"))
-        before = check(layout(target, lim0, measure, cm), lim0, measure, cm)
-        for prob in check(laid, lim, measure, cm):
+                    overflows.append((sid, str(p), str(box), line, slot_text(line, lim), f"{w} > {lim.width}"))
+        before = [formatted(prob) for prob in check(layout(target, lim0, measure, cm), lim0, measure, cm)]
+        for prob in map(formatted, check(laid, lim, measure, cm)):
             if not prob.startswith("line too wide") and prob not in before:
                 overflows.append((sid, str(p), "-", prob, "", ""))
         if lim.kind not in ("dialogue", "battle"):
@@ -1498,7 +1504,7 @@ def inserted_width_report(prof, inv: dict, catalog, ctx: dict, measure: Measure,
                 if not fits(line, lim.width, m, cm):
                     after = len(lines_of(layout(par, lim, measure, cm)))
                     en = len(lines_of(en_pars[box - 1])) if box <= len(en_pars) else 0
-                    rewrapped.append((sid, str(p), box, line, slot_note(line, lim)[6:], f"{w} > {lim.width}",
+                    rewrapped.append((sid, str(p), box, line, slot_text(line, lim), f"{w} > {lim.width}",
                                       lim0.width, f"{after} / {en}"))
     known = Counter(v.known for sw in slots.values() for v in sw.values())
     entries = sorted({x[0] for x in overflows})

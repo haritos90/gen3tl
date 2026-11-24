@@ -8,6 +8,7 @@ import re
 from collections import Counter
 from dataclasses import dataclass
 
+from ..check.provenance import formatted, is_warning
 from .termbase import FORM_ONLY, Senses, Term, rename_in_text
 
 FORMAT = "gen3tl-term-rename"
@@ -59,19 +60,20 @@ def left_out(texts: dict[str, str], renames: list[Rename], english: dict[str, st
 QUOTED = r"'(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\""
 
 
-def problem_key(p: str) -> str:
-    """The kind of a check message: numbers and quoted excerpts left out."""
-    m = re.match(r"glossary term (" + QUOTED + ")", p)
+def problem_key(p: str | dict) -> str:
+    """The kind of a check message, a text or a code: numbers and quoted excerpts left out."""
+    text = formatted(p)
+    m = re.match(r"glossary term (" + QUOTED + ")", text)
     if m:
         return "glossary term " + m.group(1)
-    return re.sub(QUOTED, "'…'", re.sub(r"\d+", "N", p))
+    return re.sub(QUOTED, "'…'", re.sub(r"\d+", "N", text))
 
 
-def severity(p: str) -> str:
-    return "warning" if "(warning)" in p else "error"
+def severity(p: str | dict) -> str:
+    return "warning" if (is_warning(p) if isinstance(p, dict) else "(warning)" in p) else "error"
 
 
-def added_problems(before: list[str], after: list[str]) -> list[dict]:
+def added_problems(before: list, after: list) -> list[dict]:
     """The after messages no before message of the same kind pairs with, as {message, severity}."""
     left = Counter(problem_key(p) for p in before)
     out = []
@@ -190,7 +192,7 @@ def markdown(report: dict) -> str:
         rows = [e for e in report["entries"] if any(p["severity"] == sev for p in e["added"])]
         for e in rows:
             lines.append(f"- {e['id']} ({e['file']})" + ("" if e["changed"] else ", limit changed"))
-            lines += [f"  - {p['message']}" for p in e["added"] if p["severity"] == sev]
+            lines += [f"  - {formatted(p['message'])}" for p in e["added"] if p["severity"] == sev]
             lines += [f"  - before: {e['before']}", f"  - after: {e['after']}"]
         if not rows:
             lines.append("None.")

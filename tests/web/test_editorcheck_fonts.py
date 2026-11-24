@@ -5,6 +5,7 @@ from gen3tl.web import editorcheck
 from gen3tl.check.entrycheck import entry_problems
 from gen3tl.lang.langpack import load_styles
 from gen3tl.check.layout import Measure
+from gen3tl.check.provenance import formatted
 from editorcheck_support import EditorCheckTest, PROF
 
 class ShadowCheckTest(unittest.TestCase):
@@ -48,7 +49,7 @@ class ShadowCheckTest(unittest.TestCase):
         cls.browser = editorcheck.Checker(header, cls.latin, PROF["qa"], "1.2.3", cls.cells)
 
     def both(self, window: dict, text: str, checker=None) -> list[str]:
-        """The browser check's messages, asserted equal to check batch's."""
+        """The browser check's messages as their English text, asserted equal to check batch's."""
         e = {"id": "s0000900", "source_text": "Desert", "window": window}
         r = (checker or self.browser).check(e, text)
         _, probs = entry_problems("Desert", text, editorcheck.limit_of(window), self.measure, self.cm,
@@ -57,7 +58,7 @@ class ShadowCheckTest(unittest.TestCase):
         msgs = [p["message"] for p in r["problems"]]
         if checker is None:
             self.assertEqual(msgs, probs)
-        return msgs
+        return [formatted(m) for m in msgs]
 
     def test_cells(self):
         self.assertEqual({s: len(c) for s, c in self.cells.items()},

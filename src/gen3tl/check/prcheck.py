@@ -26,6 +26,7 @@ from ..catalog.po import read
 from ..build.release import load as load_version
 from .render import Canvas, PALETTE, draw_text, placeholder_px, write_png
 from .layout import entry_measure
+from .provenance import formatted
 
 WARNING = "approximate: stand-in glyphs"
 
@@ -538,7 +539,7 @@ def _project_checks(project, items: list[Change], out: Path):
             line_limit = lim.lines if lim.lines is not None else "-"
             widths = [line["width"] for box in result["lines"] for line in box if line["width"] is not None]
             width_text = f"{max(widths) if widths else '-'} / {lim.width}"
-            status = "ok" if not result["errors"] else f"error: {result['problems'][0]['message']}"
+            status = "ok" if not result["errors"] else f"error: {formatted(result['problems'][0]['message'])}"
             if result["warnings"] and not result["errors"]:
                 status = f"ok; {result['warnings']} warnings"
             rows.append({"change": item, "lines": f"{line_counts} / {line_limit}", "width": width_text,

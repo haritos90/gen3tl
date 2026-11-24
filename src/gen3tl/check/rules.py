@@ -10,13 +10,14 @@ from pathlib import Path
 from ..core import notes as structured
 from ..lang import language
 from ..lang.language import save_link_keys
+from .provenance import code as coded
 
 LIST_COLUMNS = ("ids", "source_text", "rule", "source")
 HOSTS_SHOWN = 4   # ids named per inserted-word rule
 
 
-def rule(text: str, source: str, evidence: str = "") -> dict:
-    """A rule as the editor shows it: the text, where it comes from, its evidence."""
+def rule(text: str, source: str | dict, evidence: str = "") -> dict:
+    """A rule as the editor shows it: the text, where it comes from (a text or a coded profile row), its evidence."""
     return {"text": text, "source": source, "evidence": evidence}
 
 
@@ -43,9 +44,9 @@ def save_link_rules(prof, inv: dict) -> dict[str, list[dict]]:
             continue
         t = tables.get(e.get("table")) if e["kind"] == "fixed" else None
         if t is not None and t.get("save_link"):
-            out[e["id"]] = [rule(text, f"profile [[table]] {t['name']} save_link", t.get("evidence", ""))]
+            out[e["id"]] = [rule(text, coded("rule_table_save_link", table=t["name"]), t.get("evidence", ""))]
         else:
-            out[e["id"]] = [rule(text, f"profile [strings] {keys.get(e['id'], 'save_link')}")]
+            out[e["id"]] = [rule(text, coded("rule_strings", key=keys.get(e["id"], "save_link")))]
     return out
 
 
@@ -55,7 +56,7 @@ def computed_rules(prof, inv: dict) -> dict[str, list[dict]]:
     out: dict[str, list[dict]] = {}
     for d in prof.get("strings", {}).get("computed", []):
         members = sorted((by_id[s] for s in d["ids"] if s in by_id), key=lambda e: e["offset"])
-        source = f"profile [[strings.computed]] 0x{d['pointer']:X}"
+        source = coded("rule_computed", pointer=f"0x{d['pointer']:X}")
         for e, nxt in zip(members, members[1:] + [None]):
             others = ", ".join(m["id"] for m in members if m is not e)
             head = (f"Moves with {others} as one block: code reaches the group by pointer arithmetic "
@@ -80,7 +81,7 @@ def interior_rules(prof, limits: dict) -> dict[str, list[dict]]:
         out[d["id"]] = [rule(f"Begins with {lim.head}, the first {d['offset']} bytes of the English; code reads "
                              f"the text from byte {d['offset']} (pool word 0x{d['pointer']:X}); "
                              f"kept in place: at most {lim.bytes} bytes.",
-                             f"profile [[strings.interior]] 0x{d['pointer']:X}", d.get("evidence", ""))]
+                             coded("rule_interior", pointer=f"0x{d['pointer']:X}"), d.get("evidence", ""))]
     return out
 
 
@@ -96,7 +97,7 @@ def code_char_rules(prof, inv: dict) -> dict[str, list[dict]]:
         end = ", the terminator" if pad == 0xFF else ""
         out[e["id"]] = [rule(f"Character code written by game code: at most {_plural(n, 'character')}; only "
                              f"that byte changes; empty writes 0x{pad:02X}{end}.",
-                             f"profile [[table]] {t['name']}", t.get("evidence", ""))]
+                             coded("rule_table", table=t["name"]), t.get("evidence", ""))]
     return out
 
 
@@ -126,9 +127,8 @@ def code_fill_rules(prof, inv: dict, catalog: dict, tokens: dict | None = None) 
                             else f"text {s['width']} px wide")
                 where = f" ({r['where']})" if r.get("where") else ""
                 identity = r.get("name") or (f"0x{r['base']:X}" if "base" in r else r["ids"][0])
-                source = f"profile [[layout.code_fill]] {identity}"
-                if r.get("where"):
-                    source += f": {r['where']}"
+                source = (coded("rule_code_fill_where", name=identity, where=r["where"]) if r.get("where")
+                          else coded("rule_code_fill", name=identity))
                 out.setdefault(e["id"], []).append(
                     rule(f"The code fills {{{name}}} with {what}{where}.", source, r["evidence"]))
     return out
@@ -140,7 +140,7 @@ def droppable_rules(prof) -> dict[str, list[dict]]:
     for d in prof.get("qa", {}).get("droppable", []):
         for sid in d["ids"]:
             out.setdefault(sid, []).append(rule(f"May leave out {' '.join(d['tokens'])}: the code fills it with "
-                                                "text only the English needs.", "profile [[qa.droppable]]",
+                                                "text only the English needs.", coded("rule_droppable"),
                                                 d.get("evidence", "")))
     return out
 
@@ -152,7 +152,7 @@ def pointer_table_rules(prof, inv: dict) -> dict[str, list[dict]]:
     for e in inv["entries"]:
         t = notes.get(e.get("table")) if e["kind"] == "pointer" else None
         if t is not None:
-            out[e["id"]] = [rule(t["note"], f"profile [[strings.pointer_table]] {t['name']}", t.get("evidence", ""))]
+            out[e["id"]] = [rule(t["note"], coded("rule_pointer_table", table=t["name"]), t.get("evidence", ""))]
     return out
 
 

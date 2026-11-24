@@ -79,7 +79,7 @@ test("a draft checked in Russian stores and exports English; its problems show i
   new Edits(storage, "ru", "p").set(entry, check.text, "", problems, check.exact);
   const stored = new Edits(storage, "ru", "p").get("s1").problems;
   assert.deepEqual(stored.map((p) => p.message), ["Preserve the source placeholders and control codes.",
-    "Game encoding, font and layout are not verified for this catalog.", "check failed: no bundle"]);
+    "Game encoding, font and layout are not verified for this catalog.", { code: "check_failed", error: "no bundle" }]);
   assert.doesNotMatch(storage.map.get("gen3tl-editor:edits:ru:p"), /Сохраните|проверка/);
   const exported = JSON.stringify(exportDoc("ru", "p", new Edits(storage, "ru", "p").changes()));
   assert.equal(exported, JSON.stringify({ version: "4.0.0", language: "ru", profile: "p",
@@ -89,7 +89,8 @@ test("a draft checked in Russian stores and exports English; its problems show i
     "Кодировка, шрифт и раскладка игры для этого каталога не проверены.", "проверка не удалась: no bundle"]);
   setUiLanguage("en");
   setCatalog(null);
-  assert.deepEqual(stored.map((p) => checkText(p.message)), stored.map((p) => p.message));
+  assert.deepEqual(stored.map((p) => checkText(p.message)), ["Preserve the source placeholders and control codes.",
+    "Game encoding, font and layout are not verified for this catalog.", "check failed: no bundle"]);
 });
 
 test("catalog flags and explicit draft states distinguish blank values", () => {

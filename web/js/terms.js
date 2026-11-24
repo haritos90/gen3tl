@@ -1,7 +1,7 @@
 // Edit glossary terms and preview their renames.
 // Form-only matches require explicit inclusion in renames.
 
-import { checkText } from "./checktext.js";
+import { checkText, glossaryMissing } from "./checktext.js";
 import { el } from "./dom.js";
 import { hasIndependentNotes, limitResearchList, renderNoteDrafts, renderNotes, renderResearchReferences } from "./guidance.js";
 import { sameField } from "./store.js";
@@ -168,8 +168,7 @@ export function glossaryProblems(english, translation, glossary, fold = {}, foun
     if (forms.get(term).some((form) => containsForm(low, form))) present.add(term.source_text);
   }
   return found.filter((t) => !present.has(t.source_text))
-    .map((t) => ({ severity: "warning",
-      message: `glossary term ${pyRepr(t.source_text)} -> ${pyRepr(t.translation)} not found (warning)` }));
+    .map((t) => ({ severity: "warning", message: glossaryMissing(pyRepr(t.source_text), pyRepr(t.translation)) }));
 }
 
 /** Find entries naming a term or containing its forms. */

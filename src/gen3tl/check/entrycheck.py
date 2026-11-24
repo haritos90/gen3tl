@@ -11,15 +11,16 @@ from ..core.charmap import Charmap, CharmapError
 from .layout import (Limit, Measure, SpriteMeasure, arrow_overflows, box_lines, check, code_arg, dropped_breaks,
                      entry_measure, extra_lines, layout, line_width, shadow_overflow, short_line_ends, slot_rewraps,
                      split_names, wrapped_dash_lines)
-from .provenance import formatted
+from .provenance import code as coded, encoding_problem, formatted, noted, unnoted
 
 BRACE = re.compile(r"\{[^}]*\}")
 # spacing codes: amounts follow the language's glyph widths;
 # only their number must match (naming keyboard rows)
 SPACING = re.compile(r"\{(CLEAR|CLEAR_TO) [0-9A-F]{2}\}")
-UNMEASURED = " [unmeasured limit: the English width]"
-UNMEASURED_LINES = " [unmeasured limit: the English line count]"
-UNVERIFIED = " [unverified limit: an estimate for this language]"
+# the problems whose limit may be the window width
+WIDTH_LIMITED = frozenset({"line_wide", "line_wide_window", "line_wide_slots", "line_wide_slots_window",
+                           "other_window_wide", "pair_wide", "arrow_room", "arrow_room_window", "slot_rewrap",
+                           "slot_rewrap_slots", "dropped_breaks"})
 
 
 @dataclass(frozen=True)
@@ -76,7 +77,7 @@ def addable_tokens(rules: dict, *, validated: bool = False) -> dict[str, dict[st
     return out
 
 
-def centring_problems(text: str, leading: dict[str, dict], m: Measure, cm: Charmap) -> list[str]:
+def centring_problems(text: str, leading: dict[str, dict], m: Measure, cm: Charmap) -> list[dict]:
     """A text against the centre of the window of its {CLEAR_TO} rule."""
     rule = leading.get("{CLEAR_TO}")
     if not rule or "window" not in rule:
@@ -87,7 +88,7 @@ def centring_problems(text: str, leading: dict[str, dict], m: Measure, cm: Charm
     want = max(0, (rule["window"] - line_width(rest, m, cm)) // 2 - rule["x"])
     if (n or 0) == want:
         return []
-    return [f"not centred in the {rule['window']} px window: lead with {{CLEAR_TO {want:02X}}}"]
+    return [coded("not_centred", window=rule["window"], token=f"{{CLEAR_TO {want:02X}}}")]
 
 
 def typography_problems(english: str | None, target: str, forbidden: dict[str, str], keys: bool = False) -> list[str]:
@@ -133,9 +134,9 @@ def window_widths(text: str, windows: list[dict], measures: dict) -> list[dict]:
     return out
 
 
-def window_problems(text: str, windows: list[dict], measures: dict[str, tuple[Measure, Charmap]]) -> list[str]:
+def window_problems(text: str, windows: list[dict], measures: dict[str, tuple[Measure, Charmap]]) -> list[dict]:
     """A text against the measured windows of other font styles that show it."""
-    return [f"line too wide: {w['value']} > {w['width']} px in {w['where']} ({w['font']})"
+    return [coded("other_window_wide", width=w["value"], limit=w["width"], where=w["where"], font=w["font"])
             for w in window_widths(text, windows, measures) if w["over"]]
 
 
@@ -147,18 +148,18 @@ def pair_width(text: str, pair: dict, measures: dict) -> int | None:
     return m.width(text + pair.get("suffix", ""), cm) + pair["partner"]["width"] + m.shared
 
 
-def pair_problems(text: str, pair: dict | None, measures: dict) -> list[str]:
+def pair_problems(text: str, pair: dict | None, measures: dict) -> list[dict]:
     """A name whose widest pair runs past the pair's width, naming the partner."""
     n = pair_width(text, pair, measures) if pair else None
     if n is None or n <= pair["width"]:
         return []
     p, s = pair["partner"], pair["partner"]["species"]
-    return [f"pair too wide: {n} > {pair['width']} px in {pair['where']} ({pair['font']}) "
-            f"with «{p.get('text', p['id'])}» {p['id']}, {p['width']} px, "
-            f"outline {measures[pair['font']][0].shared} px, for «{s.get('text', s['id'])}» {s['id']}"]
+    return [coded("pair_wide", width=n, limit=pair["width"], where=pair["where"], font=pair["font"],
+                  partner=p.get("text", p["id"]), partner_id=p["id"], partner_width=p["width"],
+                  outline=measures[pair["font"]][0].shared, species=s.get("text", s["id"]), species_id=s["id"])]
 
 
-def unmeasured(problems: list[str], lim: Limit) -> list[str]:
+def unmeasured(problems: list[dict], lim: Limit) -> list[dict]:
     """Problems against a limit taken from the English or an unmeasured policy width, marked as such."""
     src = lim.sources or {}
     wide = src.get("width", {}).get("kind") == "source"
@@ -166,61 +167,64 @@ def unmeasured(problems: list[str], lim: Limit) -> list[str]:
     many = src.get("lines", {}).get("kind") == "source"
     out = []
     for p in problems:
-        width_match = f" > {lim.width} px: " in p or f" > {lim.width} px in " in p
+        own = unnoted(p)
+        width_match = own["code"] in WIDTH_LIMITED and own["limit"] == lim.width
         if wide and width_match:
-            p += UNMEASURED
+            p = noted(p, "unmeasured_width")
         elif guess and width_match:
-            p += UNVERIFIED
-        elif many and p.startswith("too many lines: ") and p.endswith(f" > {lim.lines}"):
-            p += UNMEASURED_LINES
+            p = noted(p, "unverified_width")
+        elif many and own["code"] == "too_many_lines" and own["limit"] == lim.lines:
+            p = noted(p, "unmeasured_lines")
         out.append(p)
     return out
 
 
-def instant_print_problems(text: str, laid: str, lim: Limit) -> list[str]:
+def instant_print_problems(text: str, laid: str, lim: Limit) -> list[dict]:
     """Refuse waits that discard an instant window's text."""
     if not any(re.search(r"\\[lp]|\{\s*F[AB]\s*\}", value) for value in (text, laid)):
         return []
-    return [f"scroll and page codes are not supported in {name}: "
-            "this window prints instantly and drops the remaining text"
-            for name in dict.fromkeys(formatted(c["name"]) for c in lim.consumers or [] if c.get("instant_print"))]
+    names = {}   # one problem per window text
+    for c in lim.consumers or []:
+        if c.get("instant_print"):
+            names.setdefault(formatted(c["name"]), c["name"])
+    return [coded("instant_print", where=name) for name in names.values()]
 
 
 def entry_problems(english: str | Source, text: str, lim: Limit, measure: Measure, cm: Charmap,
                    optional: set[str] | None = None, forbidden: dict[str, str] | None = None,
                    windows: list[dict] | None = None, measures: dict | None = None,
                    matcher=None, leading: dict[str, dict] | None = None,
-                   pair: dict | None = None) -> tuple[str, list[str]]:
+                   pair: dict | None = None) -> tuple[str, list[dict]]:
     """The laid-out text of a translation and the problems check batch reports for it, in order."""
     try:
         cm.encode(text, terminate=False)
     except CharmapError as exc:
-        return text, [f"not encodable: {exc}"]
+        return text, [encoding_problem(exc)]
     out = []
     facts = isinstance(english, Source)
     if text == "" and (not english.blank if facts else english):
-        out.append("empty translation of a non-empty English: imports as an intended empty translation (warning)")
+        out.append(noted(coded("empty_translation"), "warning"))
     if placeholders_differ(english, text, optional or set(), leading or {}):
-        out.append("placeholders differ")
+        out.append(coded("placeholders_differ"))
     laid = layout(text, lim, measure, cm)
     out += instant_print_problems(text, laid, lim)
     out += check(laid, lim, measure, cm) + window_problems(text, windows or [], measures or {})
     out += pair_problems(text, pair, measures or {})
     out += wrapped_dash_lines(text, laid)
     out += arrow_overflows(laid, lim, measure, cm)
-    out += [p + " (warning)" for p in slot_rewraps(text, lim, measure, cm)]
-    out += [p + " (warning)" for p in dropped_breaks(text, lim, measure, cm)]
+    out += [noted(p, "warning") for p in slot_rewraps(text, lim, measure, cm)]
+    out += [noted(p, "warning") for p in dropped_breaks(text, lim, measure, cm)]
     if lim.kind not in ("single", "field") and not dropped_breaks(text, lim, measure, cm):   # written breaks kept
-        out += [p + " (warning)" for p in short_line_ends(text)]
-    out += [p + " (warning)" for p in split_names(laid, lim, measure)]
-    out += [f"box {box} wraps to {n} lines, the English box has {n_en} (warning)"
+        out += [noted(p, "warning") for p in short_line_ends(text)]
+    out += [noted(p, "warning") for p in split_names(laid, lim, measure)]
+    out += [noted(coded("box_wraps", box=box, n=n, lines=n_en), "warning")
             for box, n, n_en in (box_lines(english.boxes, laid) if facts else extra_lines(english, laid))]
     if not facts:
-        out += [f"typography: {why}"
+        out += [coded("typography", reason=why)
                 for why in typography_problems(english, text, forbidden or {}, lim.keys is not None)]
     me = entry_measure(measure, lim)   # centring measures the entry's style
-    out += [p + " (warning)" for p in centring_problems(text, leading or {}, me, cm)]
+    out += [noted(p, "warning") for p in centring_problems(text, leading or {}, me, cm)]
     if matcher is not None and not facts:
-        out += [f"glossary term {t.source_text!r} -> {t.translation!r} not found (warning)"
+        out += [noted(coded("glossary_missing", term=repr(t.source_text), translation=repr(t.translation)), "warning")
                 for t in matcher.missing(english, text)]
     return laid, unmeasured(out, lim)

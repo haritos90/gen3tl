@@ -4,7 +4,9 @@ import { test } from "node:test";
 import { chunkPartUrl, decodeChunk, decodeIndex, decodeSource, decodeTerms, defaultStatus, messagesOf, sourceUrl }
   from "../js/editorstore.js";
 
-const SCHEMA = "9.0.0";
+const SCHEMA = "10.0.0";
+// a stored problem: its code, its notes around it
+const PROBLEM = { message: { code: "warning", message: { code: "box_wraps", box: 1, n: 3, lines: 2 } }, severity: "warning" };
 const URL_INDEX = "https://site.test/data/game/ru/index.json";
 const MESSAGES = {
   box_width: "[layout.box_width] {box}: the message box, measured in game",
@@ -29,7 +31,7 @@ const stored = {
   fill_sources: { sources: { names: {} }, alphabet: "АБ", values: { s2: { translation: "", flags: [] } } },
   notes: { schema: "3.0.0", note: [{ id: "note:own", scope: { kind: "language", language: "ru" } }, 0] },
   chunks: [{ file: "po/a.po", path: "entries/0.json", entries: 2, part: "../shared/a.json" }],
-  list: [{ translation: "Привет", window: 0, problems: [{ message: "x", severity: "warning" }] }, { status: "nothing" }],
+  list: [{ translation: "Привет", window: 0, problems: [PROBLEM] }, { status: "nothing" }],
   windows: [{ kind: "dialogue", width: 208, lines: 2, sources: { width: 0, lines: 1 }, consumers: [0, 1],
     slot_details: { STR_VAR_1: 0 }, font: "main" }],
   limit_sources: [{ kind: "measured", rule: { code: "box_width", box: "dialogue" } },
@@ -38,7 +40,8 @@ const stored = {
   consumers: [{ width: 208, arrow: 10, arrow_source: "default", arrow_confirmed: false, source: 0 },
     { name: "battle menu", width: 200, arrow: 0, arrow_source: "declared", arrow_confirmed: true, source: 1 }],
   slot_details: [{ width: 40, state: "computed", dependencies: ["s2"] }],
-  rules: [{ text: "Keep it short.", source: "review", evidence: "" }],
+  rules: [{ text: "Keep it short.", source: "review", evidence: "" },
+    { text: "One field.", source: { code: "rule_table", table: "items" }, evidence: "" }],
   progress: { approved: 1, nothing: 1 },
 };
 const part = { schema: SCHEMA, part: "entries", entries: [
@@ -46,7 +49,7 @@ const part = { schema: SCHEMA, part: "entries", entries: [
   { tokens: null },
 ] };
 const own = { schema: SCHEMA, entries: [
-  { terms: ["term:bag"], rules: [0, 0], note_ids: ["note:own"], inserted: [{ token: "{STR_VAR_1}", width: 40,
+  { terms: ["term:bag"], rules: [1, 1], note_ids: ["note:own"], inserted: [{ token: "{STR_VAR_1}", width: 40,
     source: { code: "slot_word", id: "s2", text: "'Bag'" } }] },
   { note: null, translator_notes: null, source_text: "kept as written" },
 ] };
@@ -64,7 +67,7 @@ test("an index takes rows, notes and fill sources from its game part", () => {
   const index = decodeIndex(structuredClone(stored), structuredClone(game), URL_INDEX);
   assert.deepEqual(index.list, [
     { id: "s1", chunk: 0, status: "approved", translation: "Привет", kind: "dialogue", reach: "reachable",
-      maps: ["hash:1"], problems: [{ message: "x", severity: "warning" }] },
+      maps: ["hash:1"], problems: [PROBLEM] },
     { id: "s2", chunk: 0, status: "nothing", translation: "", kind: null, reach: "reachable", maps: [], problems: [] },
   ]);
   assert.deepEqual(Object.keys(index.fill_sources), ["sources", "alphabet", "contexts", "dependencies", "values"]);
@@ -98,8 +101,8 @@ test("entries join the list row, the game part and the language part in the gene
   assert.deepEqual(first.context.inserted, own.entries[0].inserted);
   assert.deepEqual(Object.keys(first.window.consumers[0]), ["name", "width", "arrow", "arrow_source", "arrow_confirmed", "source"]);
   assert.deepEqual(first.window.slot_details, { STR_VAR_1: { width: 40, state: "computed", dependencies: ["s2"] } });
-  assert.deepEqual(first.rules, [stored.rules[0], stored.rules[0]]);
-  assert.notEqual(first.rules[0], first.rules[1]); // each entry owns its records
+  assert.deepEqual(first.rules, [stored.rules[1], stored.rules[1]]); // a profile rule's source stays its code
+  assert.notEqual(first.rules[0].source, first.rules[1].source); // each entry owns its records
   assert.deepEqual(Object.keys(second), ["id", "file", "translation", "flags", "status", "context", "window", "terms",
     "approved", "reach", "rules", "source_text"]);
   assert.equal(second.window, null);

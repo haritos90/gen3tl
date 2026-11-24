@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
+import { checkFailed, setMessages } from "../js/checktext.js";
 import { Codec, entryMeasure } from "../js/font.js";
 import { TOOLKIT_REPOSITORY } from "../js/registry.js";
 import { Edits, NoteEdits, RuleEdits, exportDoc, termRecord } from "../js/store.js";
@@ -116,17 +117,17 @@ test("a changed text: before, after, new, stale and the editor's check", () => {
   assert.equal(textChange("s9", edit, undefined).stale, false);
 });
 
-test("a changed text's problems follow the site language", () => {
-  const edit = { translation: "Здравствуй", base: "Привет", problems: [
-    { message: "line too wide: 210 > 196 px: 'Здравствуй' (warning)", severity: "warning" }] };
+test("a changed text's problems follow the site language", (ctx) => {
+  ctx.after(() => { setCatalog(null); setMessages(null); });
+  // the data's templates, as the page sets them from its index
+  setMessages({ line_wide: "line too wide: {width} > {limit} px: {text}", warning: "{message} (warning)" });
+  const edit = { translation: "Здравствуй", base: "Привет", problems: [{ severity: "warning",
+    message: { code: "warning", message: { code: "line_wide", width: 210, limit: 196, text: "'Здравствуй'" } } }] };
   setCatalog({ "line too wide: {width} > {limit} px: {text}": "строка слишком широкая: {width} > {limit} px: {text}",
     "(warning)": "(предупреждение)" });
-  try {
-    assert.deepEqual(textChange("s1", edit, null).problems,
-      ["строка слишком широкая: 210 > 196\u00a0px: 'Здравствуй' (предупреждение)"]);
-  } finally {
-    setCatalog(null);
-  }
+  assert.deepEqual(textChange("s1", edit, null).problems,
+    ["строка слишком широкая: 210 > 196\u00a0px: 'Здравствуй' (предупреждение)"]);
+  setCatalog(null);
   assert.deepEqual(textChange("s1", edit, null).problems, ["line too wide: 210 > 196\u00a0px: 'Здравствуй' (warning)"]);
 });
 
@@ -134,14 +135,16 @@ test("a stored draft problem is English and shows in the site language", (ctx) =
   ctx.after(() => setCatalog(null));
   const edit = { translation: "Привет", base: "", problems: [
     { message: "Preserve the source placeholders and control codes.", severity: "error" },
-    { message: "check failed: no bundle", severity: "error" }] };
+    { message: checkFailed("no bundle"), severity: "error" },
+    { message: "line too wide: 210 > 196 px: 'Привет' (warning)", severity: "warning" }] };
   setCatalog({ "Preserve the source placeholders and control codes.": "Сохраните подстановки и управляющие коды оригинала.",
     "check failed: {error}": "проверка не удалась: {error}" });
-  assert.deepEqual(textChange("s1", edit, null).problems,
-    ["Сохраните подстановки и управляющие коды оригинала.", "проверка не удалась: no bundle"]);
+  // a problem an older page stored as text shows as stored
+  assert.deepEqual(textChange("s1", edit, null).problems, ["Сохраните подстановки и управляющие коды оригинала.",
+    "проверка не удалась: no bundle", "line too wide: 210 > 196\u00a0px: 'Привет' (warning)"]);
   setCatalog(null);
-  assert.deepEqual(textChange("s1", edit, null).problems,
-    ["Preserve the source placeholders and control codes.", "check failed: no bundle"]);
+  assert.deepEqual(textChange("s1", edit, null).problems, ["Preserve the source placeholders and control codes.",
+    "check failed: no bundle", "line too wide: 210 > 196\u00a0px: 'Привет' (warning)"]);
 });
 
 test("drafts follow the catalog order; language-pack rows and lost ids stay out", () => {

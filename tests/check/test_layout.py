@@ -4,10 +4,27 @@ from unittest.mock import patch
 from gen3tl.core.charmap import Charmap
 from gen3tl.build.font import INK, SHADOW, shadow_end
 from gen3tl.lang.langpack import Glyph, LangPack
-from gen3tl.check.layout import Limit, Measure, arrow_overflows, check, dropped_breaks, entry_measure, extra_lines, fits, layout, lines_of, paragraphs, shadow_overflow, short_line_ends, split_words, waits, wrap_words, wrapped_dash_lines
+from gen3tl.check import entrycheck, layout as checks
+from gen3tl.check.layout import Limit, Measure, entry_measure, extra_lines, fits, layout, lines_of, paragraphs, shadow_overflow, split_words, waits, wrap_words
+from gen3tl.check.provenance import formatted
 from gen3tl.check.render import PALETTE, Canvas, draw_text, line_width, placeholder_px
 from gen3tl.lang.language import load as language_pack
 from project_fixture import select_language
+
+
+def texts(problems):
+    """Coded problems as their English text."""
+    return [formatted(p) for p in problems]
+
+
+def as_text(check):
+    """A check whose problems read as their English text."""
+    return lambda *args, **kw: texts(check(*args, **kw))
+
+
+check, arrow_overflows, dropped_breaks, short_line_ends, wrapped_dash_lines, split_names = map(as_text, (
+    checks.check, checks.arrow_overflows, checks.dropped_breaks, checks.short_line_ends, checks.wrapped_dash_lines,
+    checks.split_names))
 
 def setUpModule():
     select_language("ru")
@@ -250,16 +267,15 @@ class PromptArrowTest(unittest.TestCase):
         self.assertEqual(arrow_overflows(text, Limit("dialogue", 60, 2), M, CM), [])
 
     def test_entry_check_rejects_a_crowded_line(self):
-        from gen3tl.check.entrycheck import entry_problems
-        probs = entry_problems("Hi\\nho\\pyo", "аа\\nааааа ббб\\pвв", self.LIM, M, CM)[1]
+        probs = texts(entrycheck.entry_problems("Hi\\nho\\pyo", "аа\\nааааа ббб\\pвв", self.LIM, M, CM)[1])
         self.assertIn("line leaves no room for the prompt arrow: box 1: 54 > 48 px: 'ааааа ббб'", probs)
 
 class CodedExplanationTest(unittest.TestCase):
-    """A coded slot source or window name reaches a check message as its English text."""
+    """A check problem is a code with its arguments; coded slot sources and window names stay codes in it."""
 
     def test_slot_sources_and_window_names_read_as_their_text(self):
-        from gen3tl.check.entrycheck import instant_print_problems
         from gen3tl.check.provenance import code
+        instant_print_problems = as_text(entrycheck.instant_print_problems)
         source = code("slot_reasons", source=code("slot_profile"), reasons=[code("slot_no_fill")])
         menu = code("table_window", name="menu")
         lim = Limit("single", 30, None, placeholders={"PLAYER": 42}, slot_sources={"PLAYER": source},
@@ -274,6 +290,32 @@ class CodedExplanationTest(unittest.TestCase):
         self.assertEqual(instant_print_problems("а\\pб", "а\\pб", instant),
                          ["scroll and page codes are not supported in [[layout.table_window]] menu: "
                           "this window prints instantly and drops the remaining text"])
+
+    def test_problems_hold_their_values_and_nested_codes(self):
+        from gen3tl.check.provenance import code, is_warning, noted, unnoted
+        source = code("slot_reasons", source=code("slot_profile"), reasons=[code("slot_no_fill")])
+        menu = code("table_window", name="menu")
+        lim = Limit("single", 30, None, placeholders={"PLAYER": 42}, slot_sources={"PLAYER": source},
+                    slot_details={"PLAYER": {"unavailable": True, "contributors": [{"text": "Ян", "width": 12}]}},
+                    consumers=[{"name": menu, "width": 30, "arrow": 0}, {"name": "wide window", "width": 100, "arrow": 0}])
+        wide = checks.check("а {PLAYER}", lim, M, CM)
+        self.assertEqual(wide, [code("line_wide_slots_window", width=54, limit=30, text="'а {PLAYER}'", slots=[
+            code("slot_item", token="{PLAYER}", width=42, source=code(
+                "slot_parts", source=code("slot_unavailable", source=source), parts=[code("slot_part", text="Ян", width=12)]))],
+            where=menu)])
+        self.assertEqual(texts(wide), ["line too wide: 54 > 30 px: 'а {PLAYER}' with {PLAYER} = 42 px (profile width "
+                                       "(no fill known); recorded width; sources unavailable; «Ян» 12 px); "
+                                       "window [[layout.table_window]] menu"])
+        self.assertEqual(checks.check("ж\u2603", Limit("single", 30, None), M, CM), [code("not_encodable", error=code(
+            "unmapped_character", char=repr("\u2603"), unicode="2603", text=repr("ж\u2603")))])
+        stripped = checks.check("Я: абвгдежз", Limit("single", 30, None, strip=["Я: "]), M, CM)
+        self.assertEqual(stripped, [noted(code("line_wide", width=48, limit=30, text="'абвгдежз'"), "prefix_stripped",
+                                          prefix="'Я: '")])
+        self.assertEqual(unnoted(stripped[0]), code("line_wide", width=48, limit=30, text="'абвгдежз'"))
+        self.assertFalse(is_warning(stripped[0]))
+        laid, probs = entrycheck.entry_problems("Hi\\nho", "аа\\nбб\\nвв", Limit("multiline", 100, 3), M, CM)
+        self.assertEqual(probs, [noted(code("box_wraps", box=1, n=3, lines=2), "warning")])
+        self.assertTrue(is_warning(probs[0]))
 
 
 class RuntimeScrollTest(unittest.TestCase):
@@ -402,7 +444,6 @@ class SplitNameTest(unittest.TestCase):
     """A shown break between a noun and its name, or a count and its unit."""
 
     def test_reported_splits(self):
-        from gen3tl.check.layout import split_names
         lim = Limit("dialogue", 120, 2)
         name = "shown break splits «покемона» from the name after it: box 2, line 1"
         self.assertEqual(split_names("Да.\\pДай покемона\\n{COLOR 06}{STR_VAR_1}{COLOR 08}!", lim, M), [name])
@@ -412,7 +453,6 @@ class SplitNameTest(unittest.TestCase):
                          ["shown break splits a count from «шт.»: box 1, line 1"])
 
     def test_kept_pairs_and_other_tokens(self):
-        from gen3tl.check.layout import split_names
         lim = Limit("dialogue", 120, 2)
         for text in ("Дай\\nпокемона {STR_VAR_1}!",     # the pair on one line
                      "Дай покемона,\\n{STR_VAR_1}!",     # punctuation ends the phrase
@@ -584,7 +624,7 @@ class ShadowOverflowTest(unittest.TestCase):
         self.assertEqual(len(check(self.TEXT, Limit("single", w - 1, 1), plain, CM)), 1)
 
     def test_window_style_and_other_windows(self):
-        from gen3tl.check.entrycheck import window_problems
+        window_problems = as_text(entrycheck.window_problems)
         w = self.M.width(self.TEXT, CM)
         # the style's shadow ends with its widths
         m = Measure(lambda b: 6, {}, styles={"small": self.M.glyph_width}, shadow_end=lambda b: False,

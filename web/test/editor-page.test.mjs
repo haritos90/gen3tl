@@ -10,7 +10,7 @@ import { EDITOR_SCHEMA, groupsOf, loadIndex } from "../js/data.js";
 import { joinRows } from "../js/gametext.js";
 import { joinedValue } from "../js/editor-cache.js";
 import { chosenLanguage, onSiteLanguage, setCatalog, setLabelSource, setUiLanguage, SITE_LANG_KEY, startSite, t, useSiteLanguage } from "../js/ui.js";
-import { setPlaces } from "../js/checktext.js";
+import { missingTerms, setPlaces } from "../js/checktext.js";
 import { CODEC, domPage, fakeFetch, NEEDS_DOM, noteCollection, observeRemovals, PACK, STYLE, storedLanguage, stubPage } from "./fixture.mjs";
 
 const PAGE = "../editor.html";
@@ -515,7 +515,7 @@ async function referenceWorkspace(context) {
   globalThis.fetch = fetcher;
   setLabelSource(null);
   const source = editorSource()
-    .replace(/\nmain\(\);\s*$/, "\nexport { state, buildGames, openWorkspace, openRow, showGameText, showBanner, changeCatalog, changeReferenceLanguage, renderWindow, renderBreakControls, renderContext, openLookup, copyObjectReference, route, wireObjectReferences, local, setView, runtime, joinedCache, configureCheck, field, onEdit, discardDraft };\n");
+    .replace(/\nmain\(\);\s*$/, "\nexport { state, buildGames, openWorkspace, openRow, showGameText, showBanner, changeCatalog, changeReferenceLanguage, renderWindow, renderBreakControls, renderContext, renderGlossary, renderProblems, openLookup, copyObjectReference, route, wireObjectReferences, local, setView, runtime, joinedCache, configureCheck, field, onEdit, discardDraft };\n");
   assert.match(source, /\$\("reference-language"\)\.addEventListener\("change", changeReferenceLanguage\)/);
   const editor = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}#${encodeURIComponent(context.name)}`);
   Object.assign(editor.state, { registry, sources: new Map([[base, { manifest, releases: [] }]]), checkStarted: true });
@@ -679,11 +679,11 @@ test("rule sources and slot widths use words, one unit and unbroken measurements
   const { $, state, openRow, renderWindow, entries } = await referenceWorkspace(context);
   const where = "battle text, name of the opposing trainer";
   const entry = { ...entries[0],
-    rules: [{ text: "The code fills {STR_VAR_1} with text.", source: `profile [[layout.code_fill]] fill-20: ${where}`,
+    rules: [{ text: "The code fills {STR_VAR_1} with text.", source: { code: "rule_code_fill_where", name: "fill-20", where },
       evidence: "Measured code fill." },
-    { text: "The [[strings.pointer_table]] binds this text.", source: "profile [[strings.pointer_table]] credits", evidence: "" }],
+    { text: "The [[strings.pointer_table]] binds this text.", source: { code: "rule_pointer_table", table: "credits" }, evidence: "" }],
     window: { kind: "single", width: 119, font: "normal",
-      sources: { width: { kind: "profile", rule: "[[layout.window]] main: battle text", evidence: "" } },
+      sources: { width: { kind: "profile", rule: { code: "layout_window_where", name: "main", where: "battle text" }, evidence: "" } },
       slot_details: { text: { source: "fill-20", label: "Inserted text", state: "computed", computed: 59, width: 59,
         contributors: [{ label: "Source text", width: 59 }], winners: [] } } } };
   state.chunks = { entry: async () => structuredClone(entry) };
@@ -985,7 +985,7 @@ test("window facts follow the site language and preserve citations", async (cont
     slot_details: Object.fromEntries(["Species name", "Item name", "Move name"].map((label, i) =>
       [`STR_VAR_${i + 1}`, { width: 60 - i * 10, label, state: "computed", contributors: [
         { id: `word:${i}`, width: 60 - i * 10, original: false }], dependencies: [`word:${i}`] }])),
-    sources: { width: { kind: "measured", rule: `[[layout.table_window]] move-menu: ${where}`,
+    sources: { width: { kind: "measured", rule: { code: "table_window_where", name: "move-menu", where },
       evidence: "WindowTemplate at 0x1234, width measured in English" } },
     other: [{ font: "small", width: 60, where }] };
   const po = readFileSync(new URL("../i18n/ru.po", import.meta.url), "utf8");
@@ -1034,22 +1034,28 @@ test("window bases use descriptions and disclose profile rows in every interface
     setUiLanguage(language);
     setCatalog(catalog);
     if (language !== "en") {
-      for (const key of ["measured", "two lines per message box ({via})", "a one-line field",
+      for (const key of ["measured", "two lines per message box", "a one-line field",
         "Table text window", "Record text window", "Name field"]) {
         assert.ok(catalog[key]?.trim(), `${language}: ${key}`);
       }
     }
     const where = "sample menu: text window", translated = `Sample window (${language})`;
     setPlaces({ [where]: { [language]: translated } });
-    for (const [section, name, suffix, fallback] of [
-      ["layout.table_window", "sample-menu", "", "Table text window"],
-      ["layout.record_window", "sample-records", "", "Record text window"],
-      ["table", "sample-names", " window", "Name field"],
+    const menu = { code: "table_window", name: "sample-menu" }, records = { code: "record_window", name: "sample-records" };
+    // each window: its described rule, its lines rule, its rules without a description
+    for (const [section, name, described, counted, bare, fallback] of [
+      ["layout.table_window", "sample-menu", { ...menu, code: "table_window_where", where },
+        { code: "box_lines_via", via: menu }, [menu, { ...menu, code: "table_window_where", where: "" }], "Table text window"],
+      ["layout.record_window", "sample-records", { ...records, code: "record_window_where", where }, null,
+        [records, { ...records, code: "record_window_where", where: "" }], "Record text window"],
+      ["table", "sample-names", { code: "table_field_window", table: "sample-names", where },
+        { code: "table_one_line", table: "sample-names" },
+        [{ code: "table_field_window", table: "sample-names", where: "" }, { code: "table_buffer", table: "sample-names", where: "" }],
+        "Name field"],
     ]) {
-      const reference = `${section} ${name}`, prefix = `[[${section}]] ${name}`;
-      const width = { kind: "measured", rule: `${prefix}${suffix}: ${where}`, evidence: "Window trace at 0x100." };
-      const lines = { kind: "measured", rule: section === "table" ? `${prefix}: a one-line field`
-        : section === "layout.table_window" ? `two lines per message box (${prefix})` : width.rule, evidence: "" };
+      const reference = `${section} ${name}`;
+      const width = { kind: "measured", rule: described, evidence: "Window trace at 0x100." };
+      const lines = { kind: "measured", rule: counted ?? described, evidence: "" };
       const window = { kind: "multiline", width: 200, lines: 2, sources: { width, lines } };
       const before = structuredClone(window);
       renderWindow({ window });
@@ -1067,8 +1073,8 @@ test("window bases use descriptions and disclose profile rows in every interface
       }
       assert.ok(disclosures[0].textContent.includes(width.evidence));
       assert.deepEqual(window, before);
-      for (const tail of ["", ": "]) {
-        renderWindow({ window: { width: 200, sources: { width: { kind: "measured", rule: `${prefix}${suffix}${tail}` } } } });
+      for (const rule of bare) {
+        renderWindow({ window: { width: 200, sources: { width: { kind: "measured", rule } } } });
         assert.deepEqual(bases(), [`${t("measured")}: ${t(fallback, { name })}`]);
         assert.doesNotMatch(visible($("window")), /\[\[|\]\]/);
         assert.ok($("window").querySelectorAll("details")[0].textContent.includes(reference));
@@ -1179,7 +1185,7 @@ test("entry sorting preserves selection, drafts, scroll, filters and chips", asy
     byId: new Map(rows.map((row, i) => [row.id, i])), groups: groupsOf(chunks),
     edits: new Edits(storage, "ru", "game"), cur: 3, entry: rows[3] });
   state.edits.set({ ...rows[3], note: "" }, "matching draft", "");
-  state.edits.map.get("early").problems = [{ message: "line too wide", severity: "error" }];
+  state.edits.map.get("early").problems = [{ message: { code: "line_wide", width: 9, limit: 8, text: "'x'" }, severity: "error" }];
   $("field").textContent = "matching draft";
   $("list-sort").value = "relevance";
   $("list").clientHeight = 58;
@@ -1714,14 +1720,30 @@ test("instant consumers disable scroll and page insertion with a localized reaso
   assert.deepEqual(buttons.map((button) => button.disabled), [true, true, true]);
 });
 
+test("a glossary term the check finds missing matches its row, coded problems shown in words", async (context) => {
+  const { $, state, renderGlossary, renderProblems } = await referenceWorkspace(context);
+  state.index.glossary = { "term:potion": { source_text: "Potion", translation: "Зелье", forms: {} },
+    "term:ball": { source_text: "Poké Ball", translation: "Покебол", forms: {} } };
+  renderGlossary({ terms: ["term:potion", "term:ball"] });
+  const missing = { code: "warning", message: { code: "glossary_missing", term: "'Potion'", translation: "'Зелье'" } };
+  renderProblems({ problems: [{ severity: "warning", message: missing },
+    { severity: "error", message: "Preserve the source placeholders and control codes." }] });
+  // the problem quotes the term as the glossary row keys it
+  const [term] = missingTerms([{ message: missing }]);
+  assert.deepEqual($("glossary").querySelectorAll(".term").map((node) => node.getAttribute("data-key")),
+    [`glossary term ${term.term} -> ${term.translation} `, "glossary term 'Poké Ball' -> 'Покебол' "]);
+  assert.deepEqual($("problems").querySelectorAll("li").map((node) => node.textContent),
+    ["glossary term 'Potion' -> 'Зелье' not found (warning)", "Preserve the source placeholders and control codes."]);
+});
+
 test("one consumer is named once in the panel and two name the binding bar", async (context) => {
   context.after(() => { setCatalog(null); setPlaces(null); setUiLanguage("en"); });
   const { $, renderWindow } = await referenceWorkspace(context);
   const { barOf } = await import("../js/limits.js");
-  const rule = "[[layout.window]] notice: Notice message window";
+  const rule = { code: "layout_window_where", name: "notice", where: "Notice message window" };
   const source = { kind: "measured", rule, evidence: "Printer observation." };
   const window = { kind: "multiline", width: 80, lines: 2, sources: { width: source, lines: source },
-    consumers: [{ name: "Notice message window", width: 80, arrow: 10, arrow_confirmed: true, source }] };
+    consumers: [{ name: rule, width: 80, arrow: 10, arrow_confirmed: true, source }] };
   const visible = (node) => node.tagName === "DETAILS" ? node.firstChild.textContent
     : node.childNodes?.length ? node.childNodes.map(visible).join("") : node.textContent;
   renderWindow({ window });
@@ -1755,11 +1777,12 @@ test("instant windows omit arrow rows while other consumers retain theirs", asyn
 test("additional instant consumers retain names and disclosed row evidence", async (context) => {
   context.after(() => { setCatalog(null); setPlaces(null); setUiLanguage("en"); });
   const { $, renderWindow } = await referenceWorkspace(context);
-  const main = { kind: "measured", rule: "[[layout.record_window]] list: Menu list", evidence: "List trace." };
-  const source = { kind: "measured", rule: "[[layout.table_window]] banner: Notice banner", evidence: "Printer trace." };
+  const main = { kind: "measured", rule: { code: "record_window_where", name: "list", where: "Menu list" }, evidence: "List trace." };
+  const source = { kind: "measured", rule: { code: "table_window_where", name: "banner", where: "Notice banner" },
+    evidence: "Printer trace." };
   renderWindow({ window: { width: 70, sources: { width: main }, consumers: [
-    { name: "Menu list", width: 70, arrow: 10, source: main },
-    { name: "Notice banner", width: 80, arrow: 10, instant_print: true, source },
+    { name: main.rule, width: 70, arrow: 10, source: main },
+    { name: source.rule, width: 80, arrow: 10, instant_print: true, source },
   ] } });
   const visible = (node) => node.tagName === "DETAILS" ? node.firstChild.textContent
     : node.childNodes?.length ? node.childNodes.map(visible).join("") : node.textContent;

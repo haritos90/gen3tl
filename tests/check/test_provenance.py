@@ -1,3 +1,4 @@
+import json
 import unittest
 
 from gen3tl.check import provenance
@@ -56,3 +57,54 @@ class ProvenanceTest(unittest.TestCase):
                                         "source": {"code": "slot_profile"}})
         self.assertEqual(list(reasons), ["code", "source", "reasons"])
         self.assertEqual(list(reasons["reasons"][0]), ["code", "references"])
+
+    def test_a_check_problem_is_a_code_with_its_notes_after_it(self):
+        code, noted = provenance.code, provenance.noted
+        wide = code("line_wide_slots_window", width=210, limit=196, text=repr("Привет, {PLAYER}"),
+                    slots=[code("slot_item", token="{PLAYER}", width=42, source=code("slot_profile")),
+                           code("slot_item", token="{STR_VAR_1}", width=60, source=code(
+                               "slot_parts", source=code("slot_unavailable", source=code("slot_context")),
+                               parts=[code("slot_part", text="Ян", width=12), code("slot_no_prefix")]))],
+                    where=code("table_window", name="menu"))
+        problem = noted(noted(wide, "warning"), "unmeasured_width")
+        self.assertEqual(provenance.formatted(problem),
+                         "line too wide: 210 > 196 px: 'Привет, {PLAYER}' with {PLAYER} = 42 px (profile width); "
+                         "{STR_VAR_1} = 60 px (context records; recorded width; sources unavailable; «Ян» 12 px, "
+                         "no prefix 0 px); window [[layout.table_window]] menu (warning) "
+                         "[unmeasured limit: the English width]")
+        self.assertEqual(provenance.unnoted(problem), wide)
+        self.assertTrue(provenance.is_warning(problem))
+        self.assertFalse(provenance.is_warning(noted(wide, "unmeasured_width")))
+        self.assertEqual(provenance.canonical(json.loads(json.dumps(problem, sort_keys=True))), problem)
+        self.assertEqual(provenance.formatted(noted(code("line_wide", width=3, limit=2, text="'x'"), "prefix_stripped",
+                                                    prefix="'A: '")), "line too wide: 3 > 2 px: 'x' (prefix 'A: ' stripped)")
+
+    def test_an_encoder_error_is_coded_inside_its_problem(self):
+        from gen3tl.core.charmap import Charmap, CharmapError
+        for text, error in (("a\u2603", code_of("unmapped_character", char=repr("\u2603"), unicode="2603", text=repr("a\u2603"))),
+                            ("a\\q", code_of("unknown_escape", escape="\\q", at=1, text=repr("a\\q"))),
+                            ("a{", code_of("unclosed_brace", at=1, text=repr("a{"))),
+                            ("{}", code_of("empty_token", text=repr("{}"))),
+                            ("{CLEAR_TO}", code_of("token_arguments", token="{CLEAR_TO}", n=1, text=repr("{CLEAR_TO}"))),
+                            ("{NOPE}", code_of("unknown_token", token="{NOPE}", text=repr("{NOPE}")))):
+            with self.subTest(text=text), self.assertRaises(CharmapError) as raised:
+                Charmap().encode(text)
+            self.assertEqual(raised.exception.coded, error)
+            self.assertEqual(str(raised.exception), provenance.formatted(error))
+            self.assertEqual(provenance.encoding_problem(raised.exception), code_of("not_encodable", error=error))
+        plain = CharmapError("no terminator after 0x10")
+        self.assertEqual(provenance.encoding_problem(plain), code_of("not_encodable", error="no terminator after 0x10"))
+        self.assertEqual(provenance.formatted(provenance.encoding_problem(plain)), "not encodable: no terminator after 0x10")
+
+    def test_profile_rule_sources_format_as_their_phrase(self):
+        for source, text in ((code_of("rule_table_save_link", table="species"), "profile [[table]] species save_link"),
+                             (code_of("rule_strings", key="save_link"), "profile [strings] save_link"),
+                             (code_of("rule_computed", pointer="0x8123"), "profile [[strings.computed]] 0x8123"),
+                             (code_of("rule_code_fill_where", name="fill-20", where="battle text"),
+                              "profile [[layout.code_fill]] fill-20: battle text"),
+                             (code_of("rule_droppable"), "profile [[qa.droppable]]")):
+            self.assertEqual(provenance.formatted(source), text)
+
+
+def code_of(which, /, **args):
+    return provenance.code(which, **args)
