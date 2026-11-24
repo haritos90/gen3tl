@@ -309,6 +309,26 @@ class EmissionTest(unittest.TestCase):
             self.assertEqual(Profile.load(first)["support"]["stage"], "discovery")
             self.assertIn("unresolved", (first / "report.md").read_text())
 
+    def test_a_sentence_of_several_facts_stands_once_and_loads_in_place(self):
+        shared, single = "Header bytes are read directly.", "The input length is measured\ndirectly."
+        data = {"rom": {"sha1": "00" * 20, "size": 0x800, "title": "TEST"}}
+        facts = [foundations.fact(f"rom.{key}", "identity", value, foundations.evidence(sentence, "header"), "shape")
+                 for key, value, sentence in (("sha1", "00" * 20, shared), ("size", 0x800, single),
+                                              ("title", "TEST", shared))]
+        text = emission.document(data, facts)
+        self.assertEqual(text.count(shared), 1)
+        self.assertIn('\ntexts = [\n "Header bytes are read directly.",\n]\n\n[discovery]\nschema = 1\n', text)
+        self.assertEqual(text.count("sentence = 0 }"), 2)
+        self.assertIn('sentence = "The input length is measured\\ndirectly." }', text)
+        with tempfile.TemporaryDirectory() as temporary:
+            (Path(temporary) / "profile.toml").write_text(text, encoding="utf-8")
+            sources = schema.read(temporary)
+            self.assertEqual(sources.generated_records, [emission.record(proof) for proof in facts])
+            self.assertNotIn("texts", sources.generated)
+            loaded = {proof.id: proof.evidence.sentence for proof in schema.generated_facts(sources)}
+            self.assertEqual(loaded, {"rom.sha1": shared, "rom.size": single, "rom.title": shared})
+        self.assertNotIn("texts", emission.document(data, facts[:2]))
+
     @unittest.skipUnless(os.name == "posix", "POSIX file modes required")
     def test_replacements_preserve_each_file_mode_despite_umask(self):
         result = self.result()

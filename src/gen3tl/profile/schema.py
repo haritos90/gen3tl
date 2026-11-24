@@ -26,6 +26,7 @@ OVERLAY_ORDER = "order.txt"
 REPORT = "report.md"
 HEADER = "discovery"   # generated profile metadata table
 RECORD = "fact"        # fact records, in both files
+TEXTS = "texts"        # generated fact sentences stated more than once
 
 KINDS = ("identity", "family", "font", "table", "pointer-table", "string", "reference", "script-command", "map",
          "window", "keyboard", "save", "sprite-table", "graphic", "code", "reach", "context", "project",
@@ -74,9 +75,10 @@ RECORD_KEYS = frozenset({"id", "kind", "scope", "tier", "status", "source", "evi
 EVIDENCE_KEYS = frozenset({"sentence", "method", "anchors", "code_sites", "counts"})
 BARE_KEY = re.compile(r"[A-Za-z0-9_-]+")
 BARE_VALUE = re.compile(r"[A-Za-z0-9_.:+-]+")
-GENERATED_TEXT = (f"# Discovery regeneration overwrites manual edits to these facts.\n"
-                  f"# Overlay facts stay separate so loading overrides generated values.\n\n"
-                  f"[{HEADER}]\nschema = {SCHEMA}\n")
+GENERATED_NOTE = ("# Discovery regeneration overwrites manual edits to these facts.\n"
+                  "# Overlay facts stay separate so loading overrides generated values.\n")
+GENERATED_HEADER = f"[{HEADER}]\nschema = {SCHEMA}\n"
+GENERATED_TEXT = f"{GENERATED_NOTE}\n{GENERATED_HEADER}"
 
 
 class ProfileError(RomError):
@@ -459,6 +461,7 @@ def read(path: str | Path) -> Sources:
     except tsv.TSVError as exc:
         raise ProfileError(str(exc)) from exc
     header = generated.pop(HEADER, None)
+    texts = generated.pop(TEXTS, [])
     if not isinstance(header, dict) or header.get("schema") != SCHEMA:
         raise ProfileError(f"{path / GENERATED}: needs [{HEADER}] schema = {SCHEMA}")
     if (path / DISCOVERY).is_file():
@@ -476,9 +479,23 @@ def read(path: str | Path) -> Sources:
     for file, found in zip((path / GENERATED, overlay_file), records):
         if not isinstance(found, list):
             raise ProfileError(f"{file}: [[{RECORD}]] must be an array of tables")
+    _sentences(records[0], texts, path / GENERATED)
     records[1].extend(table_records)
     return _with_family(Sources(path, overlay_file, generated, overlay, header, *records,
                                 overlay_files=[file for file, _ in entries]))
+
+
+def _sentences(records: list, texts: Any, where: Path) -> None:
+    """Restore each fact sentence named by its position in the texts."""
+    if not isinstance(texts, list) or not all(notes.has_prose(text) for text in texts):
+        raise ProfileError(f"{where}: {TEXTS} must list sentences")
+    for record in records:
+        evidence = record.get("evidence") if isinstance(record, dict) else None
+        number = evidence.get("sentence") if isinstance(evidence, dict) else None
+        if type(number) is int:
+            if not 0 <= number < len(texts):
+                raise ProfileError(f"{where}: fact {record.get('id')}: unknown text {number}")
+            evidence["sentence"] = texts[number]
 
 
 def flat(path: str | Path) -> Sources:

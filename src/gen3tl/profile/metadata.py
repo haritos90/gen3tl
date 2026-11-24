@@ -2,7 +2,10 @@
 
 It holds the run's metadata, never a profile fact. A window binding is stored under its
 window and takes its consumers from the audit of its string. A prose text that repeats is
-stored once in `texts` and named by its position there. Records and texts stand one per line.
+stored once in `texts` and named by its position there. A list of records reached through
+tables is stored as a collection: its keys once and a row of values per record, null for a
+key the record lacks. Records that disagree on key order or hold null stay as records.
+Records, rows and texts stand one per line.
 """
 
 from __future__ import annotations
@@ -15,8 +18,10 @@ from typing import Any
 
 from ..core.rom import RomError
 
-VERSION = "1.0.0"
+VERSION = "2.0.0"
+KEYED = "1.0.0"   # earlier form: every record keeps its keys
 TEXTS = "texts"
+KEYS, ROWS = "keys", "rows"   # a collection: its keys once, a row per record
 TEXT_FIELDS = frozenset({"assumption", "reason"})   # prose repeated across records
 TEXT_LISTS = frozenset({"reasons"})
 WIDTH = 100   # shorter containers stay on one line
@@ -30,16 +35,23 @@ def _compact(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
 
 
+def _is_collection(value: Any) -> bool:
+    return isinstance(value, dict) and set(value) == {KEYS, ROWS}
+
+
 def _formatted(value: Any, depth: int = 0) -> str:
-    """Break long tables by key, and lists of records or texts by item."""
+    """Break long tables by key, and lists of records, rows or texts by item."""
     text = _compact(value)
     if len(text) <= WIDTH or not isinstance(value, (dict, list)):
         return text
     inner = " " * (depth + 1)
     if isinstance(value, dict):
-        rows = [inner + _compact(key) + ": " + _formatted(item, depth + 1) for key, item in value.items()]
+        # the keys of a collection head its rows on one line
+        rows = [inner + _compact(key) + ": "
+                + (_compact(item) if key == KEYS and _is_collection(value) else _formatted(item, depth + 1))
+                for key, item in value.items()]
         return "{\n" + ",\n".join(rows) + "\n" + " " * depth + "}"
-    if not any(isinstance(item, (dict, str)) for item in value):
+    if not any(isinstance(item, (dict, list, str)) for item in value):
         return text
     return "[\n" + ",\n".join(inner + _compact(item) for item in value) + "\n" + " " * depth + "]"
 
@@ -70,6 +82,27 @@ def _grouped(windows: dict) -> dict:
     return {**windows, "bindings": list(groups.values())}
 
 
+def _collection(records: list[dict]) -> dict | list[dict]:
+    """The keys once and a row per record, when one key order serves every record."""
+    keys = list(dict.fromkeys(key for record in records for key in record))
+    for record in records:
+        # null marks an absent key, so null values keep records
+        if [key for key in keys if key in record] != list(record) or None in record.values():
+            return records
+    return {KEYS: keys, ROWS: [[record.get(key) for key in keys] for record in records]}
+
+
+def _collections(value: Any) -> Any:
+    """Each list of records reached through tables, stored as a collection."""
+    if isinstance(value, dict):
+        if _is_collection(value):
+            raise ValueError(f"discovery metadata: a table of only {KEYS} and {ROWS} is reserved")
+        return {key: _collections(item) for key, item in value.items()}
+    if isinstance(value, list) and len(value) > 1 and all(isinstance(item, dict) for item in value):
+        return _collection(value)
+    return value
+
+
 def encode(metadata: dict) -> str:
     """The stored form of the metadata of one discovery run."""
     if {"schema", TEXTS} & set(metadata):
@@ -90,7 +123,7 @@ def encode(metadata: dict) -> str:
     texts = [text for text, number in counts.items() if number > 1]
     codes = {text: code for code, text in enumerate(texts)}
     document = _rewrite(document, lambda value: codes.get(value, value) if isinstance(value, str) else value)
-    return _formatted({"schema": VERSION, TEXTS: texts, **document}) + "\n"
+    return _formatted({"schema": VERSION, TEXTS: texts, **_collections(document)}) + "\n"
 
 
 def _bindings(windows: dict, where: Path) -> dict:
@@ -122,6 +155,19 @@ def _bindings(windows: dict, where: Path) -> dict:
     return {**windows, "bindings": [found[string] for string in sorted(found, key=position.get)]}
 
 
+def _records(value: Any, where: Path) -> Any:
+    """Every collection reached through tables back to its records."""
+    if not isinstance(value, dict):
+        return value
+    if not _is_collection(value):
+        return {key: _records(item, where) for key, item in value.items()}
+    keys, rows = value[KEYS], value[ROWS]
+    if (not isinstance(keys, list) or not all(isinstance(key, str) for key in keys) or len(set(keys)) != len(keys)
+            or not isinstance(rows, list) or not all(isinstance(row, list) and len(row) == len(keys) for row in rows)):
+        raise MetadataError(f"{where}: a collection needs distinct {KEYS} and a value per key in each row")
+    return [{key: item for key, item in zip(keys, row) if item is not None} for row in rows]
+
+
 def read(path: str | Path) -> dict:
     """The metadata as discovery produced it."""
     path = Path(path)
@@ -129,7 +175,7 @@ def read(path: str | Path) -> dict:
         document = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         raise MetadataError(f"{path}: cannot read discovery metadata: {exc}") from exc
-    if not isinstance(document, dict) or document.get("schema") != VERSION:
+    if not isinstance(document, dict) or document.get("schema") not in (VERSION, KEYED):
         raise MetadataError(f"{path}: needs schema {VERSION}")
     texts = document.get(TEXTS)
     if not isinstance(texts, list) or not all(isinstance(text, str) for text in texts):
@@ -142,7 +188,10 @@ def read(path: str | Path) -> dict:
             raise MetadataError(f"{path}: unknown text {value}")
         return texts[value]
 
-    metadata = _rewrite({key: value for key, value in document.items() if key not in ("schema", TEXTS)}, expand)
+    metadata = {key: value for key, value in document.items() if key not in ("schema", TEXTS)}
+    if document["schema"] == VERSION:
+        metadata = _records(metadata, path)
+    metadata = _rewrite(metadata, expand)
     if isinstance(metadata.get("windows"), dict):
         metadata["windows"] = _bindings(metadata["windows"], path)
     return metadata

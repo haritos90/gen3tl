@@ -54,13 +54,14 @@ def locate(name: str) -> Path:
     given = Path(name)
     if name.endswith(".toml") or given.is_absolute() or len(given.parts) > 1:
         path = given
-        # a directory file selects its directory
+        # a file of a profile directory selects the directory
         if path.name in (schema.GENERATED, schema.OVERLAY) and (path.parent / schema.GENERATED).is_file():
             path = path.parent
-        elif path.exists():
-            for parent in (path, *path.parents):
-                if parent.name == schema.OVERLAY_DIR and (parent.parent / schema.GENERATED).is_file():
-                    path = parent.parent
+        elif path.exists() and not (path / schema.GENERATED).is_file():
+            # absolute, since lexical parents may not contain the file
+            for parent in path.absolute().parents:
+                if (parent / schema.GENERATED).is_file():
+                    path = parent
                     break
     else:
         from ..project import game_roots

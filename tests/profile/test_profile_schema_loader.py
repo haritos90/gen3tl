@@ -13,7 +13,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(TOOLKIT_ROOT / "src"))
 
 from gen3tl.core.rom import RomError
-from gen3tl.profile import check, convert, profile, schema
+from gen3tl.profile import check, convert, metadata, profile, schema
 from gen3tl.profile.profile import Profile
 from profile_schema_support import GENERATED, HEADER, OVERLAY, write_dir, write_fact_dir
 
@@ -238,6 +238,9 @@ evidence = {sentence = "Manual keyboard proof."}
                          "needs its tier, source and evidence"),
             "sentence": (HEADER + "[rom]\nsize = 1\n" + record.replace('sentence = "s"', 'method = "m"'), None,
                          "needs a sentence"),
+            "text": ('texts = ["Shared sentence."]\n' + HEADER + "[rom]\nsize = 1\n"
+                     + record.replace('sentence = "s"', "sentence = 1"), None, "fact rom.size: unknown text 1"),
+            "texts": ("texts = [1]\n" + HEADER + "[rom]\nsize = 1\n" + record, None, "texts must list sentences"),
             "prose": (HEADER + "[[font]]\nname = 'a'\nevidence = 'x'\n" + record.replace("rom.size", "font[name=a]"),
                       None, "evidence belongs in its record"),
             "reserved": (HEADER, "[discovery]\nschema = 1\n", "reserved"),
@@ -274,6 +277,17 @@ evidence = {sentence = "Manual keyboard proof."}
             (self.tmp / "game.toml").write_text("[rom]\nsha1 = 'ab'\n")
             with self.assertRaisesRegex(RomError, "keep one"):
                 Profile.by_name("game")
+            # any file of a profile directory selects the directory
+            (self.tmp / "game" / "observations").mkdir()
+            (self.tmp / "game" / "discovery.json").write_text(metadata.encode({}), encoding="utf-8")
+            self.assertEqual(Profile.by_name(str(self.tmp / "game" / "discovery.json")).path, self.tmp / "game")
+            for name in ("discovery.json", "report.md", "observations/samples.json"):
+                if name != "discovery.json":
+                    (self.tmp / "game" / name).write_text("{}", encoding="utf-8")
+                with self.subTest(file=name):
+                    self.assertEqual(profile.locate(str(self.tmp / "game" / name)), self.tmp / "game")
+                    self.assertEqual(profile.locate(f"game/{name}").resolve(), (self.tmp / "game").resolve())
+            self.assertEqual(profile.locate("flat.toml"), Path("flat.toml"))
 
 
 class ConverterTest(unittest.TestCase):

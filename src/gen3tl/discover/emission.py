@@ -8,6 +8,7 @@ import os
 import stat
 import tempfile
 import tomllib
+from collections import Counter
 from pathlib import Path
 
 from ..profile import check, metadata, residue, schema
@@ -37,15 +38,26 @@ def record(proof: schema.Fact) -> dict:
 
 
 def document(data: dict, facts: list[schema.Fact]) -> str:
-    lines = [schema.GENERATED_TEXT.rstrip()]
+    """The generated profile; a sentence of several facts stands once in texts."""
+    records = [record(proof) for proof in facts]
+    counts = Counter(row["evidence"]["sentence"] for row in records)
+    texts = [sentence for sentence, number in counts.items() if number > 1]
+    codes = {sentence: code for code, sentence in enumerate(texts)}
+    lines = [schema.GENERATED_NOTE.rstrip()]
+    if texts:
+        lines += ["", "# Fact sentences stated more than once, named by position.",
+                  f"{schema.TEXTS} = [", *(f" {literal(sentence)}," for sentence in texts), "]"]
+    lines += ["", schema.GENERATED_HEADER.rstrip()]
     for name, value in data.items():
         items = value if isinstance(value, list) else [value]
         for item in items:
             lines += ["", f"[[{name}]]" if isinstance(value, list) else f"[{name}]"]
             lines.extend(f"{schema.key_text(key)} = {literal(v)}" for key, v in item.items())
-    for proof in facts:
+    for row in records:
+        evidence = row["evidence"]
+        evidence["sentence"] = codes.get(evidence["sentence"], evidence["sentence"])
         lines += ["", "[[fact]]"]
-        lines.extend(f"{key} = {literal(value)}" for key, value in record(proof).items())
+        lines.extend(f"{key} = {literal(value)}" for key, value in row.items())
     text = "\n".join(lines) + "\n"
     tomllib.loads(text)
     return text
@@ -201,6 +213,8 @@ def write(result: Result, directory: Path, name: str, reference: Profile | None 
             (stage / filename).write_text(outputs[filename], encoding="utf-8")
         sources = schema.read(stage)
         schema.generated_facts(sources)
+        if sources.generated_records != [record(proof) for proof in facts]:
+            raise ValueError("fact records differ once stored")
         if sources.header != {"schema": schema.SCHEMA, **json.loads(json.dumps(discovered))}:
             raise ValueError("discovery metadata differs once stored")
     directory.mkdir(parents=True, exist_ok=True)
