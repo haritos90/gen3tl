@@ -131,6 +131,17 @@ class ToolkitWorkflowTest(unittest.TestCase):
         self.assertEqual(" ".join(group.split()), expected)
         self.assertIn("  cancel-in-progress: true\n", text)
 
+    def test_the_clean_up_deletes_only_submission_branches_of_this_repository(self):
+        text = (ROOT / ".github/workflows/submission-cleanup.yml").read_text(encoding="utf-8")
+        self.assertIn("  pull_request:\n    types: [closed]\n", text)
+        self.assertIn("permissions:\n  contents: write\n\njobs:", text)
+        condition = " ".join(re.search(r"\n    if: >-\n((?:      .*\n)+)", text).group(1).split())
+        self.assertEqual(condition, "github.event.pull_request.head.repo.full_name == github.repository"
+                                    " && startsWith(github.event.pull_request.head.ref, 'submission/')")
+        script = text.split("        run: |\n", 1)[1]
+        self.assertNotIn("${{", script)
+        self.assertIn('git/refs/heads/${BRANCH}"', script)
+
     def test_workflow_script_names_the_import_and_site_checks(self):
         script = toolkit_file(ROOT / ".github/scripts/toolkit-submission.sh")
         text = script.read_text(encoding="utf-8")
