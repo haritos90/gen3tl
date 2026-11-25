@@ -19,7 +19,8 @@ from ..core.charmap import Charmap, CharmapError
 from ..core.fields import long_name_fields
 # entrycheck is shared with the browser bundle; names re-exported
 from .entrycheck import (BRACE, SPACING, Source, addable_tokens, droppable_tokens,  # noqa: F401
-                         instant_print_problems, placeholders_differ, token_counts, typography_problems, window_problems)
+                         instant_print_problems, placeholders_differ, spacing_undecided, token_counts,
+                         typography_problems, window_problems)
 from .layout import (Limit, Measure, arrow_overflows, check, dropped_breaks, entry_measure, fits, layout, line_width,
                      lines_of, paragraphs, short_line_ends, slot_items, slot_rewraps, split_names, wrapped_dash_lines)
 from ..build.release import expand
@@ -1287,10 +1288,10 @@ def run(prof, inv: dict, po_root: Path, cm: Charmap, measure: Measure, glyph_slo
     droppable = droppable_tokens(rules)   # per entry
     addable = addable_tokens(rules)   # per entry
     gate = Gate()
-    facts_typography = {}
+    facts_typography, skipped = {}, set()
     if rows:
-        facts_typography, skipped = typography_without_english(rules)
-        gate.skipped_typography = sorted(set(skipped))
+        facts_typography, needs = typography_without_english(rules)
+        skipped.update(needs)
     if not source_as_translation:
         from ..discover.inventory import untranslated_slot_usage
         collisions = untranslated_slot_usage(inv, glyph_slots, Charmap(), catalog)
@@ -1364,6 +1365,7 @@ def run(prof, inv: dict, po_root: Path, cm: Charmap, measure: Measure, glyph_slo
             text_rules, text_english = {}, None
         elif isinstance(english, Source):
             text_rules, text_english = facts_typography, None   # only rules without the English
+            skipped.update(spacing_undecided(target, text_rules, lim.keys is not None))
         else:
             text_rules, text_english = forbidden, e.msgid
         for why in typography_problems(text_english, target, text_rules, lim.keys is not None):
@@ -1376,6 +1378,7 @@ def run(prof, inv: dict, po_root: Path, cm: Charmap, measure: Measure, glyph_slo
         mixed = language.current().data.get("mixed_scripts", {})
         if mixed.get("pattern") and re.search(mixed["pattern"], plain) and not source_as_translation:
             gate.add(sid, f, "error", mixed["message"])
+    gate.skipped_typography = sorted(skipped)
     from . import languagerules, namepairs
     available_glyphs = set(Charmap().decode_table) | glyph_slots
     for problem in languagerules.catalog_problems(prof, catalog, cm,

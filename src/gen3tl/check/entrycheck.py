@@ -91,11 +91,22 @@ def centring_problems(text: str, leading: dict[str, dict], m: Measure, cm: Charm
     return [coded("not_centred", window=rule["window"], token=f"{{CLEAR_TO {want:02X}}}")]
 
 
+def _spacing_bounds(target: str, keys: bool) -> tuple[str, str]:
+    """A translation as checked beside an English without spacing and beside one with all of it."""
+    return re.sub(r" {2,}", " ", target) if keys else target, re.sub(r" {2,}", " ", target.strip(" "))
+
+
+def spacing_undecided(target: str, forbidden: dict[str, str], keys: bool = False) -> list[str]:
+    """The [qa.forbidden] rules whose result on a translation the English spacing decides, as reasons."""
+    strict, spaced = _spacing_bounds(target, keys)
+    return [why for pat, why in forbidden.items() if bool(re.search(pat, strict)) != bool(re.search(pat, spaced))]
+
+
 def typography_problems(english: str | None, target: str, forbidden: dict[str, str], keys: bool = False) -> list[str]:
     """The [qa.forbidden] rules a translation breaks, as reasons; `keys` marks a keyboard row."""
-    if english is None:
-        checked = re.sub(r" {2,}", " ", target) if keys else target
-        return [why for pat, why in forbidden.items() if re.search(pat, checked)]
+    if english is None:   # only what no English spacing excuses
+        bounds = _spacing_bounds(target, keys)
+        return [why for pat, why in forbidden.items() if all(re.search(pat, text) for text in bounds)]
     # trailing padding is allowed where the English pads
     checked = target.rstrip(" ") if english.endswith(" ") else target
     # leading caption-centring spaces too

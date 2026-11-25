@@ -222,13 +222,14 @@ class KeyOnlyPrCheckTest(PrCheckTest):
 
     def test_independent_typography_runs_without_the_english(self):
         self.assertFalse((self.root / "build/catalog.pot").exists())
-        self.edit("Да  с", "Другой текст")   # a double space the rule reads alone
+        self.edit("Да...  с", "Другой текст")   # three dots no English excuses
         status, out = self.check()
         self.assertEqual(status, 1)
         report = (out / "report.md").read_text(encoding="utf-8")
         qa_report = (out / "qa-test-ru.md").read_text(encoding="utf-8")
-        self.assertIn("typography: double space", qa_report)
-        self.assertIn("skipped typography rules: ellipsis with a dot", report)
+        self.assertIn("typography: three dots", qa_report)
+        self.assertNotIn("typography: double space", qa_report)   # the English spacing decides it
+        self.assertIn("skipped typography rules: double space, ellipsis with a dot", report)
 
     def test_placeholders_and_limits_follow_the_snapshot_row(self):
         self.snapshot({"s0000100": [digest("Fit {PLAYER}."), ["{PLAYER}"], [1], [30],
@@ -255,6 +256,122 @@ class KeyOnlyPrCheckTest(PrCheckTest):
         self.profile.path.write_text("\n".join(f"{key} = {literal(value)}"
                                               for key, value in self.profile.data.items()), encoding="utf-8")
         self.test_placeholders_and_limits_follow_the_snapshot_row()
+
+class HostedPrCheckTest(unittest.TestCase):
+    """A game project as a hosted runner checks it out: key-only catalogs, no ROM, no build/."""
+
+    def setUp(self):
+        from gen3tl import __version__
+        from gen3tl.project.manifest import Manifest
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name).resolve()
+        data = {
+            "rom": {"sha1": "ab" * 20},
+            "font": [{"name": "main", "glyphs": 0, "widths": 0x1000, "count": 512}],
+            "font_style": {"style": "unbound", "cell_height": 14},
+            "layout": {"dialogue_width": 60, "placeholders": {}},
+            "context": {"native_fill": [{"name": "native", "special": 1, "slot": 0, "base": 0x400, "stride": 4,
+                                         "count": 1, "variants": [["s0000200"]], "evidence": "Synthetic reader."}]},
+            "language_rules": [{"id": "fills", "title": "Engine-filled text", "kind": "engine_fills",
+                                "description": "Runtime sources.", "evidence": "Synthetic fills.",
+                                "related": [], "limit_status": "unverified",
+                                "references": [{"section": "context.native_fill"}]}],
+        }
+        self.profile = Profile(data, self.root / "sample.toml")
+        self.profile.path.write_text("\n".join(f"{key} = {literal(value)}" for key, value in data.items()),
+                                     encoding="utf-8")
+        write_policy(self.root, self.profile, qa={"forbidden": {
+            "  ": {"reason": "double space", "needs_source": False},
+            "\\.\\.\\.": {"reason": "three dots", "needs_source": False}}})
+        (self.root / "project.toml").write_text(
+            Manifest(self.root / "project.toml", "sample", "ab" * 20, __version__, ("ru",), "ru").text())
+        (self.root / "projects.toml").write_text(
+            '[defaults]\nprofile="sample"\nlanguage="ru"\n[[project]]\nprofile="sample"\nlanguage="ru"\n'
+            'root="."\npolicy="policy.toml"\n', encoding="utf-8")
+        from gen3tl.project import Registry
+        self.project = Registry.load(self.root).projects[0]
+        self.project.release.parent.mkdir(parents=True)
+        self.project.release.write_text('version="1.2.3"\n', encoding="utf-8")
+        self.po = self.project.catalog / "map.po"
+        # the second text pads like its English
+        self.entries = [PoEntry("s0000100", "Fit.", "Прежний текст"), PoEntry("s0000200", "Yes   ", "Да    ")]
+        write(self.po, self.entries, {"Project-Id-Version": "sample", "Language": "ru",
+                                      "Content-Type": "text/plain; charset=UTF-8", SOURCE_FIELD: KEY_ONLY})
+        self.note("The bar prints in the small font.")
+        self.snapshot()
+        self.git("init", "-q")
+        self.git("add", ".")
+        self.git("-c", "user.name=test", "-c", "user.email=test@example.invalid", "commit", "-q", "-m", "base")
+
+    def note(self, text):
+        """A language note on the evidence of the rule's declaration."""
+        from gen3tl.core import notes
+        from gen3tl.profile import schema
+        fact = next(fact for fact in schema.overlay_facts(schema.flat(self.profile.path))
+                    if fact.id.startswith("context.native_fill"))
+        notes.write_notes(self.project.profile_notes, {"schema": notes.SCHEMA, "note": [{
+            "id": "note:native-evidence", "subject": {"kind": "profile_fact", "id": fact.id},
+            "scope": {"kind": "language", "language": "ru"},
+            "binding": {"kind": "profile_fact", "id": fact.id, "value_sha256": schema.value_digest(fact.value),
+                        "field": "evidence"},
+            "facts": [text], "status": "unreviewed"}]})
+
+    def snapshot(self):
+        """The tracked measurement snapshot of the current configuration."""
+        from gen3tl.check.qa import row_limit
+        catalog = {entry.msgctxt: (self.po, entry) for entry in self.entries}
+        rows = {entry.msgctxt: [digest(entry.msgid), [], [1], [6 * len(entry.msgid)],
+                                ["dialogue", 60, 2, None, None, None, None]] for entry in self.entries}
+        facts = editorsnapshot.source_rows(catalog, {sid: row_limit(row) for sid, row in rows.items()}, lambda b: 6)
+        rows = {sid: row[:5] + [facts[sid][5]] for sid, row in rows.items()}
+        inventory = [{"id": entry.msgctxt, "offset": int(entry.msgctxt[1:], 16), "length": 40,
+                      "kind": "pointer", "category": "script", "mode": "field", "table": None, "index": None,
+                      "flags": [], "refs": [[0x10 + int(entry.msgctxt[1:], 16), "script:loadpointer"]],
+                      "source_sha256": rows[entry.msgctxt][0]} for entry in self.entries]
+        snapshot = {"schema": editorsnapshot.SCHEMA, "profile": "sample", "language": "ru", "rom_sha1": "ab" * 20,
+                    "source_sha256": editorsnapshot.source_digest(catalog, self.project.catalog, rows),
+                    "source": rows, "configuration_sha256": editorsnapshot.configuration(
+                        self.project.effective(self.profile)),
+                    "fonts": {"unbound": {"widths": [6] * 512, "shadows": [False] * 512}},
+                    "inventory": inventory, "context": {}, "reach": {}, "notes": {},
+                    "records": {"windows": [], "numbers": {}, "keys": {}, "heads": {}, "cursor": [],
+                                "code_originals": {}, "fill_fragments": {}, "fill_alphabet": ""}}
+        snapshot["facts_sha256"] = editorsnapshot.digest(snapshot)
+        editorsnapshot.write(self.project.snapshot, snapshot)
+
+    def git(self, *args):
+        subprocess.run(["git", "-C", str(self.root), *args], check=True, capture_output=True)
+
+    def check(self):
+        out = self.root / "result"
+        with patch.object(Profile, "by_name", return_value=self.profile), \
+                patch.object(Profile, "load_rom", side_effect=AssertionError("ROM access forbidden")), \
+                contextlib.redirect_stdout(io.StringIO()):
+            status = cli.main(["--project-root", str(self.root), "check", "pr", "--base", "HEAD",
+                               "--out", str(out)])
+        return status, (out / "report.md").read_text(encoding="utf-8")
+
+    def test_an_unrelated_change_passes_without_rule_review_or_spacing_errors(self):
+        self.assertFalse((self.root / "build").exists())
+        self.assertNotIn("Yes", self.po.read_text(encoding="utf-8"))
+        header, entries = read(self.po)
+        entries[0].msgstr = "Новый текст"
+        write(self.po, entries, header)
+        status, report = self.check()
+        self.assertEqual(status, 0, report)
+        self.assertNotIn("Engine language rules", report)
+        self.assertIn("skipped typography rules: double space; glossary skipped", report)
+        self.assertNotIn("typography", (self.root / "result/qa-sample-ru.md").read_text(encoding="utf-8")
+                         .split("## Findings", 1)[1])
+
+    def test_a_changed_declaration_note_keeps_the_rule_review(self):
+        self.note("The bar prints in the main font.")
+        self.snapshot()
+        status, report = self.check()
+        self.assertEqual(status, 1)
+        self.assertIn("### fills", report)
+        self.assertIn("Rule capability changed; verify the new declaration against the ROM", report)
 
 class EngineRuleReportTest(unittest.TestCase):
     def setUp(self):

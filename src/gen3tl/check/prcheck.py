@@ -409,12 +409,15 @@ def _baseline(project, base, raw, catalog, files):
     from ..catalog.extract import english
     from ..check.policy import effective
     from ..profile.profile import Profile, source_files
+    from ..project import MANIFEST
     before = deepcopy(catalog)
     aliases = keys.for_profile(raw)
     sources = set(source_files(raw.path))
+    # the base profile's name and its language notes
+    game = {project.root / MANIFEST, project.profile_notes} if project.game else set()
     with tempfile.TemporaryDirectory(prefix="gen3tl-pr-rules-") as tmp:
         root = Path(tmp)
-        for path in sorted(sources | {project.policy} |
+        for path in sorted(sources | game | {project.policy} |
                            {path for path in files if path.is_relative_to(project.catalog) and path.suffix == ".po"}):
             if not path.is_relative_to(project.registry_root):
                 continue
@@ -433,9 +436,11 @@ def _baseline(project, base, raw, catalog, files):
                         before[aliases.entry_id(entry.msgctxt)] = (path, entry)
         original = (Profile.load(root / raw.path.relative_to(project.registry_root))
                     if raw.path.is_relative_to(project.registry_root) else deepcopy(raw))
-        original.path = raw.path
+        notes = root / project.profile_notes.relative_to(project.registry_root) if project.game else None
         original = effective(original, project.language,
-                             root / project.policy.relative_to(project.registry_root), project.root)
+                             root / project.policy.relative_to(project.registry_root), project.root,
+                             notes_path=notes)
+        original.path = raw.path
     if original.sha1 != raw.sha1:
         raise ValueError("base ROM identity changed; original behavior comparison unavailable")
     english([entry for _, entry in before.values()], None, raw.sha1, False, raw.name)
