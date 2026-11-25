@@ -104,6 +104,37 @@ class ProgressTest(unittest.TestCase):
         self.assertEqual((progress["approved"], measured, progress["never shown"]),
                          tuple(int(x) for x in (overall[1], overall[3], overall[6])))
 
+    def test_a_profile_table_topic_comes_first(self):
+        """The profile's topic of a table file, then the toolkit's generic name, then the file stem."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ("plural_s", "types_short", "species", "unlisted"):
+                write(root / "tables" / f"{name}.po", [PoEntry(f"{name}:0", "Potion", "")], {})
+            files = {"plural_s": "Item names", "types_short": pg.INTERFACE}
+            topics = {r.topic: r.total for r in pg.count(root, files)}
+        self.assertEqual(topics, {"Item names": 1, pg.INTERFACE: 1, "Species names": 1, "unlisted": 1})
+
+    def test_command_takes_the_profile_topic_of_a_table_file(self):
+        import contextlib
+        import io
+
+        from gen3tl.__main__ import main
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            profile = workspace_project(root)
+            profile.write_text(profile.read_text(encoding="utf-8")
+                               + '\n[[progress.topics]]\ntopic = "Item names"\nfiles = ["plural_s"]\n',
+                               encoding="utf-8")
+            for name in ("plural_s", "species", "unlisted"):
+                write(root / "po" / "tables" / f"{name}.po", [PoEntry(f"{name}:0", "Potion", "Зелье")],
+                      {"Project-Id-Version": "game", "Language": "ru"})
+            with contextlib.redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(main(["--project-root", tmp, "--profile", str(profile), "catalog", "progress",
+                                       "--po-root", str(root / "po")]), 0)
+        self.assertEqual([re.split(r" {2,}", line) for line in out.getvalue().splitlines()], [
+            ["topic", "done (%)"], ["Species names", "100"], ["Item names", "100"], ["unlisted", "100"],
+            ["Overall", "100"], ["status", "ready"]])
+
     def test_graphics_row(self):
         """Translate-category graphics count, done once the profile edits them."""
         with tempfile.TemporaryDirectory() as tmp:

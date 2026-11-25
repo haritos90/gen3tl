@@ -32,7 +32,7 @@ class Row:
 
 
 def file_topics(prof: dict) -> dict[str, str]:
-    """System PO file stem -> topic, from the profile's [progress] topics list."""
+    """System or table PO file stem -> topic, from the profile's [progress] topics list."""
     out = {}
     for t in prof.get("progress", {}).get("topics", []):
         for f in t["files"]:
@@ -42,8 +42,8 @@ def file_topics(prof: dict) -> dict[str, str]:
 
 def topic_of(rel: Path, extracted: list[str], files: dict[str, str]) -> str:
     group = rel.parts[0] if len(rel.parts) > 1 else rel.stem
-    if group == "tables":
-        return TABLE_TOPICS.get(rel.stem, rel.stem)
+    if group == "tables":   # the profile's topic, then the generic name
+        return files.get(rel.stem, TABLE_TOPICS.get(rel.stem, rel.stem))
     if group in GROUP_TOPICS:
         return GROUP_TOPICS[group]
     if rel.stem in files:
