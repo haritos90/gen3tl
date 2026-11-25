@@ -730,6 +730,7 @@ export const fontSheets = new FontsView({
 export const engineRules = new EngineRulesView({
   reference: (id) => setObjectReference("engine-rule", id),
   index: () => state.index,
+  game: () => state.games?.find((game) => game.id === state.profile?.id) ?? null,
   row: (id) => state.rows[state.byId.get(id)],
   edits: () => state.edits,
   ruleEdits: () => state.ruleEdits,

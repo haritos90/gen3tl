@@ -50,6 +50,9 @@
             "changes": "Declared release changes",
             "review_title": "Public review",
             "review": "Declared review policy"
+          },
+          "interface_labels": {
+            "xx": "sample/xx/interface-labels.json"
           }
         }
       ]
@@ -85,6 +88,9 @@
             "changes": "Declared release changes",
             "review_title": "Public review",
             "review": "Declared review policy"
+          },
+          "interface_labels": {
+            "xx": "sample/xx/interface-labels.json"
           }
         }
       ],

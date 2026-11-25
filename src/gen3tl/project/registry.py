@@ -64,6 +64,11 @@ class Project:
         return self.translation / "profile-labels.po"
 
     @property
+    def interface_labels(self) -> Path:
+        """The language's translations of the game's own interface texts."""
+        return self.translation / "interface-labels.po"
+
+    @property
     def batches(self) -> Path:
         return self.review or self.translation / "batches"
 

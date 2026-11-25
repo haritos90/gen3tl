@@ -842,6 +842,8 @@ def write_languages(root, bundle: str = "gen3tl-check.zip", toolkit: str | None 
     profiles = {}
     loaded = registered.profiles() if registered is not None else {
         prof.name: prof for prof in map(Profile.load, profile_paths())}
+    labels = (sitecatalog.write_games(root, sitecatalog.game_languages(registered, loaded))
+              if registered is not None else {})
     for prof in loaded.values():
         profiles[prof.name] = {"id": prof.name, "name": prof["rom"]["name"],
                                "support": prof.get("support", {}).get("stage", "legacy"),
@@ -855,6 +857,7 @@ def write_languages(root, bundle: str = "gen3tl-check.zip", toolkit: str | None 
         for key in ("links", "compatibility", "landing"):
             if key in prof.data:
                 profiles[prof.name][key] = prof[key]
+        profiles[prof.name]["interface_labels"] = labels.get(prof.name, {})
         if prof["rom"].get("patch_bases"):
             profiles[prof.name].update(size=prof["rom"]["size"], patch_bases=[
                 {"name": base["name"], "sha1": base["sha1"]} for base in prof["rom"]["patch_bases"]])
@@ -974,7 +977,7 @@ def registry_of(doc: dict, data: str = "./", only: list[str] | None = None,
         stage = p["support"] if p["support"] in STAGES else "legacy"
         games.append({"id": p["id"], "name": p["name"], "stage": stage, "engine": p.get("engine", "unspecified"),
                       "languages": codes, "data": data})
-        for key in ("source_language", "engine_label", "links", "compatibility", "landing"):
+        for key in ("source_language", "engine_label", "links", "compatibility", "landing", "interface_labels"):
             if key in p:
                 games[-1][key] = p[key]
         if repository is not None:
@@ -1052,7 +1055,7 @@ def validate_registry(doc: dict) -> dict:
             raise ValueError(f"registry: duplicate game {g['id']}")
         seen.add(g["id"])
         if set(g) - {"id", "name", "stage", "engine", "languages", "data", "repository", "source_language",
-                     "engine_label", "links", "compatibility", "landing"}:
+                     "engine_label", "links", "compatibility", "landing", "interface_labels"}:
             raise ValueError(f"registry: {g['id']} has unknown keys")
         if "engine_label" in g and not _registry_text(g["engine_label"]):
             raise ValueError(f"registry: {g['id']} has an invalid engine label")
@@ -1065,6 +1068,10 @@ def validate_registry(doc: dict) -> dict:
         if "landing" in g:
             _registry_fields(g["landing"], dict.fromkeys(("intro", "editor", "changes_title", "changes",
                                                        "review_title", "review"), _registry_text), "landing")
+        labels = g.get("interface_labels", {})
+        if not isinstance(labels, dict) or not all(isinstance(code, str) and REGISTRY_ID.fullmatch(code)
+                                                   and _registry_url(path) for code, path in labels.items()):
+            raise ValueError(f"registry: {g['id']} has invalid interface labels")
         if "repository" in g and not (isinstance(g["repository"], str) and REPOSITORY.fullmatch(g["repository"])):
             raise ValueError(f"registry: {g['id']} has an invalid repository")
         if "source_language" in g and not (isinstance(g["source_language"], str)

@@ -1,11 +1,11 @@
 import { el, keepPosition } from "../dom.js";
-import { t, onSiteLanguage, uiError } from "../ui.js";
+import { t, onSiteLanguage, prepareSiteLanguage, uiError, uiLanguage } from "../ui.js";
 import { getJson, projectProfiles } from "../data.js";
 import { gameHash, loadRegistry, readRegistry, siteRoute } from "../registry.js";
 import { startPage } from "../site-shell.js";
 import { workspaceLanguage } from "../start.js";
 import { vimStep } from "../listview.js";
-import { loadSources, gameModel } from "../landing.js";
+import { loadGameTexts, loadSources, gameModel } from "../landing.js";
 import { debounce } from "../check.js";
 import { saveLocal, discardDraft, exportChanges, submit } from "./actions.js";
 import { renderNote, renderHistory } from "./context.js";
@@ -316,6 +316,8 @@ export function wire() {
 
 
 export async function main() {
+  // the games' rule texts arrive with the interface
+  prepareSiteLanguage((code) => loadGameTexts(state.registry?.games, code));
   await startPage();
   onSiteLanguage(followLanguage);
   wire();
@@ -327,6 +329,7 @@ export async function main() {
     state.sources = await loadSources({ games: [{ data: new URL("data/", document.baseURI).href }, ...state.registry.games] });
     buildGames();
     if (!state.registry.games.length) throw uiError("the registry lists no game");
+    await loadGameTexts(state.registry.games, uiLanguage());
     const first = state.sources.get(state.registry.games[0].data);
     if (first?.manifest) {
       state.base = state.registry.games[0].data;

@@ -1,6 +1,7 @@
 import { el, keepPosition, setText, updateChildren } from "./dom.js";
 import { translationState } from "./draft.js";
 import { rulePreview } from "./preview.js";
+import { gameText } from "./site-model.js";
 import { N_, errorText, formatNumber, t } from "./ui.js";
 
 const STATES = { original: N_("Inherited original"), empty: N_("Off"), text: N_("Custom") };
@@ -27,6 +28,11 @@ export class EngineRulesView {
     return engineRulesOf(this.host.index()).find((rule) => rule.id === id);
   }
 
+  /** A rule's title or description in the game's own texts. */
+  text(key) {
+    return gameText(this.host.game?.(), key);
+  }
+
   reset(id = null) {
     this.requests.clear();
     this.serial++;
@@ -44,7 +50,7 @@ export class EngineRulesView {
         const row = this.host.row(source.entry);
         return [source.entry, row?.source_text, row?.translation, this.host.edits()?.get(source.entry)?.translation].join(" ");
       });
-      return [rule.id, t(rule.title), t(rule.description), ...sources].join(" ").toLowerCase().includes(query);
+      return [rule.id, this.text(rule.title), this.text(rule.description), ...sources].join(" ").toLowerCase().includes(query);
     });
     if (query && this.filtered.some((rule) => rule.collapsed)) this.$("er-fills").open = true;
     this.show(this.filtered.some((rule) => rule.id === this.cur) ? this.cur : null);
@@ -73,7 +79,7 @@ export class EngineRulesView {
     const rows = (collapsed) => this.filtered.filter((rule) => Boolean(rule.collapsed) === collapsed).map((rule) =>
       el("button", { type: "button", class: "er-row", "data-key": rule.id,
         "aria-pressed": String(rule.id === this.cur), on: { click: () => this.show(rule.id) } },
-      el("span", { textContent: t(rule.title) }), el("span", { class: "eid muted", textContent: rule.id })));
+      el("span", { textContent: this.text(rule.title) }), el("span", { class: "eid muted", textContent: rule.id })));
     updateChildren($("er-list"), ...rows(false));
     updateChildren($("er-fill-list"), ...rows(true));
     $("er-fills").hidden = !this.filtered.some((rule) => rule.collapsed);
@@ -301,7 +307,7 @@ export class EngineRulesView {
         if (serial === this.serial) output.replaceChildren(el("p", { class: "err", textContent: errorText(error) }));
       }
     };
-    const select = el("select", { class: "select", "aria-label": t(rule.title), on: { change: (event) => {
+    const select = el("select", { class: "select", "aria-label": this.text(rule.title), on: { change: (event) => {
       request.value.enabled = event.target.value === "enabled";
       if (units) request.value.fields = request.value.enabled
         ? Object.fromEntries([...custom].filter(([, input]) => input.value).map(([field, input]) => [field, input.value])) : {};
@@ -353,7 +359,7 @@ export class EngineRulesView {
     setText($("er-empty"), !hasRules ? t("No rules declared for this game")
       : !this.filtered.length ? t("No matching rules") : t("Select a rule"));
     $("er-detail").hidden = !rule;
-    setText($("er-title"), rule ? t(rule.title) : "");
+    setText($("er-title"), rule ? this.text(rule.title) : "");
     setText($("er-id"), rule?.id ?? "");
     if (!rule) {
       $("er-body").replaceChildren();
@@ -365,7 +371,7 @@ export class EngineRulesView {
       related.push([N_("Keyboards"), "keyboards"]);
     }
     $("er-body").replaceChildren(...[
-      el("p", { textContent: t(rule.description) }),
+      el("p", { textContent: this.text(rule.description) }),
       el("div", { class: "toolbar" }, rule.read_only ? badge(N_("Read-only")) : null,
         rule.limit_status === "unverified" ? badge(N_("Unverified limit")) : null,
         related.map(([title, view]) => el("button", { type: "button", class: "btn sm", textContent: t(title),

@@ -10,14 +10,15 @@ import { isDraft, translationState } from "./draft.js";
 import { messagesOf } from "./editorstore.js";
 import { Codec, entryMeasure } from "./font.js";
 import { draftFonts, drawArt, sheetsOf, styleGlyphs } from "./fonts.js";
-import { languageName } from "./landing.js";
+import { languageName, loadGameTexts } from "./landing.js";
 import { digest } from "./patcher-core.js";
 import { fromB64 } from "./pictures.js";
 import { chosenGame, gameHash, loadRegistry, TOOLKIT_REPOSITORY } from "./registry.js";
 import { CAPTURE_ROLES, Edits, GlyphEdits, KeyboardEdits, NoteEdits, PictureEdits, RuleEdits, TERM_COLUMNS, TermEdits,
   browserStorage, exportDoc, exportName, noteProblems, noteRevision } from "./store.js";
+import { gameText } from "./site-model.js";
 import { submissionDoc, submissionParts, submissionProblem, submitAvailable, submitChanges } from "./submit.js";
-import { N_, errorText, onSiteLanguage, plainText, showText, t, uiError } from "./ui.js";
+import { N_, errorText, onSiteLanguage, plainText, prepareSiteLanguage, showText, t, uiError, uiLanguage } from "./ui.js";
 
 // Page model without DOM dependencies.
 
@@ -384,7 +385,7 @@ export function ruleItem(change, game, language) {
   };
   const modes = [["original", N_("Original")], ["current", N_("Current")], ["proposed", N_("Proposed")]];
   return el("article", { class: "submit-item" },
-    el("div", { class: "top" }, el("a", { href: editorLink(change.id, true), textContent: t(change.title) }),
+    el("div", { class: "top" }, el("a", { href: editorLink(change.id, true), textContent: gameText(state.game, change.title) }),
       el("span", { class: "id", textContent: change.id }),
       chip("plain", t("Also changes {n} catalog entries", { n: change.entries.length }))),
     change.stale ? el("p", { class: "note warn", role: "alert",
@@ -584,6 +585,7 @@ async function load() {
   const code = route.language ?? recall(`lang:${game.id}`);
   state.game = game;
   links(game, code);
+  await loadGameTexts([game], uiLanguage());
   if (!code) throw uiError("{game}: no language is chosen. Open the editor, choose a language, then Submit.", { game: game.name });
   history.replaceState(null, "", gameHash(game.id, code));
   manifest = manifest ?? await getJson(new URL("languages.json", game.data).href);
@@ -758,6 +760,8 @@ function showLoadError() {
 async function main() {
   state.storage = browserStorage();
   onSiteLanguage(relabel);
+  // the game's rule texts arrive with the interface
+  prepareSiteLanguage((code) => loadGameTexts(state.game ? [state.game] : [], code));
   await startPage();
   try {
     await load();

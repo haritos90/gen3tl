@@ -51,6 +51,12 @@ class SiteRegistryTest(unittest.TestCase):
                                '[compatibility]\nsaves = "Declared save support"\n'
                                '[landing]\neditor = "Declared editor measurement"\n'
                                'review_title = "Public review"\nreview = "Declared review policy"\n', encoding="utf-8")
+            from gen3tl.catalog.po import PoEntry, write
+            write(root / "translation" / "interface-labels.po",
+                  [PoEntry("site:Declared review policy", "Declared review policy", "Own review policy", flags=["fuzzy"]),
+                   PoEntry("site:Public review", "Public review", ""),
+                   PoEntry("site:Removed review", "Removed review", "Removed")],
+                  {"Project-Id-Version": "sample", "Language": "xx", "X-Group": "interface-labels"})
             with registry_scope(root), patch("gen3tl.profile.profile.profile_paths", return_value=[profile]):
                 doc = editordata.write_languages(root)
             self.assertEqual(doc["site"], {"name": "Example site", "home": "../"})
@@ -61,10 +67,17 @@ class SiteRegistryTest(unittest.TestCase):
                         "links": {"project": "https://example.org/game"},
                         "compatibility": {"saves": "Declared save support"},
                         "landing": {"editor": "Declared editor measurement", "review_title": "Public review",
-                                    "review": "Declared review policy"}}
+                                    "review": "Declared review policy"},
+                        "interface_labels": {"xx": "sample/xx/interface-labels.json"}}
             for key, value in expected.items():
                 self.assertEqual(game[key], value)
                 self.assertEqual(registry["games"][0][key], value)
+            self.assertEqual(json.loads((root / "sample/xx/interface-labels.json").read_text(encoding="utf-8")),
+                             {"schema": 1, "language": "xx", "strings": {"Declared review policy": "Own review policy"}})
+            (root / "translation" / "interface-labels.po").unlink()
+            with registry_scope(root), patch("gen3tl.profile.profile.profile_paths", return_value=[profile]):
+                doc = editordata.write_languages(root)
+            self.assertEqual(next(p for p in doc["profiles"] if p["id"] == "sample")["interface_labels"], {})
 
     def test_invalid_metadata(self):
         for key, values in {
@@ -81,6 +94,8 @@ class SiteRegistryTest(unittest.TestCase):
             "links": [None, [], "link", {"unknown": "x"}, {"project": 1}, {"new_language": False}],
             "compatibility": [None, [], "yes", {"unknown": "x"}, {"saves": True},
                               {"link_play": " "}, {"changed_bytes": ["text"]}],
+            "interface_labels": [None, [], "labels.json", {"r u": "ru.json"}, {"ru": True},
+                                 {"ru": "javascript:alert(1)"}, {"ru": "../a b"}],
         }.items():
             for value in values:
                 with self.subTest(key=key, value=value):
@@ -265,7 +280,8 @@ class SiteAssembleTest(unittest.TestCase):
         for path in ("index.html", "js/app.js", "data/pokedex/other/pokedex.json", "test/app.test.mjs", ".DS_Store"):
             (self.web / path).parent.mkdir(parents=True, exist_ok=True)
             (self.web / path).write_text(path, encoding="utf-8")
-        for path in ("languages.json", "registry.json", "game/ru/index.json", "game/ru/.data-key"):
+        for path in ("languages.json", "registry.json", "game/ru/index.json", "game/ru/interface-labels.json",
+                     "game/ru/.data-key"):
             (self.data / path).parent.mkdir(parents=True, exist_ok=True)
             (self.data / path).write_text(path, encoding="utf-8")
         self.manifest = {"bundle": "gen3tl-check.zip",
@@ -287,7 +303,8 @@ class SiteAssembleTest(unittest.TestCase):
         self.assertEqual(self.assemble()[0], 0)
         files = sorted(p.relative_to(self.out).as_posix() for p in self.out.rglob("*") if p.is_file())
         self.assertEqual(files, [f"assets/{__version__}/files.json", f"assets/{__version__}/js/app.js",
-                                "data/game/ru/index.json", "data/languages.json", "data/registry.json", "index.html",
+                                "data/game/ru/index.json", "data/game/ru/interface-labels.json", "data/languages.json",
+                                "data/registry.json", "index.html",
                                 "site-build.json"])
         self.assertEqual(json.loads((self.out / "data/languages.json").read_text(encoding="utf-8")), self.manifest)
 

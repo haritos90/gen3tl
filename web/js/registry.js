@@ -96,15 +96,24 @@ export function readRegistry(doc, base) {
     const landing = g.landing === undefined ? {} : g.landing;
     metadataFields(landing, { intro: text, editor: text, changes_title: text, changes: text,
       review_title: text, review: text }, "landing");
+    const labels = g.interface_labels;
+    if (labels !== undefined && (!object(labels)
+        || Object.entries(labels).some(([code, path]) => !ID.test(code) || !metadataURL(path)))) {
+      throw uiError("registry.json: invalid {field}", { field: "interface_labels" });
+    }
     const data = new URL(g.data || "./", base).href;
     const engine = typeof g.engine === "string" ? g.engine : "unspecified";
+    const folder = data.endsWith("/") ? data : `${data}/`;
     return {
       id: g.id, name: g.name, stage: g.stage, engine, engineLabel: g.engine_label ?? engine,
-      languages: [...g.languages], data: data.endsWith("/") ? data : `${data}/`, repository: g.repository ?? null,
+      languages: [...g.languages], data: folder, repository: g.repository ?? null,
       sourceLanguage: g.source_language ?? SOURCE_LANGUAGE,
       links: Object.fromEntries(Object.entries(links).map(([key, value]) => [key, value === null ? null : new URL(value, base).href])),
       compatibility: { ...compatibility },
       landing: { ...landing },
+      // null: data published before games carried their texts
+      interfaceLabels: labels === undefined ? null
+        : Object.fromEntries(Object.entries(labels).map(([code, path]) => [code, new URL(path, folder).href])),
     };
   });
   if (doc.default !== undefined && !seen.has(doc.default)) throw uiError("registry.json: unknown default game");

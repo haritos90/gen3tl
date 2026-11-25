@@ -130,6 +130,13 @@ test("interface data is loaded without a release request", async () => {
   assert.deepEqual(sources.get("https://example.org/data/").releases, []);
 });
 
+test("a game's interface labels resolve against its data folder", () => {
+  const registry = readRegistry({ schema: 1, games: [{ ...game("own", "catalog", ["ru"]), data: "https://data.test/game",
+    interface_labels: { ru: "own/ru/interface-labels.json", de: "https://labels.test/de.json" } }] }, BASE);
+  assert.deepEqual(registry.games[0].interfaceLabels, { ru: "https://data.test/game/own/ru/interface-labels.json",
+    de: "https://labels.test/de.json" });
+});
+
 test("generated metadata resolves links against the registry location", () => {
   const fixture = FIXTURES.find((f) => f.name === "present");
   const registry = readRegistry(fixture.registry, BASE);
@@ -146,6 +153,7 @@ test("generated metadata resolves links against the registry location", () => {
     content_license: "https://example.org/content-license" });
   assert.deepEqual(game.compatibility, fixture.registry.games[0].compatibility);
   assert.deepEqual(game.landing, fixture.registry.games[0].landing);
+  assert.deepEqual(game.interfaceLabels, { xx: "https://example.org/data/sample/xx/interface-labels.json" });
   assert.equal(fixture.registry.site.brand, "../brand.svg");
   registry.site.licenses[0].label_key = "Changed";
   game.compatibility.saves = "Changed";
@@ -161,6 +169,7 @@ test("absent metadata retains defaults and null links stay unavailable", () => {
   assert.deepEqual(absent.games[0].links, {});
   assert.deepEqual(absent.games[0].compatibility, {});
   assert.deepEqual(absent.games[0].landing, {});
+  assert.equal(absent.games[0].interfaceLabels, null);
   const unavailable = readRegistry(FIXTURES.find((f) => f.name === "unavailable").registry, BASE);
   assert.deepEqual(unavailable.site, { repository: null, new_language_url: null, licenses: [] });
   assert.deepEqual(unavailable.games[0].links, { project: null, new_language: null, content_license: null });
@@ -180,6 +189,7 @@ test("metadata rejects malformed objects and unsupported fields", () => {
     engine_label: [null, false, [], " "],
     links: [null, [], "link", { unknown: "x" }, { project: 1 }, { new_language: false }],
     compatibility: [null, [], "yes", { unknown: "x" }, { saves: true }, { link_play: " " }, { changed_bytes: ["text"] }],
+    interface_labels: [null, [], "labels.json", { "r u": "ru.json" }, { ru: true }, { ru: "javascript:alert(1)" }],
   })) {
     for (const value of values) {
       const doc = { schema: 1, games: [game("sample", "catalog", [])] };

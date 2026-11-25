@@ -4,10 +4,11 @@ import { EngineRulesView } from "../js/enginerules.js";
 import { placeOf } from "../js/data.js";
 import { Edits, RuleEdits, exportDoc } from "../js/store.js";
 import { submissionDoc, submissionRepository } from "../js/submit.js";
-import { setCatalog, setLabelSource } from "../js/ui.js";
-import { stubPage } from "./fixture.mjs";
+import { loadGameTexts } from "../js/site-model.js";
+import { setCatalog, setLabelSource, setUiLanguage, SOURCE_LANGUAGE } from "../js/ui.js";
+import { fakeFetch, stubPage } from "./fixture.mjs";
 
-function fixture(context) {
+function fixture(context, host = {}) {
   const { $, storage } = stubPage(context, "editor");
   setLabelSource(null);
   setCatalog(null);
@@ -37,7 +38,7 @@ function fixture(context) {
   const references = [], hashes = [], opened = [], views = [];
   const view = new EngineRulesView({ index: () => index, row: (id) => rows.find((row) => row.id === id),
     edits: () => edits, reference: (id) => references.push(id), setHash: (id) => hashes.push(id),
-    openEntry: (id) => opened.push(id), openView: (name) => views.push(name) }, $);
+    openEntry: (id) => opened.push(id), openView: (name) => views.push(name), ...host }, $);
   view.reset();
   return { $, view, index, rows, edits, references, hashes, opened, views };
 }
@@ -80,6 +81,25 @@ test("engine-filled text starts collapsed, opens by reference and retains unveri
   view.reset();
   assert.equal($("er-fills").open, false);
   assert.equal(view.cur, "ending/group");
+});
+
+test("rule titles and descriptions come from the game's own texts", async (context) => {
+  context.after(() => setUiLanguage(SOURCE_LANGUAGE));
+  const game = { id: "fixture", data: "https://example.org/data/",
+    interfaceLabels: { aa: "https://example.org/data/fixture/aa/interface-labels.json" } };
+  await loadGameTexts([game], "aa", fakeFetch({ [game.interfaceLabels.aa]: { schema: 1, language: "aa",
+    strings: { "Grouped ending": "Own ending", "One ending for two routines.": "Own description." } } }));
+  setUiLanguage("aa");
+  const { $, view } = fixture(context, { game: () => game });
+  setCatalog({ "Engine-filled text": "Site fills" });
+  view.reset();
+  assert.equal($("er-title").textContent, "Own ending");
+  assert.ok($("er-body").textContent.includes("Own description."));
+  assert.deepEqual($("er-list").children.map((row) => row.children[0].textContent), ["Own ending"]);
+  assert.deepEqual($("er-fill-list").children.map((row) => row.children[0].textContent), ["Site fills"]);
+  $("er-search").value = "own description";
+  view.applyFilters();
+  assert.deepEqual(view.filtered.map((rule) => rule.id), ["ending/group"]);
 });
 
 test("search includes rule identities and current catalog text and restores an empty state", (context) => {

@@ -1,7 +1,7 @@
 // Shared game data drives every surface.
 
 import { validateManifest } from "./patcher-core.js";
-import { N_, SOURCE_LANGUAGE, formatNumber, languageName, t, uiError } from "./ui.js";
+import { N_, SOURCE_LANGUAGE, formatNumber, languageName, readCatalog, t, uiError, uiLanguage } from "./ui.js";
 import { PAGES, toolURL } from "./routes.js";
 
 export { languageName };
@@ -118,7 +118,48 @@ export function gameModel(game, manifest, releases = []) {
     sourceEntries: profile?.source_catalog?.entries ?? null, pokedex: profile?.pokedex ?? null,
     languages, released: Boolean(latest), repository: game.repository ?? null, sourceLanguage: game.sourceLanguage ?? SOURCE_LANGUAGE,
     links: game.links ?? {}, compatibility: game.compatibility ?? {}, landing: game.landing ?? {},
+    interfaceLabels: game.interfaceLabels ?? null,
   };
+}
+
+/**
+ * The address of a game's own interface texts in a language, or null.
+ * Data published before games carried them: the site catalog beside it.
+ */
+export function gameTextsURL(game, code) {
+  // the site's own catalog holds the interface project's texts
+  if (!game?.data || game.stage === "interface" || code === SOURCE_LANGUAGE) return null;
+  if (!game.interfaceLabels) return new URL(`site/${code}.json`, game.data).href;
+  return game.interfaceLabels[code] ?? null;
+}
+
+const gameTexts = new Map(); // address -> { ready, strings }
+
+/** Fetch each game's own texts in a language once; a failure shows the site catalog's. */
+export function loadGameTexts(games, code, fetcher = fetch) {
+  return Promise.all((games ?? []).map((game) => {
+    const url = gameTextsURL(game, code);
+    if (!url) return null;
+    if (!gameTexts.has(url)) {
+      const held = { strings: null };
+      held.ready = (async () => {
+        try {
+          const response = await fetcher(url, { credentials: "omit", cache: "no-cache" });
+          if (response.ok) held.strings = readCatalog(await response.json(), code);
+        } catch (e) {
+          console.warn(`game texts ${code}: ${e.message || e}`);
+        }
+      })();
+      gameTexts.set(url, held);
+    }
+    return gameTexts.get(url).ready;
+  })).then(() => undefined);
+}
+
+/** A key a game declares, in its own texts for the shown language; else the site catalog's. */
+export function gameText(game, key) {
+  const text = gameTexts.get(gameTextsURL(game, uiLanguage()))?.strings?.[key];
+  return typeof text === "string" && text ? text : t(key);
 }
 
 async function getJson(url, fetcher) {

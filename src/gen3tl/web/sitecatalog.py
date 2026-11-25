@@ -44,6 +44,7 @@ SITE_CALLS = [re.compile(r"\bsiteText\(\s*" + LITERAL), re.compile(r"\bshowText\
 LOCATIONS = re.compile(r"[\w.-]+\.html|js/[\w./-]+\.js|fragments/[\w.-]+\.json|registry")
 REGISTERED = "registry"   # the location of keys the registry declares
 HOLE = re.compile(r"\{\w+\}")   # a value the page fills
+GAME_PAGE = "interface-labels.json"   # beside the language's editor data
 
 
 class SiteCatalogError(ValueError):
@@ -79,14 +80,17 @@ class Compared:
     problems: list[str]
 
 
-def load(path: Path) -> list[PoEntry]:
-    """The entries of a site catalog, its identity checked: the file's language, one entry per key."""
+def load(path: Path, project: str = SITE, code: str | None = None) -> list[PoEntry]:
+    """The entries of a site catalog, its identity checked: its project and language, one entry per key.
+
+    `code`: the language of a game catalog; a site catalog is named by its language.
+    """
     path = Path(path)
-    code = path.stem
+    code = code or path.stem
     if not CODE.fullmatch(code):
         raise SiteCatalogError(f"{path}: not a language code")
     header, entries = read(path)
-    if header.get("Language") != code or header.get("Project-Id-Version") != SITE:
+    if header.get("Language") != code or header.get("Project-Id-Version") != project:
         raise SiteCatalogError(f"{path}: header names another catalog")
     seen = set()
     for entry in entries:
@@ -207,6 +211,24 @@ def merged(entries: list[PoEntry], keys: dict[str, list[str]], notes: dict[str, 
         if entry.msgid in notes:
             entry.extracted.insert(0, notes[entry.msgid])
     return out
+
+
+def game_keys(prof) -> dict[str, list[str]]:
+    """The interface keys a game declares: key -> the fields that declare it."""
+    keys: dict[str, list[str]] = {}
+    for section in ("landing", "compatibility"):
+        for field, key in prof.get(section, {}).items():
+            append_unique(keys.setdefault(key, []), f"{section}.{field}")
+    for rule in prof.get("language_rules", []):
+        for field in ("title", "description"):
+            append_unique(keys.setdefault(rule[field], []), f"language_rules.{rule['id']}.{field}")
+    return keys
+
+
+def game_languages(registry, profiles: dict) -> list[tuple]:
+    """Each language project of `registry` with the keys its game declares; `profiles` by name."""
+    return [(project, game_keys(profiles[project.profile])) for project in registry.projects
+            if project.profile in profiles]
 
 
 def catalog_keys(directory: Path | None = None, web: Path | None = None) -> dict[str, list[str]]:
@@ -446,6 +468,27 @@ def write(root: Path, directory: Path | None = None, web: Path | None = None) ->
     (out / "catalogs.json").write_text(json.dumps(index_doc(languages, guides(web)), ensure_ascii=False,
                                                   separators=(",", ":")), encoding="utf-8")
     return list(languages)
+
+
+def write_games(root: Path, games: list[tuple]) -> dict[str, dict[str, str]]:
+    """Write the translated keys of each game catalog beside its language's editor data under `root`.
+
+    `games`: language projects with their game's keys (game_languages); the result is profile -> code -> path.
+    """
+    from .editordata import _check_output
+    root = Path(root)
+    out: dict[str, dict[str, str]] = {}
+    for project, keys in games:
+        if not project.interface_labels.is_file():
+            continue
+        entries = [e for e in load(project.interface_labels, project.profile, project.language) if e.msgid in keys]
+        page = root / project.profile / project.language / GAME_PAGE
+        _check_output(root, page)
+        page.parent.mkdir(parents=True, exist_ok=True)
+        page.write_text(json.dumps(page_doc(project.language, entries), ensure_ascii=False, separators=(",", ":"),
+                                   sort_keys=True), encoding="utf-8")
+        out.setdefault(project.profile, {})[project.language] = page.relative_to(root).as_posix()
+    return out
 
 
 def write_interface(root: Path) -> None:

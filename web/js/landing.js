@@ -2,11 +2,11 @@
 
 import { el } from "./dom.js";
 import { chosenGame, pickerURL, recallGame, REPOSITORY, siteRoute } from "./registry.js";
-import { actionsOf, gamesModel, hrefs, LANGUAGE_STATES, languageMeta, languageName, progressTitle, STAGE_DETAILS, SURFACES } from "./site-model.js";
+import { actionsOf, gamesModel, gameText, hrefs, LANGUAGE_STATES, languageMeta, languageName, progressTitle, STAGE_DETAILS, SURFACES } from "./site-model.js";
 import { N_, formatNumber, t, textParts } from "./ui.js";
 
-export { compareVersions, gameModel, hrefs, languageMeta, languageModel, languageName, loadSources, measured,
-  percentOf, progressTitle, translatedOf } from "./site-model.js";
+export { compareVersions, gameModel, hrefs, languageMeta, languageModel, languageName, loadGameTexts, loadSources,
+  measured, percentOf, progressTitle, translatedOf } from "./site-model.js";
 
 /** Preserve registry order across all stages. */
 export function landingModel(registry, sources, hash = "", storage) {
@@ -74,7 +74,7 @@ function gameCard(game, site) {
   fact(t("Catalog"), game.entries ? t("{n} texts", { n: formatNumber(game.entries) })
     : game.sourceEntries ? t("{n} draft source entries", { n: formatNumber(game.sourceEntries) }) : null);
   const compatibility = ["changed_bytes", "saves", "link_play"].map((key) => game.compatibility[key]).filter(Boolean);
-  fact(t("Compatibility"), compatibility.length ? [...new Set(compatibility)].map((key) => t(key)).join(" ") : null);
+  fact(t("Compatibility"), compatibility.length ? [...new Set(compatibility)].map((key) => gameText(game, key)).join(" ") : null);
   for (const [key, label] of [["project", t("Project")], ["content_license", t("Content licence")]]) {
     fact(label, game.links[key] ? el("a", { href: game.links[key], rel: "noreferrer", textContent: label }) : null);
   }
@@ -136,7 +136,7 @@ export function renderCopy(current, $) {
   const copy = current?.landing ?? {};
   const show = (id, key) => {
     const node = $(id);
-    node.textContent = key ? t(key) : "";
+    node.textContent = key ? gameText(current, key) : "";
     node.hidden = !key;
   };
   show("landing-intro", copy.intro ?? N_("Translation patches for Game Boy Advance ROM hacks. Runs locally in your browser."));

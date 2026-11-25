@@ -1,9 +1,9 @@
 // The landing page: the registry, then each game's data.
 import { setToolContext, startPage } from "./site-shell.js";
-import { collapse, landingModel, landingRedirect, loadSources, render, renderCopy, renderLoading } from "./landing.js";
+import { collapse, landingModel, landingRedirect, loadGameTexts, loadSources, render, renderCopy, renderLoading } from "./landing.js";
 import { loadRegistry, rememberGame, siteRoute } from "./registry.js";
 import { installSiteFonts } from "./site-fonts.js";
-import { errorText, onSiteLanguage, t } from "./ui.js";
+import { errorText, onSiteLanguage, prepareSiteLanguage, t } from "./ui.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -18,6 +18,8 @@ function showError(e) {
 onSiteLanguage(() => shown?.());
 window.addEventListener("hashchange", () => shown?.());
 const registryPromise = loadRegistry(new URL("data/registry.json", document.baseURI).href);
+// the games' own texts arrive with the interface
+prepareSiteLanguage((code) => registryPromise.then((registry) => loadGameTexts(registry.games, code), () => {}));
 await startPage({ reveal: () => {} });
 try {
   const registry = await registryPromise;

@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 
 import { test } from "node:test";
 
-import { gameModel, landingModel, landingRedirect, languageRequestURL, measured, percentOf, progressTitle, translatedOf, render, renderLoading } from "../js/landing.js";
+import { gameModel, landingModel, landingRedirect, languageRequestURL, loadGameTexts, measured, percentOf, progressTitle, translatedOf, render, renderLoading } from "../js/landing.js";
 
 import { actionsOf, languageRows, pokedexLanguages, SURFACES } from "../js/pick.js";
 
@@ -94,6 +94,49 @@ test("landing copy and links follow declarations and clear when the game changes
     assert.equal($(`how-${section}-title`).textContent, "");
     assert.equal($(`how-${section}-text`).textContent, "");
   }
+});
+
+test("a game's own texts translate its declarations; earlier data reads its site catalog", async (context) => {
+  const { $ } = stubPage(context, "index");
+  context.after(() => {
+    setCatalog(null);
+    setUiLanguage(SOURCE_LANGUAGE);
+  });
+  const game = { id: "sample", name: "Sample", stage: "translation", engine: "emerald", languages: ["xx"],
+    compatibility: { saves: "Declared save support" },
+    landing: { review_title: "Public review", review: "Declared review policy" } };
+  const current = readRegistry({ schema: 1, games: [{ ...game, data: "current/",
+    interface_labels: { xx: "sample/xx/interface-labels.json" } }] }, BASE);
+  const previous = readRegistry({ schema: 1, games: [{ ...game, data: "previous/" }] }, BASE);
+  const fetcher = fakeFetch({
+    "https://example.org/site/data/current/sample/xx/interface-labels.json": { schema: 1, language: "xx",
+      strings: { "Declared review policy": "Own review policy", "Declared save support": "Own save support" } },
+    "https://example.org/site/data/previous/site/xx.json": { schema: 1, language: "xx",
+      strings: { "Declared review policy": "Earlier review policy", "Public review": "Earlier review" } },
+  });
+  setCatalog({ "Public review": "Site review", "Declared save support": "Site save support" });
+  setUiLanguage("xx");
+  await loadGameTexts([...current.games, ...previous.games], "xx", fetcher);
+  await loadGameTexts([...current.games, ...previous.games], "en", fetcher);
+  await loadGameTexts(current.games, "yy", fetcher);
+  assert.deepEqual(fetcher.calls, ["https://example.org/site/data/current/sample/xx/interface-labels.json",
+    "https://example.org/site/data/previous/site/xx.json"]);
+  render(landingModel(current, new Map(), "#sample", null), $);
+  assert.equal($("how-review-text").textContent, "Own review policy");
+  assert.equal($("how-review-title").textContent, "Site review");
+  assert.match($("games-list").firstChild.textContent, /Own save support/);
+  render(landingModel(previous, new Map(), "#sample", null), $);
+  assert.equal($("how-review-text").textContent, "Earlier review policy");
+  assert.equal($("how-review-title").textContent, "Earlier review");
+  assert.match($("games-list").firstChild.textContent, /Site save support/);
+  setUiLanguage("yy");
+  render(landingModel(current, new Map(), "#sample", null), $);
+  assert.equal($("how-review-text").textContent, "Declared review policy");
+  setUiLanguage(SOURCE_LANGUAGE);
+  setCatalog(null);
+  render(landingModel(current, new Map(), "#sample", null), $);
+  assert.equal($("how-review-text").textContent, "Declared review policy");
+  assert.match($("games-list").firstChild.textContent, /Declared save support/);
 });
 
 test("landing placeholders follow registry structure and cannot match the picker", (context) => {
