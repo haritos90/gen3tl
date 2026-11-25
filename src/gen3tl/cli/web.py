@@ -524,7 +524,7 @@ def site_catalog(args):
         line("catalog", path.relative_to(sitecatalog.WEB).as_posix() if path.is_relative_to(sitecatalog.WEB) else path)
         line("approved", f"{approved.cleared} entries")
     if args.sync:
-        for synced in sitecatalog.sync():
+        for synced in [*sitecatalog.sync(), *sitecatalog.sync_games()]:
             line("synced", synced.path)
             line("added", f"{len(synced.added)} keys")
             line("dropped", f"{len(synced.dropped)} keys")
@@ -1079,7 +1079,8 @@ def register(sub):
     sc = add(sub, "site-catalog", site_catalog)
     sc.add_argument("--data", default="build/editor", help="editor data directory")
     sc.add_argument("--sync", action="store_true",
-                    help="first add the keys the pages use to every catalog and drop the stale ones")
+                    help="first add the keys the pages use to every catalog and the keys each game declares "
+                         "to its own catalogs, and drop the stale ones")
     sc.add_argument("--approve", nargs="+", metavar=("CODE", "KEY"), default=None,
                     help="mark approved the named keys of the site catalog CODE")
     sc.add_argument("--approve-all", metavar="CODE", default=None,

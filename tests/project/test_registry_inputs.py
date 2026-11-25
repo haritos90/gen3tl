@@ -133,7 +133,7 @@ class RegistryInputsTest(unittest.TestCase):
         out = self.root / "editor"
         with registry_scope(self.registry):
             doc = editordata.write_languages(out, toolkit="0.0.0")
-            self.assertIn("External title", sitecatalog.registry_keys())
+            self.assertIn("External title", sitecatalog.game_catalogs()[0][1])
         profile = next(row for row in doc["profiles"] if row["id"] == "external")
         self.assertEqual(profile["name"], "External game")
         self.assertEqual(profile["engine_label"], "External engine")

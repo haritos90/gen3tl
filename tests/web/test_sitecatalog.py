@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 from gen3tl.web import editordata, sitecatalog
-from gen3tl.catalog.po import PoEntry, write
+from gen3tl.catalog.po import PoEntry, read, write
 from project_fixture import workspace_project
 from editorstore_support import decoded
 
@@ -287,80 +287,100 @@ class SyncTest(unittest.TestCase):
         self.web = site(Path(self.tmp.name))
 
 
-    def test_registry_keys_follow_configuration_and_preserve_translations(self):
+    def game(self, root: Path, declarations: str) -> Path:
+        """A game project at `root` declaring interface keys; its profile."""
+        root.mkdir(parents=True, exist_ok=True)
+        profile = workspace_project(root, "xx")
+        profile.write_text(profile.read_text() + declarations, encoding="utf-8")
+        return profile
+
+    def scope(self, root: Path, profile: Path, directory: Path):
+        from contextlib import ExitStack
         from unittest.mock import patch
 
         from gen3tl.project import registry_scope
+        stack = ExitStack()
+        for context in (registry_scope(root), patch("gen3tl.profile.profile.profile_paths", return_value=[profile]),
+                        patch.object(sitecatalog, "WEB", self.web), patch.object(sitecatalog, "CATALOGS", directory)):
+            stack.enter_context(context)
+        return stack
 
-        root = Path(self.tmp.name)
-        profile = workspace_project(root, "xx")
-        profile.write_text(profile.read_text() + '\n[landing]\nreview = "Declared review"\n'
-                           'review_title = "Review policy"\n[compatibility]\nsaves = "Declared saves"\n'
-                           '\n[[language_rules]]\nid = "ending"\ntitle = "Declared ending"\n'
-                           'description = "A fixed engine ending."\nkind = "catalog_text"\n'
-                           'related = []\nexamples = []\nevidence = "Recorded source."\n',
-                           encoding="utf-8")
-        project = root / "projects.toml"
-        project.write_text(project.read_text() + '\n[site]\nlicenses = [{label_key = "Declared licence", '
-                           'url = "../terms"}]\n', encoding="utf-8")
-        other = root / "other.toml"
-        other.write_text('[rom]\nsha1 = "' + 'a' * 40 + '"\n[landing]\nreview = "Unrelated review"\n',
-                         encoding="utf-8")
+    def test_a_game_declares_its_keys_with_the_fields_that_declare_them(self):
+        prof = {"landing": {"review_title": "Review policy", "review": "Declared review"},
+                "compatibility": {"saves": "Declared saves", "link_play": "Declared saves"},
+                "language_rules": [{"id": "ending", "title": "Declared ending", "description": "Shared wording."},
+                                   {"id": "other-ending", "title": "Other ending", "description": "Shared wording."}]}
+        self.assertEqual(sitecatalog.game_keys(prof), {
+            "Review policy": ["landing.review_title"], "Declared review": ["landing.review"],
+            "Declared saves": ["compatibility.saves", "compatibility.link_play"],
+            "Declared ending": ["language_rules.ending.title"],
+            "Shared wording.": ["language_rules.ending.description", "language_rules.other-ending.description"],
+            "Other ending": ["language_rules.other-ending.title"]})
+        self.assertTrue(sitecatalog.is_location("language_rules.other-ending.description, compatibility.saves"))
+        self.assertEqual(sitecatalog.game_keys({}), {})
+
+    def test_a_game_catalog_follows_its_game_and_keeps_translations(self):
+        root = Path(self.tmp.name).resolve() / "game"
+        profile = self.game(root, '\n[landing]\nreview = "Declared review"\nreview_title = "Review policy"\n'
+                                  '[compatibility]\nsaves = "Declared saves"\n'
+                                  '\n[[language_rules]]\nid = "ending"\ntitle = "Declared ending"\n'
+                                  'description = "A fixed engine ending."\nkind = "catalog_text"\n'
+                                  'related = []\nexamples = []\nevidence = "Recorded source."\n')
         directory = self.web / "i18n"
-        catalog("xx", [PoEntry("site:Declared review", "Declared review", "Review wording", extracted=["registry"]),
-                       PoEntry("site:Declared ending", "Declared ending", "Ending wording", extracted=["registry"])], directory)
-        with registry_scope(root), patch("gen3tl.profile.profile.profile_paths", return_value=[profile, other]), \
-                patch.object(sitecatalog, "WEB", self.web), patch.object(sitecatalog, "CATALOGS", directory):
-            self.assertEqual(sitecatalog.registry_keys(), {"Declared review", "Review policy", "Declared saves",
-                                                          "Declared licence", "Declared ending", "A fixed engine ending."})
-            keys = sitecatalog.page_keys()
-            self.assertEqual(keys["Declared review"], ["registry"])
-            self.assertNotIn("Unrelated review", keys)
-            sitecatalog.sync()
-            with patch("gen3tl.profile.profile.profile_paths", return_value=[]):
-                self.assertNotIn("Declared review", sitecatalog.page_keys())
-            entries = {entry.msgid: entry for entry in sitecatalog.load(directory / "xx.po")}
-            self.assertEqual(entries["Declared review"].msgstr, "Review wording")
-            self.assertEqual(entries["Declared review"].extracted, ["registry"])
-            self.assertEqual(entries["Declared ending"].msgstr, "Ending wording")
-            self.assertEqual(entries["A fixed engine ending."].extracted, ["registry"])
+        catalog("xx", [PoEntry("site:Home", "Home", "Дом", extracted=["index.html"])], directory)
+        path = root / "translation" / "interface-labels.po"
+        with self.scope(root, profile, directory):
+            [created] = sitecatalog.sync_games()
+            self.assertEqual((created.path, created.added, created.dropped, created.keys),
+                             (path, ["Declared review", "Review policy", "Declared saves", "Declared ending",
+                                     "A fixed engine ending."], [], 5))
+            header, entries = read(path)
+            self.assertEqual((header["Project-Id-Version"], header["Language"], header["X-Group"]),
+                             ("game", "xx", "interface-labels"))
+            entries[0].set_translation("Обзор", "text")
+            entries[3].msgstr = "Окончание"
+            entries[3].translator = ["source: engine wording"]
+            write(path, entries + [PoEntry("site:Removed review", "Removed review", "Убрано")], header)
+            profile.write_text(profile.read_text().replace("Review policy", "Open review"), encoding="utf-8")
+            [synced] = sitecatalog.sync_games()
+            self.assertEqual((synced.added, synced.dropped), (["Open review"], ["Review policy", "Removed review"]))
+            kept = {e.msgid: e for e in sitecatalog.load(path, "game", "xx")}
+            self.assertEqual((kept["Declared review"].msgstr, kept["Declared review"].fuzzy), ("Обзор", True))
+            self.assertEqual(kept["Declared review"].extracted, ["landing.review"])
+            self.assertEqual((kept["Declared ending"].msgstr, kept["Declared ending"].source_note),
+                             ("Окончание", "engine wording"))
+            self.assertEqual(kept["Declared ending"].extracted, ["language_rules.ending.title"])
+            self.assertEqual(kept["Open review"].msgstr, "")
+            self.assertEqual([p for c in sitecatalog.compare_games() for p in c.problems], [])
+            self.assertEqual(sitecatalog.load(directory / "xx.po")[0].msgid, "Home")
 
+    def test_a_game_language_without_a_site_catalog_gains_no_catalog(self):
+        root = Path(self.tmp.name).resolve() / "game"
+        profile = self.game(root, '\n[landing]\nreview = "Declared review"\n')
+        with self.scope(root, profile, self.web / "i18n"):
+            self.assertEqual(sitecatalog.sync_games(), [])
+        self.assertFalse((root / "translation" / "interface-labels.po").exists())
 
-    def test_sync_and_seed_without_a_registry_keep_registry_entries(self):
+    def test_a_sync_in_one_game_leaves_every_other_game_its_texts(self):
         directory = self.web / "i18n"
-        catalog("xx", [PoEntry("site:Home", "Home", "Дом", extracted=["index.html, registry"]),
-                       PoEntry("site:Declared review", "Declared review", "Обзор", extracted=["registry"]),
-                       PoEntry("site:Gone", "Gone", "Нет", extracted=["js/gone.js"])], directory)
-        [synced] = sitecatalog.sync(directory, self.web)
-        self.assertEqual(synced.dropped, ["Gone"])
-        entries = {e.msgid: e for e in sitecatalog.load(directory / "xx.po")}
-        declared = entries["Declared review"]
-        self.assertEqual((declared.msgstr, declared.extracted), ("Обзор", ["registry"]))
-        self.assertEqual((entries["Home"].msgstr, entries["Home"].extracted), ("Дом", ["index.html, registry"]))
-        seeded = {e.msgid: e for e in sitecatalog.load(sitecatalog.seed("yy", directory, self.web))}
-        self.assertEqual((seeded["Declared review"].msgstr, seeded["Declared review"].extracted), ("", ["registry"]))
-        self.assertEqual([p for c in sitecatalog.compare(directory, self.web)[1] for p in c.problems], [])
-
-    def test_sync_in_a_registry_drops_a_key_it_no_longer_declares(self):
-        from unittest.mock import patch
-
-        from gen3tl.project import registry_scope
-
-        root = Path(self.tmp.name)
-        profile = workspace_project(root, "xx")
-        profile.write_text(profile.read_text() + '\n[landing]\nreview = "Declared review"\n', encoding="utf-8")
-        directory = self.web / "i18n"
-        catalog("xx", [PoEntry("site:Declared review", "Declared review", "Обзор", extracted=["registry"]),
-                       PoEntry("site:Removed review", "Removed review", "Убрано", extracted=["registry"])],
-                directory)
-        with registry_scope(root), patch("gen3tl.profile.profile.profile_paths", return_value=[profile]), \
-                patch.object(sitecatalog, "WEB", self.web), patch.object(sitecatalog, "CATALOGS", directory):
+        catalog("xx", [PoEntry("site:Home", "Home", "Дом", extracted=["index.html"]),
+                       PoEntry("site:Other review", "Other review", "Чужой обзор", extracted=["registry"])], directory)
+        games = {}
+        for name, key in (("one", "Own review"), ("other", "Other review")):
+            root = Path(self.tmp.name).resolve() / name
+            profile = self.game(root, f'\n[landing]\nreview = "{key}"\n')
+            write(root / "translation" / "interface-labels.po",
+                  [PoEntry(f"site:{key}", key, f"Перевод {name}", extracted=["landing.review"])],
+                  {"Project-Id-Version": "game", "Language": "xx", "X-Group": "interface-labels"})
+            games[name] = (root, profile)
+        other = (games["other"][0] / "translation" / "interface-labels.po").read_bytes()
+        with self.scope(*games["one"], directory):
             [synced] = sitecatalog.sync()
-        self.assertEqual(synced.dropped, ["Removed review"])
-        entries = {e.msgid: e for e in sitecatalog.load(directory / "xx.po")}
-        self.assertNotIn("Removed review", entries)
-        declared = entries["Declared review"]
-        self.assertEqual((declared.msgstr, declared.extracted), ("Обзор", ["registry"]))
+            self.assertEqual((synced.added, synced.dropped), (["Kept & used", "Loading {game}…"], ["Other review"]))
+            self.assertNotIn("Own review", sitecatalog.page_keys())
+            sitecatalog.sync_games()
+        self.assertEqual((games["other"][0] / "translation" / "interface-labels.po").read_bytes(), other)
+        self.assertEqual([e.msgid for e in sitecatalog.load(directory / "xx.po")], ["Home", "Kept & used", "Loading {game}…"])
 
     def test_the_command_syncs_before_it_writes(self):
         import contextlib
@@ -370,19 +390,22 @@ class SyncTest(unittest.TestCase):
         from gen3tl.__main__ import main
         catalog("xx", [PoEntry("site:Stale", "Stale", "Старое")], self.web / "i18n")
         data = Path(self.tmp.name) / "data"
+        profile = workspace_project(Path(self.tmp.name), "xx")
+        profile.write_text(profile.read_text() + '\n[landing]\nreview = "Declared review"\n', encoding="utf-8")
         with patch.object(sitecatalog, "WEB", self.web), patch.object(sitecatalog, "CATALOGS", self.web / "i18n"), \
+                patch("gen3tl.profile.profile.profile_paths", return_value=[profile]), \
                 contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()):
-            profile = workspace_project(Path(self.tmp.name))
             self.assertEqual(main(["--project-root", self.tmp.name, "--profile", str(profile),
                                    "web", "site-catalog", "--sync", "--data", str(data)]), 0)
         self.assertIn("added        3 keys\ndropped      1 keys", out.getvalue())
+        self.assertRegex(out.getvalue(), r"synced\s+\S*translation/interface-labels.po\nadded\s+1 keys\ndropped\s+0 keys")
         self.assertIn("untranslated 3 entries", out.getvalue())
         self.assertEqual([e.msgid for e in sitecatalog.load(self.web / "i18n" / "xx.po")],
                          ["Home", "Kept & used", "Loading {game}…"])
         self.assertEqual(json.loads((data / "site" / "xx.json").read_text(encoding="utf-8"))["strings"], {})
 
 class CompareTest(unittest.TestCase):
-    """The pull-request comparison; without a registry the catalogs' registry entries stand for it."""
+    """The pull-request comparison: the site catalogs with the pages, a game's catalogs with the game."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -399,29 +422,43 @@ class CompareTest(unittest.TestCase):
         keys, compared = sitecatalog.compare(self.i18n, self.web)
         return keys, [problem for c in compared for problem in c.problems]
 
-    def test_registry_entries_stand_without_a_registry(self):
-        entries = self.page_entries()
-        entries[0].extracted = ["index.html, registry"]
-        catalog("xx", entries + [PoEntry("site:Declared review", "Declared review", "Обзор", extracted=["registry"])],
-                self.i18n)
+    def test_a_former_registry_entry_is_stale(self):
+        path = catalog("xx", self.page_entries() + [PoEntry("site:Declared review", "Declared review", "Обзор",
+                                                            extracted=["registry"])], self.i18n)
         keys, problems = self.problems()
-        self.assertEqual(problems, [])
-        self.assertEqual(keys["Declared review"], ["registry"])
-        self.assertEqual(keys["Home"], ["index.html", "registry"])
+        self.assertNotIn("Declared review", keys)
+        self.assertEqual(problems, [f"stale key  {path}: Declared review"])
 
     def test_a_stale_page_entry_is_still_reported(self):
         path = catalog("xx", self.page_entries() + [PoEntry("site:Gone", "Gone", "Нет", extracted=["js/gone.js"])],
                        self.i18n)
         self.assertEqual(self.problems()[1], [f"stale key  {path}: Gone"])
 
-    def test_an_active_registry_decides_the_registry_entries(self):
+    def test_game_catalogs_are_compared_with_the_keys_their_game_declares(self):
         from unittest.mock import patch
-        path = catalog("xx", self.page_entries() + [PoEntry("site:Declared review", "Declared review", "Обзор",
-                                                            extracted=["registry"])], self.i18n)
-        with patch.object(sitecatalog, "WEB", self.web), \
-                patch.object(sitecatalog, "registry_keys", return_value={"Declared ending"}):
-            self.assertEqual(self.problems()[1], [f"missing key  {path}: Declared ending",
-                                                  f"stale key  {path}: Declared review"])
+
+        from gen3tl.project import registry_scope
+        root = Path(self.tmp.name).resolve()
+        profile = workspace_project(root, "xx")
+        profile.write_text(profile.read_text() + '\n[landing]\nreview = "Declared review"\n'
+                           'editor = "Declared editor"\n', encoding="utf-8")
+        path = root / "translation" / "interface-labels.po"
+        header = {"Project-Id-Version": "game", "Language": "xx", "X-Group": "interface-labels"}
+        with registry_scope(root), patch("gen3tl.profile.profile.profile_paths", return_value=[profile]):
+            self.assertEqual(sitecatalog.compare_games(), [])
+            write(path, [PoEntry("site:Declared review", "Declared review", "Обзор {n}", extracted=["landing.review"]),
+                         PoEntry("site:Gone", "Gone", "Нет", extracted=["landing.intro"])], header)
+            [compared] = sitecatalog.compare_games()
+            self.assertEqual(compared.problems, [f"missing key  {path}: Declared editor", f"stale key  {path}: Gone",
+                                                 f"dropped hole  {path}: Declared review"])
+            write(path, [PoEntry("site:Declared review", "Declared review", "Обзор", extracted=["landing.intro"]),
+                         PoEntry("site:Declared editor", "Declared editor", "", extracted=["landing.editor"])], header)
+            self.assertEqual(sitecatalog.compare_games()[0].problems,
+                             [f"out of sync  {path}: web site-catalog --sync would change it"])
+            header["Language"] = "yy"
+            write(path, [], header)
+            with self.assertRaisesRegex(sitecatalog.SiteCatalogError, "header names another catalog"):
+                sitecatalog.compare_games()
 
     def test_holes_and_unsynced_locations_are_reported(self):
         entries = self.page_entries()

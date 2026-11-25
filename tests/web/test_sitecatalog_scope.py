@@ -1,4 +1,4 @@
-"""Interface keys come from the explicitly selected project scope."""
+"""A game's interface keys come from the explicitly selected project scope."""
 
 from contextlib import chdir
 from pathlib import Path
@@ -9,8 +9,13 @@ from unittest.mock import patch
 from gen3tl import __version__
 from gen3tl.profile import profile
 from gen3tl.project import Manifest, registry_scope
-from gen3tl.web.sitecatalog import registry_keys
+from gen3tl.web.sitecatalog import game_catalogs
 from profile_schema_support import write_dir
+
+
+def declared(root=None):
+    """The game keys of each language project of a scope."""
+    return {project.key: set(keys) for project, keys in game_catalogs(root)}
 
 
 class SiteCatalogScopeTest(unittest.TestCase):
@@ -35,13 +40,13 @@ class SiteCatalogScopeTest(unittest.TestCase):
         self.enterContext(patch.object(profile, "PROFILE_DIR", self.root / "library"))
 
     def test_explicit_scope_collects_only_its_registered_keys(self):
-        self.assertEqual(registry_keys(self.game), {"Selected key", "License key"})
-        self.assertEqual(registry_keys(), {"Outer key", "License key"})
+        self.assertEqual(declared(self.game), {"selected-game/xx": {"Selected key"}})
+        self.assertEqual(declared(), {"outer-game/xx": {"Outer key"}})
 
     def test_empty_explicit_scope_does_not_inherit_current_game(self):
-        self.assertEqual(registry_keys(self.empty), set())
+        self.assertEqual(declared(self.empty), {})
 
     def test_context_scope_matches_explicit_root(self):
         with registry_scope(self.game):
-            self.assertEqual(registry_keys(), registry_keys(self.game))
-            self.assertEqual(registry_keys(), {"Selected key", "License key"})
+            self.assertEqual(declared(), declared(self.game))
+            self.assertEqual(declared(), {"selected-game/xx": {"Selected key"}})

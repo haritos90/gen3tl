@@ -41,10 +41,12 @@ SITE_MARK = re.compile(r"\sdata-ui-site[\s=>]")   # a Pokédex element the site 
 LITERAL = r'"((?:[^"\\]|\\.)*)"'
 CALLS = re.compile(r"\b(?:t|N_|uiError)\(\s*" + LITERAL)   # a page label source may answer first
 SITE_CALLS = [re.compile(r"\bsiteText\(\s*" + LITERAL), re.compile(r"\bshowText\((?:[^,()]|\([^()]*\))*,\s*" + LITERAL)]
-LOCATIONS = re.compile(r"[\w.-]+\.html|js/[\w./-]+\.js|fragments/[\w.-]+\.json|registry")
-REGISTERED = "registry"   # the location of keys the registry declares
+# a site page or module, or a game's declaring field
+LOCATIONS = re.compile(r"[\w.-]+\.html|js/[\w./-]+\.js|fragments/[\w.-]+\.json"
+                       r"|(?:landing|compatibility)\.\w+|language_rules\.[\w-]+\.(?:title|description)")
 HOLE = re.compile(r"\{\w+\}")   # a value the page fills
 GAME_PAGE = "interface-labels.json"   # beside the language's editor data
+GAME_GROUP = "interface-labels"
 
 
 class SiteCatalogError(ValueError):
@@ -108,29 +110,8 @@ def catalogs(directory: Path | None = None) -> dict[str, Path]:
     return {path.stem: path for path in sorted(directory.glob("*.po"))} if directory.is_dir() else {}
 
 
-def registry_keys(root: Path | None = None) -> set[str]:
-    """Interface keys declared by the active registry configuration."""
-    from ..profile.profile import Profile, profile_paths
-    from ..project import REGISTRY, Registry, registry_root, registry_scope
-
-    root = Path(root) if root is not None else registry_root()
-    registered = Registry.load(root) if (root / REGISTRY).is_file() else None
-    keys = {license["label_key"] for license in (registered.site or {}).get("licenses", [])} if registered else set()
-    with registry_scope(root):
-        profiles = registered.profiles().values() if registered else map(Profile.load, profile_paths())
-        for profile in profiles:
-            for field in ("compatibility", "landing"):
-                keys.update(profile.get(field, {}).values())
-            for rule in profile.get("language_rules", []):
-                keys.update((rule["title"], rule["description"]))
-    return keys
-
-
-def page_keys(web: Path | None = None, registry: set[str] | None = None) -> dict[str, list[str]]:
-    """Every key the site's pages and modules show through the site catalog: key -> where.
-
-    `registry`: the keys the registry declares; None reads the active registry for the installed pages.
-    """
+def page_keys(web: Path | None = None) -> dict[str, list[str]]:
+    """Every key the site's pages and modules show through the site catalog: key -> where."""
     web = Path(web or WEB)
     keys: dict[str, list[str]] = {}
 
@@ -164,10 +145,6 @@ def page_keys(web: Path | None = None, registry: set[str] | None = None) -> dict
         for pattern in SITE_CALLS:
             for match in pattern.finditer(source):
                 add_use(json.loads(f'"{match.group(1)}"'), where)
-    if registry is None and web.resolve() == WEB.resolve():
-        registry = registry_keys()
-    for key in sorted(registry or ()):
-        add_use(key, REGISTERED)
     for row in preview_texts(web).values():
         for key in row.values():
             add_use(key, "fragments/page-previews.json")
@@ -182,18 +159,13 @@ def preview_notes(web: Path | None = None) -> dict[str, str]:
 
 
 def location(where: list[str]) -> str:
-    """The location comment of a key: the files that use it."""
+    """The location comment of a key: the files that use it, or the fields that declare it."""
     return ", ".join(where)
 
 
 def is_location(comment: str) -> bool:
     """Whether an extracted comment is a location comment."""
     return all(LOCATIONS.fullmatch(item) for item in comment.split(", "))
-
-
-def places(entry: PoEntry) -> list[str]:
-    """The files an entry's location comment names."""
-    return [item for comment in entry.extracted if is_location(comment) for item in comment.split(", ")]
 
 
 def merged(entries: list[PoEntry], keys: dict[str, list[str]], notes: dict[str, str] | None = None) -> list[PoEntry]:
@@ -231,56 +203,81 @@ def game_languages(registry, profiles: dict) -> list[tuple]:
             if project.profile in profiles]
 
 
-def catalog_keys(directory: Path | None = None, web: Path | None = None) -> dict[str, list[str]]:
-    """The keys every catalog of `directory` holds: those of the pages under `web` and of the registry.
+def game_catalogs(root: Path | None = None) -> list[tuple]:
+    """Each language project of the active registry with the keys its game declares."""
+    from ..project import REGISTRY, Registry, registry_root
 
-    Without an active registry, the catalogs' registry entries stand for its keys.
-    """
-    web = Path(web or WEB)
-    registry = registry_keys() if web.resolve() == WEB.resolve() else set()
-    if not registry:   # only a game project knows its registry
-        registry = {e.msgid for path in catalogs(directory).values() for e in load(path) if REGISTERED in places(e)}
-    return page_keys(web, registry)
+    root = Path(root) if root is not None else registry_root()
+    if not (root / REGISTRY).is_file():
+        return []
+    registry = Registry.load(root)
+    return game_languages(registry, registry.profiles())
+
+
+def game_header(project) -> dict[str, str]:
+    """The header of a new game catalog."""
+    return {"Project-Id-Version": project.profile, "Language": project.language, **HEADER, "X-Group": GAME_GROUP}
+
+
+def _synced(path: Path, entries: list[PoEntry], header: dict, keys: dict[str, list[str]],
+            notes: dict[str, str] | None = None) -> Synced:
+    kept = merged(entries, keys, notes)
+    old = {e.msgid for e in entries}
+    write_po(path, kept, header)
+    return Synced(path, [k for k in keys if k not in old], [e.msgid for e in entries if e.msgid not in keys], len(kept))
 
 
 def sync(directory: Path | None = None, web: Path | None = None) -> list[Synced]:
-    """Bring every catalog of `directory` to the keys of the pages under `web` and of the registry."""
-    keys = catalog_keys(directory, web)
+    """Bring every catalog of `directory` to the keys of the pages under `web`."""
+    keys = page_keys(web)
+    return [_synced(path, load(path), read(path)[0], keys, preview_notes(web)) for path in catalogs(directory).values()]
+
+
+def sync_games(root: Path | None = None, directory: Path | None = None) -> list[Synced]:
+    """Bring each game language's catalog to the keys its game declares.
+
+    A game language with a site catalog in `directory` gains its catalog.
+    """
+    interface = catalogs(directory)
     out = []
-    for path in catalogs(directory).values():
-        entries = load(path)
-        header = read(path)[0]
-        kept = merged(entries, keys, preview_notes(web))
-        old = {e.msgid for e in entries}
-        write_po(path, kept, header)
-        out.append(Synced(path, [k for k in keys if k not in old], [e.msgid for e in entries if e.msgid not in keys],
-                          len(kept)))
+    for project, keys in game_catalogs(root):
+        path = project.interface_labels
+        if path.is_file():
+            out.append(_synced(path, load(path, project.profile, project.language), read(path)[0], keys))
+        elif project.language in interface:
+            out.append(_synced(path, [], game_header(project), keys))
     return out
 
 
-def compare(directory: Path | None = None, web: Path | None = None) -> tuple[dict[str, list[str]], list[Compared]]:
-    """Compare every catalog of `directory` with the keys it holds (catalog_keys): the keys, each catalog's problems."""
+def _problems(path: Path, entries: list[PoEntry], keys: dict[str, list[str]]) -> Compared:
     from tempfile import TemporaryDirectory
-    keys = catalog_keys(directory, web)
-    loaded = {path: load(path) for path in catalogs(directory).values()}
-    out = []
-    for path, entries in loaded.items():
-        header = read(path)[0]
-        have = {e.msgid for e in entries}
-        added = [key for key in keys if key not in have]
-        dropped = [e.msgid for e in entries if e.msgid not in keys]
-        problems = [f"missing key  {path}: {key}" for key in added] + [f"stale key  {path}: {key}" for key in dropped]
-        problems += [f"dropped hole  {path}: {e.msgid}" for e in entries
-                     if e.msgstr and sorted(HOLE.findall(e.msgstr)) != sorted(HOLE.findall(e.msgid))]
-        translated = sum(1 for e in entries if e.msgstr and e.fuzzy)
-        if not added and not dropped:
-            with TemporaryDirectory() as tmp:
-                synced = Path(tmp) / path.name
-                write_po(synced, merged(entries, keys), header)
-                if synced.read_bytes() != path.read_bytes():
-                    problems.append(f"out of sync  {path}: web site-catalog --sync would change it")
-        out.append(Compared(path, translated, problems))
-    return keys, out
+    header = read(path)[0]
+    have = {e.msgid for e in entries}
+    added = [key for key in keys if key not in have]
+    dropped = [e.msgid for e in entries if e.msgid not in keys]
+    problems = [f"missing key  {path}: {key}" for key in added] + [f"stale key  {path}: {key}" for key in dropped]
+    problems += [f"dropped hole  {path}: {e.msgid}" for e in entries
+                 if e.msgstr and sorted(HOLE.findall(e.msgstr)) != sorted(HOLE.findall(e.msgid))]
+    translated = sum(1 for e in entries if e.msgstr and e.fuzzy)
+    if not added and not dropped:
+        with TemporaryDirectory() as tmp:
+            synced = Path(tmp) / path.name
+            write_po(synced, merged(entries, keys), header)
+            if synced.read_bytes() != path.read_bytes():
+                problems.append(f"out of sync  {path}: web site-catalog --sync would change it")
+    return Compared(path, translated, problems)
+
+
+def compare(directory: Path | None = None, web: Path | None = None) -> tuple[dict[str, list[str]], list[Compared]]:
+    """Compare every catalog of `directory` with the keys of the pages: the keys, each catalog's problems."""
+    keys = page_keys(web)
+    return keys, [_problems(path, load(path), keys) for path in catalogs(directory).values()]
+
+
+def compare_games(root: Path | None = None) -> list[Compared]:
+    """Compare each game catalog with the keys its game declares."""
+    return [_problems(project.interface_labels, load(project.interface_labels, project.profile, project.language), keys)
+            for project, keys in game_catalogs(root) if project.interface_labels.is_file()]
 
 
 def seed(code: str, directory: Path | None = None, web: Path | None = None) -> Path | None:
@@ -291,7 +288,7 @@ def seed(code: str, directory: Path | None = None, web: Path | None = None) -> P
     if path.exists():
         return None
     header = {"Project-Id-Version": SITE, "Language": code, **HEADER}
-    write_po(path, merged([], catalog_keys(directory, web), preview_notes(web)), header, obsolete=[])
+    write_po(path, merged([], page_keys(web), preview_notes(web)), header, obsolete=[])
     return path
 
 
