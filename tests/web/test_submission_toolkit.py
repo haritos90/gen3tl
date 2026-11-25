@@ -2,6 +2,7 @@ import contextlib
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -119,6 +120,16 @@ class ToolkitWorkflowTest(unittest.TestCase):
         self.assertIn("issues:", text)
         self.assertIn("run: bash .github/scripts/submission.sh", text)
         self.assertIn("PYTHONPATH: src", text)
+
+    def test_a_run_that_skips_keeps_its_own_group(self):
+        _, text = self.workflow()
+        group = re.search(r"\n  group: >-\n((?:    .*\n)+)", text).group(1)
+        condition = re.search(r"\n    if: >-\n((?:      .*\n)+)", text).group(1)
+        applies = " ".join(condition.split())
+        expected = ("submission-${{ github.event.issue.number }}-${{ " + applies
+                    + " && 'apply' || github.run_id }}")
+        self.assertEqual(" ".join(group.split()), expected)
+        self.assertIn("  cancel-in-progress: true\n", text)
 
     def test_workflow_script_names_the_import_and_site_checks(self):
         script = toolkit_file(ROOT / ".github/scripts/toolkit-submission.sh")
