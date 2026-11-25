@@ -273,6 +273,15 @@ def copy_releases(source: Path, destination: Path, profile: str) -> int:
     return len(changed)
 
 
+def empty_releases(destination: Path) -> None:
+    """Write an empty release list into `destination` unless it holds one."""
+    destination = Path(destination)
+    if (destination / "releases.json").exists():
+        return
+    destination.mkdir(parents=True, exist_ok=True)
+    _write_manifest(destination, {"schema": 1, "releases": []})
+
+
 def add_notes(profile: Profile, directory: Path, notes_of) -> list[str]:
     """Publish the notes of every release of `profile` that has none."""
     manifest = directory / "releases.json"

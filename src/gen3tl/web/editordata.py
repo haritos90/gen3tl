@@ -896,6 +896,8 @@ def write_languages(root, bundle: str = "gen3tl-check.zip", toolkit: str | None 
             profiles[name]["source_texts"] = {
                 "code": project.language, "texts": texts}
     write_releases(root, registered)   # Keep releases within the selected registry.
+    from .patcher import empty_releases
+    empty_releases(root / "releases")   # the pages ask every game for one
     for path in sorted(root.glob("sources/*/catalog.json")):
         import hashlib
         source = json.loads(path.read_text(encoding="utf-8"))
