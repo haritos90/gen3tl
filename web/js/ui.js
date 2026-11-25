@@ -370,10 +370,24 @@ export function onSiteLanguage(listener) {
   return () => listeners.delete(listener);
 }
 
-/** Load page texts before committing a language switch. */
+/** Load page texts before committing a language switch.
+ * The preparer resolves to its commit step or to nothing. */
 export function prepareSiteLanguage(prepare) {
   preparers.add(prepare);
   return () => preparers.delete(prepare);
+}
+
+/** The commit steps of every preparer for a language. */
+async function preparedCommits(code) {
+  const pages = [...preparers];
+  const commits = await Promise.all(pages.map((prepare) => prepare(code)));
+  commits.forEach((commit, i) => {
+    if (commit != null && typeof commit !== "function") {
+      throw new TypeError(`Language preparer ${pages[i].name || "(anonymous)"}: `
+        + `a commit function or nothing expected, got ${typeof commit}`);
+    }
+  });
+  return commits;
 }
 
 
@@ -551,7 +565,7 @@ export async function useSiteLanguage(code, { fetcher = fetch, root = globalThis
   const known = offered?.find((l) => l.code === code);
   const [strings, commits] = await Promise.all([
     missingCatalog(code, known, root) ? null : loadCatalog(code, fetcher, root?.baseURI, storage),
-    Promise.all([...preparers].map((prepare) => prepare(code))),
+    preparedCommits(code),
   ]);
   if (mine !== generation) return current;
   return applySiteLanguage(code, strings, commits, root);
@@ -697,7 +711,7 @@ export async function startSite({ fetcher = fetch, storage = deviceStorage(), ro
     const [strings, commits] = await Promise.all([
       missingCatalog(code, known, root) ? null
         : (code === initial && firstCatalog) || loadCatalog(code, fetcher, root?.baseURI, storage),
-      Promise.all([...preparers].map((prepare) => prepare(code))),
+      preparedCommits(code),
     ]);
     return { code, strings, commits, languages: listed };
   })().catch(() => fallback);

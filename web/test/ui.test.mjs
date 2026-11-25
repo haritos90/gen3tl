@@ -47,6 +47,31 @@ test("failed page texts keep the previous language and content", async () => {
   } finally { off(); }
 });
 
+test("a language preparer gives its commit step or nothing", async () => {
+  const fetcher = async (url) => {
+    const code = url.match(/([^/]+)\.json$/)[1];
+    return { ok: true, json: async () => ({ schema: 1, language: code, strings: { Ready: code } }) };
+  };
+  const root = { baseURI: "https://site.test/", querySelectorAll: () => [] };
+  const committed = [];
+  const offs = [prepareSiteLanguage(async () => {}), prepareSiteLanguage(() => null),
+    prepareSiteLanguage(async (code) => () => committed.push(code))];
+  try {
+    await useSiteLanguage("de", { fetcher, root });
+    assert.deepEqual(committed, ["de"]);
+    const loadTexts = async () => ({ texts: {} });
+    offs.push(prepareSiteLanguage(loadTexts));
+    await assert.rejects(useSiteLanguage("fr", { fetcher, root }),
+      { name: "TypeError", message: "Language preparer loadTexts: a commit function or nothing expected, got object" });
+    assert.deepEqual(committed, ["de"]);
+    assert.equal(chosenLanguage(), "de");
+    assert.equal(t("Ready"), "de");
+  } finally {
+    offs.forEach((off) => off());
+    await useSiteLanguage("en", { root });
+  }
+});
+
 test("text updates preserve nodes, controls, focus and scroll", { skip: NEEDS_DOM }, (context) => {
   const win = domPage(context, "editor");
   const parent = document.getElementById("rules");
